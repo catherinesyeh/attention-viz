@@ -115,3 +115,15 @@ a:hover {
 #content {
     margin: calc(12px + 1.2vw) calc(20px + 2vw);
 }
+
+#graph {
+    margin-top: -50px;
+}
+
+.main-svg {
+    background: transparent !important;
+}
+
+.modebar {
+    top: 60px !important;
+}

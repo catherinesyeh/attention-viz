@@ -1,7 +1,7 @@
 function load_graph(layer, head) {
+    console.log(layer + " " + head);
     // change graph displayed on UI
     $("#graph").load("plots/layer" + layer + "_head" + head + ".html");
-    //$(".plotly-graph-div").css({ "height": "calc(200px + 40vw) !important", "max-height": "750px !important" }); // resize
 }
 
 $(document).ready(function () { // on load
@@ -23,7 +23,7 @@ $(document).ready(function () { // on load
         load_graph(layer, head);
     })
 
-    load_graph(0, 0); // default to layer 0, head 0
+    load_graph(layer_menu.val(), head_menu.val()); // default to layer 0, head 0
 
     $(".plotly-graph-div.js-plotly-plot").on('plotly_click', function () {
         alert('You clicked this Plotly chart!');
