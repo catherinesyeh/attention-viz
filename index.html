@@ -24,8 +24,8 @@
     <div id="content">
         <center>
             <h1>visualizing <span class="blue emphasis">query</span> + <span class="pink emphasis">key</span> vectors in <span class="mono">BERT</span></h1>
-            <label for="layer">TSNE plot for layer:</label>
-            <select name="layer" id="layer">
+            <label for="layer" class="control">TSNE plot for layer:</label>
+            <select name="layer" id="layer" class="control">
                 <option value="0" selected>0</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -39,8 +39,8 @@
                 <option value="10">10</option>
                 <option value="11">11</option>
             </select>
-            <label for="head">and head:</label>
-            <select name="head" id="head">
+            <label for="head" class="control">and head:</label>
+            <select name="head" id="head" class="control">
                 <option value="0" selected>0</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -54,6 +54,7 @@
                 <option value="10">10</option>
                 <option value="11">11</option>
             </select>
+            <span class="bar control">|</span><span class="link" title="toggle view" id="view-all">view all</span>
         </center>
         <div id="graph"></div>
     </div>

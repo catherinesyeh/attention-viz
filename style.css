@@ -1,6 +1,7 @@
 /* COLORS */
 :root {
     --text: rgb(22, 21, 21); 
+    --dark-blue: rgb(55, 70, 132);
     --blue: rgb(49, 160, 220);
     --light-blue: rgb(182, 213, 241);
     --pink: rgb(210, 70, 93);
@@ -69,6 +70,7 @@ p:last-child {
 h1, h2, h3, h4, h5 { /* headings */
     font-family: Be Vietnam Pro;
     font-weight: 800;
+    transition: 0.5s;
 }
 
 h1 {
@@ -87,15 +89,20 @@ h5 {
     font-weight: 600;
 }
 
-a { /* links */
+a, .link { /* links */
     text-decoration: none;
-    color: var(--blue);
+    color: var(--dark-blue);
     font-weight: 400;
     transition: 0.5s;
+    font-size: smaller;
+    cursor: pointer;
+    font-family: monospace;
+    border-bottom: 1px solid transparent;
 }
 
-a:hover {
+a:hover, .link:hover {
    opacity: 0.8;
+   border-bottom: 1px solid var(--dark-blue);
 }
 
 .emphasis {
@@ -111,6 +118,11 @@ a:hover {
     font-size: larger;
 }
 
+.bar {
+    margin-left: 6px;
+    margin-right: 10px;
+}
+
 /* MAIN CONTENT */
 #content {
     margin: calc(12px + 1.2vw) calc(20px + 2vw);
@@ -120,10 +132,56 @@ a:hover {
     margin-top: -50px;
 }
 
+#graph.active {
+    margin-top: 20px;
+}
+
+#view-all.inactive {
+    pointer-events: none;
+}
+
 .main-svg {
     background: transparent !important;
 }
 
 .modebar {
     top: 60px !important;
+}
+
+#matrix {
+    display: grid;
+    grid-template-columns: 0.5fr repeat(12, 1fr);
+    align-items: center;
+}
+
+#matrix p {
+    font-size: x-small;
+    line-height: initial;
+    margin-bottom: 0;
+}
+
+.mini-plot {
+    width: 100%;
+    height: calc(20px + 4.5vw);
+    transition: 0.5s;
+    cursor: pointer;
+    border: 2px solid white;
+}
+
+.mini-plot:hover {
+    opacity: 0.8;
+    border: 2px solid var(--light-pink);
+    transform: scale(1.1);
+}
+
+.axis-label {
+    font-weight: 400;
+}
+
+.axis-label span {
+    display: block;
+}
+
+.head-label {
+    text-align: center;
 }
