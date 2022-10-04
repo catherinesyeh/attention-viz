@@ -74,7 +74,9 @@ h1, h2, h3, h4, h5 { /* headings */
 }
 
 h1 {
-    line-height: calc(36px + 2vw);
+    line-height: calc(32px + 1.5vw);
+    font-size: calc(20px + 1vw);
+    margin-bottom: 10px;
 }
 
 h3 {
