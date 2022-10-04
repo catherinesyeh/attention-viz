@@ -130,6 +130,11 @@ a:hover, .link:hover {
     margin: calc(12px + 1.2vw) calc(20px + 2vw);
 }
 
+.loading {
+    text-align: center; 
+    line-height: 50vh;
+}
+
 #graph {
     margin-top: -50px;
 }

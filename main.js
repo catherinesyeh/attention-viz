@@ -1,6 +1,6 @@
 function load_graph(layer, head) {
     const g = $("#graph");
-    g.html("");
+    g.html("<p class='emphasis loading'>loading...</p>");
     // change graph displayed on UI
     g.load("plots/layer" + layer + "_head" + head + ".html");
 }
