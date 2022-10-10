@@ -1,26 +1,40 @@
+// save variables
+const layer_menu = $("#layer");
+const head_menu = $("#head");
+const type_menu = $("#graph-type");
+const view_all = $("#view-all");
+const graph = $("#graph");
+
+const matrix = $("<div id='matrix'></div>");
+const matrix_pos = $("<div id='matrix'></div>");
+
 function load_graph(layer, head) {
     const g = $("#graph");
-    g.html("<p class='emphasis loading'>loading...</p>");
+    g.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
     // change graph displayed on UI
-    g.load("plots/layer" + layer + "_head" + head + ".html");
+    var directory = "plots/";
+    if (type_menu.val() == "position") { // switch directory based on type of graph selected
+        directory = "plots_pos/";
+    }
+    g.load(directory + "layer" + layer + "_head" + head + ".html");
 }
 
 function load_matrix() {
     // show all graphs in matrix view
     const g = $("#graph");
     g.html(""); // clear content
-    matrix.appendTo(g); // load matrix
+    if (type_menu.val() == "type") { // load matrix based on type of graph selected
+        matrix.appendTo(g);
+    } else {
+        matrix_pos.appendTo(g);
+    }
 }
 
 function load_single_view(plot) {
     var layer = plot.attr("layer");
     var head = plot.attr("head");
-    // switch back to single plot view
-    const layer_menu = $("#layer");
-    const head_menu = $("#head");
-    const view_all = $("#view-all");
-    const graph = $("#graph");
 
+    // switch back to single plot view
     graph.removeClass("active");
     layer_menu.val(layer); // switch to right layer and head
     head_menu.val(head);
@@ -32,8 +46,11 @@ function load_single_view(plot) {
     $('.control').fadeIn();
 }
 
-const matrix = $("<div id='matrix'></div>");
-function create_matrix() {
+function create_matrix(matrix, pos) {
+    var directory = "plot_imgs/";
+    if (pos) { // switch directory for position graphs
+        directory = "plot_imgs_pos/";
+    }
     // generate matrix of all plots
     var head_label = $("<p class='axis-label'><span class='head-axis'>head →</span><span class='layer-axis'>layer ↓</span></p>");
     head_label.appendTo(matrix);
@@ -49,7 +66,7 @@ function create_matrix() {
         for (var head = 0; head < 12; head++) {
             // load img of each plot
             var img = $("<img class='mini-plot' />");
-            img.attr("src", "plot_imgs/layer" + layer + "_head" + head + ".png")
+            img.attr("src", directory + "layer" + layer + "_head" + head + ".png")
             img.attr("title", "layer " + layer + " head " + head);
             img.attr("layer", layer);
             img.attr("head", head);
@@ -58,13 +75,22 @@ function create_matrix() {
     }
 }
 
-$(document).ready(function () { // on load
-    // save variables
-    const layer_menu = $("#layer");
-    const head_menu = $("#head");
-    const view_all = $("#view-all");
-    const graph = $("#graph");
+function matrix_control() { // control ui behavior when in matrix view
+    load_matrix();
 
+    if (!graph.hasClass("active")) {
+        graph.addClass("active");
+        view_all.addClass("inactive");
+        view_all.html("click on a plot below to explore");
+        $('.control').fadeOut();
+    }
+
+    $('.mini-plot').click(function () { // when user presses plot in matrix view
+        load_single_view($(this));
+    })
+}
+
+$(document).ready(function () { // on load
     layer_menu.on("change", function () { // when user changes layer
         var layer = $(this).val();
         var head = head_menu.val();
@@ -79,18 +105,23 @@ $(document).ready(function () { // on load
         load_graph(layer, head);
     })
 
-    view_all.click(function () { // when user presses 'view all' button
-        // load matrix of all plots
-        load_matrix();
-        graph.addClass("active");
-        $(this).addClass("inactive");
-        $(this).html("click on a plot below to explore");
-        $('.control').fadeOut();
-        $('.mini-plot').click(function () { // when user presses plot in matrix view
-            load_single_view($(this));
-        })
+    type_menu.on("change", function () { // when user changes graph type
+        if (!graph.hasClass("active")) {
+            var layer = layer_menu.val();
+            var head = head_menu.val();
+
+            load_graph(layer, head);
+        } else {
+            matrix_control();
+        }
     })
 
-    create_matrix(); // pre create matrix
+    view_all.click(function () { // when user presses 'view all' button
+        // load matrix of all plots
+        matrix_control();
+    })
+
+    create_matrix(matrix, false); // pre create matrices
+    create_matrix(matrix_pos, true);
     load_graph(layer_menu.val(), head_menu.val()); // default to layer 0, head 0
 });

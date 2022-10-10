@@ -135,12 +135,23 @@ a:hover, .link:hover {
     line-height: 50vh;
 }
 
+#graph-dropdown {
+    margin-top: 10px;
+}
+
+#graph-dropdown label {
+    font-size: smaller;
+    letter-spacing: 1px;
+    font-weight: 400;
+    color: var(--gray);
+}
+
 #graph {
-    margin-top: -50px;
+    margin-top: -85px;
 }
 
 #graph.active {
-    margin-top: 20px;
+    margin-top: 5px;
 }
 
 #view-all.inactive {
