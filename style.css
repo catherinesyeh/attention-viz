@@ -137,13 +137,40 @@ a:hover, .link:hover {
 
 #graph-dropdown {
     margin-top: 10px;
+    margin-right: 5px;
+    display: inline-block;
 }
 
-#graph-dropdown label {
+label.emphasis {
     font-size: smaller;
     letter-spacing: 1px;
     font-weight: 400;
     color: var(--gray);
+}
+
+#search {
+    display: inline-block;
+}
+
+#search input {
+    padding: 0 5px;
+}
+
+#clear {
+    margin-left: -15px;
+    cursor: pointer;
+    transition: 0.5s;
+    color: var(--gray);
+}
+
+#clear:hover {
+    opacity: 0.8;
+}
+
+#clear.hide {
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
 }
 
 #graph {

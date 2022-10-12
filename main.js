@@ -83,6 +83,7 @@ function matrix_control() { // control ui behavior when in matrix view
         view_all.addClass("inactive");
         view_all.html("click on a plot below to explore");
         $('.control').fadeOut();
+        $("#search-text").val(""); // clear search
     }
 
     $('.mini-plot').click(function () { // when user presses plot in matrix view
