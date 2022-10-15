@@ -8,9 +8,14 @@ template = "test.html"
 with open(template, 'r') as t:
     contents = t.read()
 
+    start_ind = contents.index("</body>")
+    contents = contents[:start_ind] + \
+        '<script src="graph.js" type="text/javascript"></script>' + \
+        contents[start_ind:]
+
     replace = {',"title":{"text":"TSNE Plot for BERT (Layer 0, Head 0)"},"height":800': '',
-               'style="height:800px; width:100%;"': 'style="height:calc(200px + 40vw); max-height:750px; width:100%;"'
-               }
+               'style="height:800px; width:100%;"': 'style="height:calc(200px + 40vw); max-height:750px; width:100%;"',
+               '"type":"scattergl","customdata"': '"type":"scatter","customdata"'}
 
     for r in replace:
         contents = contents.replace(r, replace[r])
@@ -58,7 +63,7 @@ with open(template, 'r') as t:
 
                 contents = contents[:tx_start] + x + \
                     contents[tx_end:ty_start] + y + contents[ty_end:]
-                with open('plots_pos/' + filename, 'w') as o:
+                with open('../plots_pos/' + filename, 'w') as o:
                     o.write(contents)
                 os.remove(new_f)
                 contents = og_contents

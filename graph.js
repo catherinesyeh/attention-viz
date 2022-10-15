@@ -5,8 +5,9 @@ var myPlot = document.getElementById(id);
 var search = $("#search-text");
 var clear_input = $("#clear");
 
-//console.log(myPlot.data);
+console.log(myPlot.data);
 
+// preset styles
 var style_1 = {
     marker: {
         color: myPlot.data[0].marker.color,
@@ -14,18 +15,54 @@ var style_1 = {
         opacity: myPlot.data[0].marker.opacity
     }
 }
-var style_2 = {
-    marker: {
-        color: myPlot.data[1].marker.color,
-        size: 6,
-        opacity: myPlot.data[1].marker.opacity
+
+var style_2 = {}
+
+if (myPlot.data.length == 1) {
+    // position plot
+    style_1 = {
+        marker: {
+            color: myPlot.data[0].marker.color,
+            size: 6,
+            opacity: myPlot.data[0].marker.opacity,
+            coloraxis: "coloraxis"
+            // colorbar: {
+            //     outlinewidth: 0,
+            //     ticks: ""
+            // }
+        },
+        color: 0,
+        coloraxis: "coloraxis",
+        hoverlabel: {
+            bgcolor: 'black'
+        }
+    }
+    Plotly.restyle(myPlot, style_1);
+    //myPlot.data[0].showlegend = true;
+} else {
+    // type plot
+    style_2 = {
+        marker: {
+            color: myPlot.data[1].marker.color,
+            size: 6,
+            opacity: myPlot.data[1].marker.opacity
+        }
     }
 }
 
 // search by keyword and highlight matching points
 function filterBySearch(search) {
+    var data = myPlot.data;
+
+    // reset graph first
     Plotly.restyle(myPlot, style_1, [0]);
-    Plotly.restyle(myPlot, style_2, [1]);
+    //console.log(data);
+
+    if (data.length > 1) {
+        Plotly.restyle(myPlot, style_2, [1]);
+    } else {
+        // data[0].showlegend = true;
+    }
 
     // search for points
     var val = search.val();
@@ -36,7 +73,6 @@ function filterBySearch(search) {
         clear_input.addClass('hide');
         return;
     }
-    var data = myPlot.data;
     var found = false;
     var update = {
         marker: {
@@ -45,13 +81,19 @@ function filterBySearch(search) {
             opacity: Array(data[0].x.length).fill(0.1)
         }
     };
-    var update2 = {
-        marker: {
-            color: Array(data[1].x.length).fill(style_2.marker.color),
-            size: Array(data[1].x.length).fill(6),
-            opacity: Array(data[1].x.length).fill(0.1)
-        }
-    };
+    var update2 = {};
+
+    if (data.length > 1) {
+        update2 = {
+            marker: {
+                color: Array(data[1].x.length).fill(style_2.marker.color),
+                size: Array(data[1].x.length).fill(6),
+                opacity: Array(data[1].x.length).fill(0.1)
+            }
+        };
+    } else {
+        update.marker.color = style_1.marker.color;
+    }
     for (var trace = 0; trace < data.length; trace++) {
         var num_points = data[trace].x.length;
         var offset = trace * num_points;
@@ -74,7 +116,9 @@ function filterBySearch(search) {
 
     if (found) { // restyle only if keyword found
         Plotly.restyle(myPlot, update, [0]);
-        Plotly.restyle(myPlot, update2, [1]);
+        if (data.length > 1) {
+            Plotly.restyle(myPlot, update2, [1]);
+        }
     }
 }
 
