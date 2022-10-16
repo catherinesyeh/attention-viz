@@ -1,27 +1,27 @@
 /* COLORS */
 :root {
     --text: rgb(22, 21, 21); 
-    --dark-blue: rgb(55, 70, 132);
-    --blue: rgb(49, 160, 220);
-    --light-blue: rgb(182, 213, 241);
-    --pink: rgb(210, 70, 93);
-    --light-pink: rgb(238, 196, 210);
+    --dark-green: rgb(58, 107, 109);
+    --green: rgb(110, 170, 138);
+    --light-green: rgb(172, 214, 175);
+    --pink: rgb(151, 73, 96);
+    --light-pink: rgb(231, 169, 147);
     --gray: rgb(111, 108, 108);
     --light-gray: rgb(232, 228, 228);
 }
 
 ::-moz-selection { /* highlight color */
-    background: var(--blue);
+    background: var(--green);
     color: white;
 }
 
 ::selection {
-    background: var(--blue);
+    background: var(--green);
     color: white;
 }
 
-.blue {
-    color: var(--blue);
+.green {
+    color: var(--green);
 }
 
 .pink {
@@ -93,7 +93,7 @@ h5 {
 
 a, .link { /* links */
     text-decoration: none;
-    color: var(--dark-blue);
+    color: var(--dark-green);
     font-weight: 400;
     transition: 0.5s;
     font-size: smaller;
@@ -104,7 +104,7 @@ a, .link { /* links */
 
 a:hover, .link:hover {
    opacity: 0.8;
-   border-bottom: 1px solid var(--dark-blue);
+   border-bottom: 1px solid var(--dark-green);
 }
 
 .emphasis {
@@ -174,7 +174,7 @@ label.emphasis {
 }
 
 #graph {
-    margin-top: -85px;
+    margin-top: -60px;
 }
 
 #graph.active {

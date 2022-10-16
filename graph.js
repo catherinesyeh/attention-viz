@@ -5,15 +5,18 @@ var myPlot = document.getElementById(id);
 var search = $("#search-text");
 var clear_input = $("#clear");
 
-console.log(myPlot.data);
+//console.log(myPlot.data);
 
 // preset styles
 var style_1 = {
     marker: {
         color: myPlot.data[0].marker.color,
         size: 6,
-        opacity: myPlot.data[0].marker.opacity
-    }
+        opacity: myPlot.data[0].marker.opacity,
+        coloraxis: "coloraxis"
+    },
+    //color: 0,
+    //coloraxis: "coloraxis",
 }
 
 var style_2 = {}
@@ -45,8 +48,11 @@ if (myPlot.data.length == 1) {
         marker: {
             color: myPlot.data[1].marker.color,
             size: 6,
-            opacity: myPlot.data[1].marker.opacity
-        }
+            opacity: myPlot.data[1].marker.opacity,
+            coloraxis: "coloraxis2"
+        },
+        //color: 1,
+        //coloraxis: "coloraxis2",
     }
 }
 
@@ -164,7 +170,7 @@ $(document).ready(function () { // on load
         search.val("");
     })
 
-    filterBySearch(search);
+    //filterBySearch(search);
 
     //Plotly.Fx.hover(myPlot, [{ curveNumber: 0, pointNumber: 200 }, { curveNumber: 1, pointNumber: 14 }]);
 })

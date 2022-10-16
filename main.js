@@ -6,16 +6,16 @@ const view_all = $("#view-all");
 const graph = $("#graph");
 
 const matrix = $("<div id='matrix'></div>");
-const matrix_pos = $("<div id='matrix'></div>");
+//const matrix_pos = $("<div id='matrix'></div>");
 
 function load_graph(layer, head) {
     const g = $("#graph");
     g.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
     // change graph displayed on UI
     var directory = "plots/";
-    if (type_menu.val() == "position") { // switch directory based on type of graph selected
-        directory = "plots_pos/";
-    }
+    // if (type_menu.val() == "position") { // switch directory based on type of graph selected
+    //     directory = "plots_pos/";
+    // }
     g.load(directory + "layer" + layer + "_head" + head + ".html");
 }
 
@@ -23,11 +23,11 @@ function load_matrix() {
     // show all graphs in matrix view
     const g = $("#graph");
     g.html(""); // clear content
-    if (type_menu.val() == "type") { // load matrix based on type of graph selected
-        matrix.appendTo(g);
-    } else {
-        matrix_pos.appendTo(g);
-    }
+    //if (type_menu.val() == "type") { // load matrix based on type of graph selected
+    matrix.appendTo(g);
+    // } else {
+    //     matrix_pos.appendTo(g);
+    // }
 }
 
 function load_single_view(plot) {
@@ -48,9 +48,9 @@ function load_single_view(plot) {
 
 function create_matrix(matrix, pos) {
     var directory = "plot_imgs/";
-    if (pos) { // switch directory for position graphs
-        directory = "plot_imgs_pos/";
-    }
+    // if (pos) { // switch directory for position graphs
+    //     directory = "plot_imgs_pos/";
+    // }
     // generate matrix of all plots
     var head_label = $("<p class='axis-label'><span class='head-axis'>head →</span><span class='layer-axis'>layer ↓</span></p>");
     head_label.appendTo(matrix);
@@ -123,6 +123,6 @@ $(document).ready(function () { // on load
     })
 
     create_matrix(matrix, false); // pre create matrices
-    create_matrix(matrix_pos, true);
+    //create_matrix(matrix_pos, true);
     load_graph(layer_menu.val(), head_menu.val()); // default to layer 0, head 0
 });
