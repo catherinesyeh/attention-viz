@@ -149,6 +149,7 @@ label.emphasis {
 }
 
 #search {
+    margin-top: 10px;
     display: inline-block;
 }
 
@@ -157,7 +158,7 @@ label.emphasis {
 }
 
 #clear {
-    margin-left: -15px;
+    margin-left: -20px;
     cursor: pointer;
     transition: 0.5s;
     color: var(--gray);
@@ -167,14 +168,34 @@ label.emphasis {
     opacity: 0.8;
 }
 
-#clear.hide {
+#clear.hide, #results-count.hide {
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
 }
 
+@keyframes loading {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+#results-count {
+    margin-left: 10px;
+    transition: 0.5s;
+    font-size: smaller;
+    animation: loading 2s infinite;
+}
+
+#results-count.done {
+    animation: none;
+}
+
 #graph {
-    margin-top: -60px;
+    margin-top: -85px;
 }
 
 #graph.active {

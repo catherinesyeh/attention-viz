@@ -1,0 +1,8 @@
+.plotly-graph-div {
+    transition: 0.5s !important;
+}
+
+.plotly-graph-div.loading {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+}

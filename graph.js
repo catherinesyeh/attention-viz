@@ -1,9 +1,13 @@
 // save some variables
 var id = $(".plotly-graph-div").first().attr("id");
 var myPlot = document.getElementById(id);
+myPlot.classList.add("loading");
 
 var search = $("#search-text");
 var clear_input = $("#clear");
+var results = $("#results-count");
+
+var hov_template = "<b style='font-size:larger'>%{customdata[0]} (<i style='color:%{customdata[5]}'>%{customdata[4]}</i>, pos: %{customdata[2]} of %{customdata[3]})</b><br><br>%{customdata[1]}";
 
 //console.log(myPlot.data);
 
@@ -15,61 +19,43 @@ var style_1 = {
         opacity: myPlot.data[0].marker.opacity,
         coloraxis: "coloraxis"
     },
-    //color: 0,
-    //coloraxis: "coloraxis",
+    hoverinfo: 'text',
+    hovertemplate: hov_template
 }
 
-var style_2 = {}
+var style_2 = {
+    marker: {
+        color: myPlot.data[1].marker.color,
+        size: 6,
+        opacity: myPlot.data[1].marker.opacity,
+        coloraxis: "coloraxis2"
+    },
+    hoverinfo: 'text',
+    hovertemplate: hov_template
+}
 
-if (myPlot.data.length == 1) {
-    // position plot
-    style_1 = {
-        marker: {
-            color: myPlot.data[0].marker.color,
-            size: 6,
-            opacity: myPlot.data[0].marker.opacity,
-            coloraxis: "coloraxis"
-            // colorbar: {
-            //     outlinewidth: 0,
-            //     ticks: ""
-            // }
-        },
-        color: 0,
-        coloraxis: "coloraxis",
-        hoverlabel: {
-            bgcolor: 'black'
-        }
-    }
-    Plotly.restyle(myPlot, style_1);
-    //myPlot.data[0].showlegend = true;
-} else {
-    // type plot
-    style_2 = {
-        marker: {
-            color: myPlot.data[1].marker.color,
-            size: 6,
-            opacity: myPlot.data[1].marker.opacity,
-            coloraxis: "coloraxis2"
-        },
-        //color: 1,
-        //coloraxis: "coloraxis2",
-    }
+var update = {
+    marker: {
+        opacity: 0.05,
+        color: myPlot.data[0].marker.color,
+        coloraxis: "coloraxis"
+    },
+    hoverinfo: 'skip',
+    hovertemplate: null
+}
+
+var update2 = {
+    marker: {
+        opacity: 0.05,
+        color: myPlot.data[1].marker.color,
+        coloraxis: "coloraxis2"
+    },
+    hoverinfo: 'skip',
+    hovertemplate: null
 }
 
 // search by keyword and highlight matching points
 function filterBySearch(search) {
-    var data = myPlot.data;
-
-    // reset graph first
-    Plotly.restyle(myPlot, style_1, [0]);
-    //console.log(data);
-
-    if (data.length > 1) {
-        Plotly.restyle(myPlot, style_2, [1]);
-    } else {
-        // data[0].showlegend = true;
-    }
-
     // search for points
     var val = search.val();
 
@@ -77,55 +63,76 @@ function filterBySearch(search) {
         clear_input.removeClass('hide');
     } else {
         clear_input.addClass('hide');
+        results.addClass("hide");
+        myPlot.classList.remove("loading");
         return;
     }
-    var found = false;
-    var update = {
-        marker: {
-            color: Array(data[0].x.length).fill(style_1.marker.color),
-            size: Array(data[0].x.length).fill(6),
-            opacity: Array(data[0].x.length).fill(0.1)
-        }
-    };
-    var update2 = {};
 
-    if (data.length > 1) {
-        update2 = {
+    results.html("...");
+    results.removeClass("hide");
+    results.removeClass("done");
+    myPlot.classList.add("loading");
+
+    setTimeout(() => {
+        var data = myPlot.data;
+
+        if (data.length == 3) { // delete top trace
+            Plotly.deleteTraces(myPlot, -1);
+        }
+
+        // reset graph first
+        Plotly.restyle(myPlot, style_1, [0]);
+        Plotly.restyle(myPlot, style_2, [1]);
+
+        var found = {
+            type: 'scatter',
+            mode: 'markers',
+            showlegend: false,
             marker: {
-                color: Array(data[1].x.length).fill(style_2.marker.color),
-                size: Array(data[1].x.length).fill(6),
-                opacity: Array(data[1].x.length).fill(0.1)
-            }
+                color: [],
+                size: 10,
+                line: { width: 2, color: 'black' },
+                symbol: 'star'
+            },
+            xaxis: 'x',
+            yaxis: 'y',
+            legendgroup: '',
+            name: '',
+            x: [],
+            y: [],
+            customdata: [],
+            hovertemplate: hov_template,
         };
-    } else {
-        update.marker.color = style_1.marker.color;
-    }
-    for (var trace = 0; trace < data.length; trace++) {
-        var num_points = data[trace].x.length;
-        var offset = trace * num_points;
-        for (var point = 0; point < num_points; point++) {
-            if (data[trace].customdata[point + offset][0].toLowerCase().includes(val.toLowerCase())) {
-                //found.push({ curveNumber: trace, pointNumber: point });
-                found = true;
-                if (trace == 0) { // query
-                    update.marker.opacity[point] = 1;
-                    update.marker.size[point] = 10;
-                    update.marker.color[point] = 'black';
-                } else { // key
-                    update2.marker.opacity[point] = 1;
-                    update2.marker.size[point] = 10;
-                    update2.marker.color[point] = 'black';
+
+        for (var trace = 0; trace < data.length; trace++) {
+            var cur_trace = data[trace];
+            var num_points = cur_trace.x.length;
+            for (var point = 0; point < num_points; point++) {
+                if (cur_trace.customdata[point][0].toLowerCase().includes(val.toLowerCase())) {
+                    // add info to search results if keyword found
+                    found.x.push(cur_trace.x[point]);
+                    found.y.push(cur_trace.y[point]);
+                    found.customdata.push(cur_trace.customdata[point]);
+
+                    if (trace == 0) { // key
+                        found.marker.color.push("rgb(151, 73, 96)");
+                    } else { // query
+                        found.marker.color.push("rgb(58, 107, 109)");
+                    }
                 }
             }
         }
-    }
 
-    if (found) { // restyle only if keyword found
-        Plotly.restyle(myPlot, update, [0]);
-        if (data.length > 1) {
+        //console.log(found);
+        if (found && found.x.length != 0) {
+            Plotly.restyle(myPlot, update, [0]);
             Plotly.restyle(myPlot, update2, [1]);
+            Plotly.addTraces(myPlot, found);
         }
-    }
+        results.html(found.x.length + " results found");
+        results.addClass("done");
+        myPlot.classList.remove("loading");
+    }, 100);
 }
 
 $(document).ready(function () { // on load
@@ -164,13 +171,25 @@ $(document).ready(function () { // on load
     })
 
     clear_input.click(function () {
-        Plotly.restyle(myPlot, style_1, [0]);
-        Plotly.restyle(myPlot, style_2, [1]);
-        $(this).addClass("hide");
-        search.val("");
+        results.html("...");
+        results.removeClass("hide");
+        results.removeClass("done");
+        myPlot.classList.add("loading");
+
+        setTimeout(() => {
+            Plotly.restyle(myPlot, style_1, [0]);
+            Plotly.restyle(myPlot, style_2, [1]);
+            if (myPlot.data.length == 3) { // delete top trace
+                Plotly.deleteTraces(myPlot, -1);
+            }
+            $(this).addClass("hide");
+            search.val("");
+            results.addClass("hide");
+            myPlot.classList.remove("loading");
+        }, 100);
     })
 
-    //filterBySearch(search);
+    filterBySearch(search);
 
     //Plotly.Fx.hover(myPlot, [{ curveNumber: 0, pointNumber: 200 }, { curveNumber: 1, pointNumber: 14 }]);
 })

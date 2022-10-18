@@ -8,6 +8,11 @@ template = "template.html"
 with open(template, 'r') as t:
     contents = t.read()
 
+    start_ind = contents.index("</head>")
+    contents = contents[:start_ind] + \
+        '<link rel="stylesheet" type="text/css" href="graph.css" />' + \
+        contents[start_ind:]
+
     start_ind = contents.index("</body>")
     contents = contents[:start_ind] + \
         '<script src="graph.js" type="text/javascript"></script>' + \
@@ -81,7 +86,7 @@ with open(template, 'r') as t:
 
                 # contents = contents[:tx_start] + x + \
                 #     contents[tx_end:ty_start] + y + contents[ty_end:]
-                with open('../plots_pos/' + filename, 'w') as o:
+                with open('../plots/' + filename, 'w') as o:
                     o.write(contents)
                 os.remove(new_f)
                 contents = og_contents
