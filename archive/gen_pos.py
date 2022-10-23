@@ -19,6 +19,7 @@ with open(template, 'r') as t:
         contents[start_ind:]
 
     replace = {',"title":{"text":"TSNE Plot for BERT (Layer 0, Head 0)"},"height":800': '',
+               'plotly-graph-div': 'plotly-graph-div loading',
                'style="height:800px; width:100%;"': 'style="height:calc(200px + 40vw); max-height:750px; width:100%;"',
                '"type":"scattergl","customdata"': '"type":"scatter","customdata"',
                '"hoverlabel":{"font': '"hoverlabel":{"bgcolor":"black","font'}
