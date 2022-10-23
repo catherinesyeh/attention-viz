@@ -40,7 +40,16 @@ with open(template, 'r') as t:
         if os.path.isfile(file) and file.endswith("html"):
             print(file)
 
+            # layer number
+            attention_file = filename[:-4]
+
+            # attach attention info
             new_f = file[:-4] + "txt"
+            start_ind = contents.index("</body>")
+            contents = contents[:start_ind] + \
+                '<script src="attention/' + attention_file + 'js" type="text/javascript"></script>' + \
+                contents[start_ind:]
+
             shutil.copyfile(file, new_f)  # convert to txt file to read
             with open(new_f, 'r') as f:
                 f_contents = f.read()
