@@ -12,7 +12,7 @@ function load_graph(layer, head) {
     const g = $("#graph");
     g.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
     // change graph displayed on UI
-    var directory = "plots/";
+    let directory = "plots/";
     // if (type_menu.val() == "position") { // switch directory based on type of graph selected
     //     directory = "plots_pos/";
     // }
@@ -31,8 +31,8 @@ function load_matrix() {
 }
 
 function load_single_view(plot) {
-    var layer = plot.attr("layer");
-    var head = plot.attr("head");
+    let layer = plot.attr("layer");
+    let head = plot.attr("head");
 
     // switch back to single plot view
     graph.removeClass("active");
@@ -47,25 +47,25 @@ function load_single_view(plot) {
 }
 
 function create_matrix(matrix, pos) {
-    var directory = "plot_imgs/";
+    let directory = "plot_imgs/";
     // if (pos) { // switch directory for position graphs
     //     directory = "plot_imgs_pos/";
     // }
     // generate matrix of all plots
-    var head_label = $("<p class='axis-label'><span class='head-axis'>head →</span><span class='layer-axis'>layer ↓</span></p>");
+    let head_label = $("<p class='axis-label'><span class='head-axis'>head →</span><span class='layer-axis'>layer ↓</span></p>");
     head_label.appendTo(matrix);
-    for (var i = 0; i < 12; i++) {
+    for (let i = 0; i < 12; i++) {
         // label head number across
-        var head = $("<p class='head-label'>" + i + "</p>");
+        let head = $("<p class='head-label'>" + i + "</p>");
         head.appendTo(matrix);
     }
-    for (var layer = 0; layer < 12; layer++) {
+    for (let layer = 0; layer < 12; layer++) {
         // add layer number
-        var label = $("<p class='layer-label'>" + layer + "</p>");
+        let label = $("<p class='layer-label'>" + layer + "</p>");
         label.appendTo(matrix);
-        for (var head = 0; head < 12; head++) {
+        for (let head = 0; head < 12; head++) {
             // load img of each plot
-            var img = $("<img class='mini-plot' />");
+            let img = $("<img class='mini-plot' />");
             img.attr("src", directory + "layer" + layer + "_head" + head + ".png")
             img.attr("title", "layer " + layer + " head " + head);
             img.attr("layer", layer);
@@ -93,23 +93,23 @@ function matrix_control() { // control ui behavior when in matrix view
 
 $(document).ready(function () { // on load
     layer_menu.on("change", function () { // when user changes layer
-        var layer = $(this).val();
-        var head = head_menu.val();
+        let layer = $(this).val();
+        let head = head_menu.val();
 
         load_graph(layer, head);
     })
 
     head_menu.on("change", function () { // when user changes head
-        var head = $(this).val();
-        var layer = layer_menu.val();
+        let head = $(this).val();
+        let layer = layer_menu.val();
 
         load_graph(layer, head);
     })
 
     type_menu.on("change", function () { // when user changes graph type
         if (!graph.hasClass("active")) {
-            var layer = layer_menu.val();
-            var head = head_menu.val();
+            let layer = layer_menu.val();
+            let head = head_menu.val();
 
             load_graph(layer, head);
         } else {
@@ -120,6 +120,10 @@ $(document).ready(function () { // on load
     view_all.click(function () { // when user presses 'view all' button
         // load matrix of all plots
         matrix_control();
+        $("#reset").fadeOut(); // hide buttons
+        $("#reset").removeData("data");
+        $("#reset").removeAttr("pn");
+        $("#results-count").addClass("hide");
     })
 
     create_matrix(matrix, false); // pre create matrices

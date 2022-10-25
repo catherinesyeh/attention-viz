@@ -148,6 +148,10 @@ label.emphasis {
     color: var(--gray);
 }
 
+.top-menu {
+    position: relative;
+}
+
 #search {
     margin-top: 10px;
     display: inline-block;
@@ -192,6 +196,22 @@ label.emphasis {
 
 #results-count.done {
     animation: none;
+}
+
+#reset {
+    font-size: small;
+    letter-spacing: 1px;
+    font-weight: 300;
+    background-color: var(--light-pink);
+    color: white;
+    border-radius: 2px;
+    padding: 3px 8px;
+    transition: 0.5s;
+    cursor: pointer;
+}
+
+#reset:hover {
+    opacity: 0.8;
 }
 
 #graph {
