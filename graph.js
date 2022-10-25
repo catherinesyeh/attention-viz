@@ -55,7 +55,7 @@ var update2 = {
 }
 
 function reset_plot() {
-    if (myPlot.data.length == 3) { // delete top trace
+    while (myPlot.data.length > 2) { // delete top trace
         Plotly.deleteTraces(myPlot, -1);
     }
     // reset main traces
@@ -70,12 +70,12 @@ function filterBySearch(search) {
 
     if (val != "" && val != " ") {
         myPlot.classList.add("loading");
+        reset_plot();
         results.removeClass("hide");
         results.removeClass("done");
         results.html("...");
         clear_input.removeClass('hide');
         val = val.toLowerCase();
-        reset_plot();
     } else {
         clear_input.addClass('hide');
         results.addClass("hide");
@@ -109,7 +109,6 @@ function filterBySearch(search) {
         let expr = new RegExp(val, "gi");
         const trace_colors = ["rgb(151, 73, 96)", "rgb(58, 107, 109)"];
         let num_traces = 2;
-        console.log(num_traces);
         for (let trace = 0; trace < num_traces; trace++) {
             data[trace].customdata.filter((e, i) => {
                 if (expr.test(e[0])) {
@@ -125,7 +124,6 @@ function filterBySearch(search) {
             Plotly.restyle(myPlot, update2, [1]);
             Plotly.addTraces(myPlot, found);
         }
-        console.log(found.customdata);
         results.html(found.x.length + " results found");
         results.addClass("done");
         myPlot.classList.remove("loading");
@@ -134,11 +132,13 @@ function filterBySearch(search) {
 
 function show_attention(data, point_num) {
     myPlot.classList.add("loading");
+    reset_plot();
     results.removeClass("hide");
     results.removeClass("done");
     results.html("...");
     search_contain.fadeOut();
-    reset_plot();
+
+    console.log(data);
 
     setTimeout(() => {
         let same_sent;
@@ -149,27 +149,22 @@ function show_attention(data, point_num) {
         let tn = data.points[0].curveNumber;
         let cust_data = data.points[0].customdata;
 
-        if (tn == 2) {
+        if (tn > 1) {
             // attention mode already activated
             token_type = cust_data[4];
             tn = (token_type == "query") ? 1 : 0;
-            console.log(point_num);
             pn = point_num ? parseInt(point_num) : myPlot.data[tn].customdata.indexOf(cust_data);
 
         }
 
         console.log(tn);
-        console.log(data);
         console.log(pn);
 
         let offset = myPlot.data[0].x.length;
         let trace = (tn == 0) ? 1 : 0; // find other trace
 
-        console.log(trace);
-
         // info about this point
         let attn = attention[pn + (trace * offset)];
-        console.log(attn);
         len = attn.length;
         let pos = cust_data[2] - 1;
 
