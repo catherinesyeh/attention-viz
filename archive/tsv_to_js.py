@@ -1,7 +1,7 @@
 # convert tsv to js
 import os
 import pandas as pd
-dir = "../tsv/"
+dir = "../new_tsv/"
 new_dir = "../attention/"
 
 for file in os.listdir(dir):
