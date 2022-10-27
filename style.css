@@ -130,6 +130,16 @@ a:hover, .link:hover {
     margin: calc(12px + 1.2vw) calc(20px + 2vw);
 }
 
+#type-label {
+    cursor: pointer;
+    transition: 0.5s;
+}
+
+#type-label:hover {
+    color: var(--light-pink);
+    letter-spacing: 1px;
+}
+
 .loading {
     text-align: center; 
     line-height: 50vh;

@@ -2,7 +2,7 @@
 import os
 import sys
 
-directory = "../plot_imgs/"
+directory = "../umap_imgs/"
 
 layer = sys.argv[1]  # layer num
 

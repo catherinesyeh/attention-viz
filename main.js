@@ -1,21 +1,21 @@
 // save variables
 const layer_menu = $("#layer");
 const head_menu = $("#head");
-const type_menu = $("#graph-type");
+const graph_type = $("#type-label");
 const view_all = $("#view-all");
 const graph = $("#graph");
 
 const matrix = $("<div id='matrix'></div>");
-//const matrix_pos = $("<div id='matrix'></div>");
+const matrix_umap = $("<div id='matrix'></div>");
 
 function load_graph(layer, head) {
     const g = $("#graph");
     g.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
     // change graph displayed on UI
     let directory = "plots/";
-    // if (type_menu.val() == "position") { // switch directory based on type of graph selected
-    //     directory = "plots_pos/";
-    // }
+    if (graph_type.html() == "UMAP") { // switch directory based on type of graph selected
+        directory = "umap/";
+    }
     g.load(directory + "layer" + layer + "_head" + head + ".html");
 }
 
@@ -23,11 +23,11 @@ function load_matrix() {
     // show all graphs in matrix view
     const g = $("#graph");
     g.html(""); // clear content
-    //if (type_menu.val() == "type") { // load matrix based on type of graph selected
-    matrix.appendTo(g);
-    // } else {
-    //     matrix_pos.appendTo(g);
-    // }
+    if (graph_type.html() == "TSNE") { // load matrix based on type of graph selected
+        matrix.appendTo(g);
+    } else {
+        matrix_umap.appendTo(g);
+    }
 }
 
 function load_single_view(plot) {
@@ -46,11 +46,11 @@ function load_single_view(plot) {
     $('.control').fadeIn();
 }
 
-function create_matrix(matrix, pos) {
+function create_matrix(matrix, umap) {
     let directory = "plot_imgs/";
-    // if (pos) { // switch directory for position graphs
-    //     directory = "plot_imgs_pos/";
-    // }
+    if (umap) { // switch directory for umap
+        directory = "umap_imgs/";
+    }
     // generate matrix of all plots
     let head_label = $("<p class='axis-label'><span class='head-axis'>head →</span><span class='layer-axis'>layer ↓</span></p>");
     head_label.appendTo(matrix);
@@ -106,8 +106,15 @@ $(document).ready(function () { // on load
         load_graph(layer, head);
     })
 
-    type_menu.on("change", function () { // when user changes graph type
-        if (!graph.hasClass("active")) {
+    graph_type.click(function () { // when user changes graph type
+        const cur_type = $(this).html();
+        if (cur_type == "TSNE") {
+            $(this).html("UMAP");
+        } else {
+            $(this).html("TSNE"); // switch type
+        }
+
+        if (!graph.hasClass("active")) { // update plots
             let layer = layer_menu.val();
             let head = head_menu.val();
 
@@ -127,6 +134,6 @@ $(document).ready(function () { // on load
     })
 
     create_matrix(matrix, false); // pre create matrices
-    //create_matrix(matrix_pos, true);
+    create_matrix(matrix_umap, true);
     load_graph(layer_menu.val(), head_menu.val()); // default to layer 0, head 0
 });
