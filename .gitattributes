@@ -1,3 +1,0 @@
-*.html filter=lfs diff=lfs merge=lfs -text
-plots/*.html filter=lfs diff=lfs merge=lfs -text
-umap/*.html filter=lfs diff=lfs merge=lfs -text
