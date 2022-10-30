@@ -6,3 +6,19 @@
     opacity: 0.5 !important;
     pointer-events: none !important;
 }
+
+.cursor-ns-resize, .cursor-ew-resize, .cursor-ns-resize, .cursor-ew-resize {
+    display: none !important;
+    pointer-events: none !important;
+    cursor: default;
+}
+
+.selectionlayer path {
+    pointer-events: none !important;
+}
+
+.outline-controllers circle {
+    display: none !important;
+    pointer-events: none !important;
+    cursor: default;
+}

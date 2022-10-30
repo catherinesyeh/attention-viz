@@ -61,6 +61,7 @@ function reset_plot() {
     // reset main traces
     Plotly.restyle(myPlot, style_1, [0]);
     Plotly.restyle(myPlot, style_2, [1]);
+    Plotly.relayout(myPlot, { annotations: [] }); // remove annotations
 }
 
 // search by keyword and highlight matching points
@@ -71,6 +72,7 @@ function filterBySearch(search) {
     if (val != "" && val != " ") {
         myPlot.classList.add("loading");
         reset_plot();
+        Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
         results.removeClass("hide");
         results.removeClass("done");
         results.html("...");
@@ -124,6 +126,7 @@ function filterBySearch(search) {
             Plotly.restyle(myPlot, update2, [1]);
             Plotly.addTraces(myPlot, found);
         }
+        results.removeClass("hide");
         results.html(found.x.length + " results found");
         results.addClass("done");
         myPlot.classList.remove("loading");
@@ -133,12 +136,11 @@ function filterBySearch(search) {
 function show_attention(data, point_num) {
     myPlot.classList.add("loading");
     reset_plot();
+    Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
     results.removeClass("hide");
     results.removeClass("done");
     results.html("...");
     search_contain.fadeOut();
-
-    console.log(data);
 
     setTimeout(() => {
         let same_sent;
@@ -156,9 +158,6 @@ function show_attention(data, point_num) {
             pn = point_num ? parseInt(point_num) : myPlot.data[tn].customdata.indexOf(cust_data);
 
         }
-
-        console.log(tn);
-        console.log(pn);
 
         let offset = myPlot.data[0].x.length;
         let trace = (tn == 0) ? 1 : 0; // find other trace
@@ -234,13 +233,81 @@ function show_attention(data, point_num) {
         Plotly.restyle(myPlot, update2, [1]);
         Plotly.addTraces(myPlot, same_sent);
 
-        // console.log(myPlot.data);
-
         // hover largest over pair with largest attention
         setTimeout(() => {
             Plotly.Fx.hover(myPlot, [{ curveNumber: 2, pointNumber: len }, { curveNumber: 2, pointNumber: max_ind }]);
         }, 100);
+        search_contain.fadeOut();
         reset.fadeIn();
+        results.addClass("hide");
+        myPlot.classList.remove("loading");
+    }, 100);
+}
+
+function highlight_cluster(data) {
+    if (!data) { // nothing selected
+        return;
+    }
+
+    // if (reset.attr("style") == "") {
+    //     // hide attention button
+    //     reset.fadeOut();
+    //     search_contain.fadeIn();
+    //     search.val("");
+    //     clear_input.addClass('hide');
+    // }
+
+    results.html("...");
+    reset_plot();
+    results.removeClass("hide");
+    results.removeClass("done");
+    myPlot.classList.add("loading");
+
+    setTimeout(() => {
+        reset.fadeOut();
+        search_contain.fadeIn();
+        search.val("");
+        clear_input.addClass('hide');
+
+        // show words in cluster on select
+        const clicked = data.points;
+
+        let annotations = [];
+        let unique_words = {};
+
+        clicked.forEach(function (pt) {
+            let word = pt.customdata[0];
+            let annotation = {
+                // add annotation for each point in cluster
+                x: pt.x,
+                y: pt.y,
+                text: word,
+                font: {
+                    color: 'black',
+                    size: 10
+                },
+                arrowcolor: 'black',
+                opacity: 0.5
+            }
+            if (!(word in unique_words)) {
+                unique_words[word] = annotations.length;
+            }
+
+            annotations.push(annotation);
+        });
+
+        // emphasize first instance of each token
+        for (word in unique_words) {
+            let index = unique_words[word];
+            annotations[index].opacity = 1;
+            annotations[index].font.size = 14;
+        }
+
+        let update = {
+            annotations: annotations
+        }
+        Plotly.relayout(myPlot, update);
+
         results.addClass("hide");
         myPlot.classList.remove("loading");
     }, 100);
@@ -250,6 +317,10 @@ $(document).ready(function () { // on load
     myPlot.on('plotly_click', function (data) { // show attention info on click
         show_attention(data, false);
     });
+
+    myPlot.on('plotly_selected', function (data) { // show details of cluster on select
+        highlight_cluster(data);
+    })
 
     search.change(function () {
         filterBySearch($(this));
@@ -261,9 +332,9 @@ $(document).ready(function () { // on load
         results.removeClass("done");
         myPlot.classList.add("loading");
 
-        setTimeout(() => {
-            reset_plot();
+        reset_plot();
 
+        setTimeout(() => {
             $(this).addClass("hide");
             search.val("");
             results.addClass("hide");
@@ -275,8 +346,9 @@ $(document).ready(function () { // on load
         myPlot.classList.add("loading");
         $(this).fadeOut();
 
+        reset_plot();
+
         setTimeout(() => {
-            reset_plot();
             $(this).removeAttr("pn");
             $(this).removeData("data");
             search.val("");
