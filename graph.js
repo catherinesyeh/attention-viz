@@ -86,6 +86,7 @@ function filterBySearch(search) {
         clear_input.addClass('hide');
         results.addClass("hide");
         myPlot.classList.remove("loading");
+        console.log("hello");
         return;
     }
 
@@ -129,6 +130,8 @@ function filterBySearch(search) {
             Plotly.restyle(myPlot, update, [0]);
             Plotly.restyle(myPlot, update2, [1]);
             Plotly.addTraces(myPlot, found);
+        } else {
+            $(".points .point").css("opacity", marker_opacity);
         }
         results.removeClass("hide");
         clear_input.removeClass('hide');
@@ -252,8 +255,6 @@ function highlight_cluster(data) {
     if (!data) { // nothing selected
         return;
     }
-
-    $(".points .point").removeClass("clear");
     results.html("...");
     reset_plot();
     results.removeClass("hide");
@@ -354,6 +355,7 @@ $(document).ready(function () { // on load
             search.val("");
             results.addClass("hide");
             myPlot.classList.remove("loading");
+            $(".points .point").css("opacity", marker_opacity);
         }, 100);
     })
 
@@ -374,6 +376,7 @@ $(document).ready(function () { // on load
             results.addClass("hide");
             search_contain.fadeIn();
             myPlot.classList.remove("loading");
+            $(".points .point").css("opacity", marker_opacity);
         }, 100);
     })
 
@@ -393,7 +396,7 @@ $(document).ready(function () { // on load
             $(this).fadeOut();
             search_contain.fadeIn();
             myPlot.classList.remove("loading");
-            $(".points .point").addClass("clear");
+            $(".points .point").css("opacity", marker_opacity);
         }, 100);
     })
 
