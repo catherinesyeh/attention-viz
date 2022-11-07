@@ -208,7 +208,7 @@ label.emphasis {
     animation: none;
 }
 
-#reset {
+#reset, #reset-cluster {
     font-size: small;
     letter-spacing: 1px;
     font-weight: 300;
@@ -220,7 +220,7 @@ label.emphasis {
     cursor: pointer;
 }
 
-#reset:hover {
+#reset:hover, #reset-cluster:hover {
     opacity: 0.8;
 }
 

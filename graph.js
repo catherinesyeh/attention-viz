@@ -8,6 +8,7 @@ var search = $("#search-text");
 var clear_input = $("#clear");
 var results = $("#results-count");
 var reset = $("#reset");
+var reset_cluster = $("#reset-cluster");
 
 var hov_template = "<b style='font-size:larger'>%{customdata[0]} (<i style='color:%{customdata[5]}'>%{customdata[4]}</i>, pos: %{customdata[2]} of %{customdata[3]}, norm: %{customdata[6]})</b><br><br>%{customdata[1]}";
 
@@ -72,7 +73,7 @@ function filterBySearch(search) {
     if (val != "" && val != " ") {
         myPlot.classList.add("loading");
         reset_plot();
-        Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
+        // Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
         results.removeClass("hide");
         results.removeClass("done");
         results.html("...");
@@ -137,7 +138,7 @@ function filterBySearch(search) {
 function show_attention(data, point_num) {
     myPlot.classList.add("loading");
     reset_plot();
-    Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
+    // Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
     results.removeClass("hide");
     results.removeClass("done");
     results.html("...");
@@ -250,25 +251,18 @@ function highlight_cluster(data) {
         return;
     }
 
-    // if (reset.attr("style") == "") {
-    //     // hide attention button
-    //     reset.fadeOut();
-    //     search_contain.fadeIn();
-    //     search.val("");
-    //     clear_input.addClass('hide');
-    // }
-
     results.html("...");
     reset_plot();
     results.removeClass("hide");
     results.removeClass("done");
+    search_contain.fadeOut();
     myPlot.classList.add("loading");
 
     setTimeout(() => {
         reset.fadeOut();
-        search_contain.fadeIn();
-        search.val("");
-        clear_input.addClass('hide');
+        // search_contain.fadeIn();
+        // search.val("");
+        // clear_input.addClass('hide');
 
         // show words in cluster on select
         const clicked = data.points;
@@ -311,6 +305,7 @@ function highlight_cluster(data) {
         Plotly.relayout(myPlot, update);
 
         results.addClass("hide");
+        reset_cluster.fadeIn();
         myPlot.classList.remove("loading");
     }, 100);
 }
@@ -345,6 +340,9 @@ $(document).ready(function () { // on load
     })
 
     reset.click(function () { // remove attention annotations on reset
+        results.html("...");
+        results.removeClass("hide");
+        results.removeClass("done");
         myPlot.classList.add("loading");
         $(this).fadeOut();
 
@@ -357,6 +355,26 @@ $(document).ready(function () { // on load
             clear_input.addClass("hide");
             results.addClass("hide");
             search_contain.fadeIn();
+            myPlot.classList.remove("loading");
+        }, 100);
+    })
+
+    reset_cluster.click(function () {
+        results.html("...");
+        results.removeClass("hide");
+        results.removeClass("done");
+        $(this).fadeOut();
+        myPlot.classList.add("loading");
+
+        reset_plot();
+        Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
+
+        setTimeout(() => {
+            search.val("");
+            clear_input.addClass("hide");
+            results.addClass("hide");
+            search_contain.fadeIn();
+            $(this).fadeOut();
             myPlot.classList.remove("loading");
         }, 100);
     })
