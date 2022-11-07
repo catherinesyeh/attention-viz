@@ -73,7 +73,6 @@ function filterBySearch(search) {
     if (val != "" && val != " ") {
         myPlot.classList.add("loading");
         reset_plot();
-        // Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
         results.removeClass("hide");
         results.removeClass("done");
         results.html("...");
@@ -138,7 +137,6 @@ function filterBySearch(search) {
 function show_attention(data, point_num) {
     myPlot.classList.add("loading");
     reset_plot();
-    // Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
     results.removeClass("hide");
     results.removeClass("done");
     results.html("...");
@@ -260,9 +258,6 @@ function highlight_cluster(data) {
 
     setTimeout(() => {
         reset.fadeOut();
-        // search_contain.fadeIn();
-        // search.val("");
-        // clear_input.addClass('hide');
 
         // show words in cluster on select
         const clicked = data.points;
@@ -270,33 +265,51 @@ function highlight_cluster(data) {
         let annotations = [];
         let unique_words = {};
 
-        clicked.forEach(function (pt) {
+        clicked.forEach(function (pt) { // collect unique set of words
             let word = pt.customdata[0];
+            if (!(word in unique_words)) { // new word
+                unique_words[word] = {
+                    x: [pt.x],
+                    y: [pt.y],
+                }
+            } else { // add coords to existing lists
+                unique_words[word].x.push(pt.x);
+                unique_words[word].y.push(pt.y);
+            }
+        })
+
+        let min_num = myPlot.data[0].customdata.length;
+        let max_num = 0;
+        for (word in unique_words) {
+            let length = unique_words[word].x.length;
+            if (length < min_num) { // found new min
+                min_num = length;
+            }
+            if (length > max_num) { // found new max
+                max_num = length;
+            }
+        }
+        let range = max_num - min_num;
+
+        for (word in unique_words) {
+            let avg = array => array.reduce((a, b) => a + b) / array.length; const avg_x = avg(unique_words[word].x);
+            const avg_y = avg(unique_words[word].y);
+
+            let size = unique_words[word].x.length;
             let annotation = {
                 // add annotation for each point in cluster
-                x: pt.x,
-                y: pt.y,
-                text: word,
+                x: avg_x,
+                y: avg_y,
+                text: word + " (" + parseInt(size) + ")",
                 font: {
                     color: 'black',
-                    size: 10
+                    size: (((size - min_num) / range) * 6) + 10
                 },
                 arrowcolor: 'black',
                 arrowwidth: 0.1,
-                opacity: 0.5
+                opacity: (((size - min_num) / range) * 0.5) + 0.5
             }
-            if (!(word in unique_words)) {
-                unique_words[word] = annotations.length;
-            }
-
             annotations.push(annotation);
-        });
-
-        // emphasize first instance of each token
-        for (word in unique_words) {
-            let index = unique_words[word];
-            annotations[index].opacity = 1;
-            annotations[index].font.size = 14;
         }
 
         let update = {
@@ -359,11 +372,10 @@ $(document).ready(function () { // on load
         }, 100);
     })
 
-    reset_cluster.click(function () {
+    reset_cluster.click(function () { // remove cluster annotations on reset
         results.html("...");
         results.removeClass("hide");
         results.removeClass("done");
-        $(this).fadeOut();
         myPlot.classList.add("loading");
 
         reset_plot();
@@ -373,8 +385,8 @@ $(document).ready(function () { // on load
             search.val("");
             clear_input.addClass("hide");
             results.addClass("hide");
-            search_contain.fadeIn();
             $(this).fadeOut();
+            search_contain.fadeIn();
             myPlot.classList.remove("loading");
         }, 100);
     })
