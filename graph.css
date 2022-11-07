@@ -22,3 +22,7 @@
     pointer-events: none !important;
     cursor: default;
 }
+
+.points .point.clear {
+    opacity: 0.5 !important;
+}

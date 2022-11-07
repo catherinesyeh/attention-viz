@@ -12,12 +12,16 @@ var reset_cluster = $("#reset-cluster");
 
 var hov_template = "<b style='font-size:larger'>%{customdata[0]} (<i style='color:%{customdata[5]}'>%{customdata[4]}</i>, pos: %{customdata[2]} of %{customdata[3]}, norm: %{customdata[6]})</b><br><br>%{customdata[1]}";
 
+var marker_opacity = myPlot.data[0].marker.opacity;
+var color_1 = myPlot.data[0].marker.color;
+var color_2 = myPlot.data[1].marker.color;
+
 // preset styles
 var style_1 = {
     marker: {
-        color: myPlot.data[0].marker.color,
+        color: color_1,
         size: 6,
-        opacity: myPlot.data[0].marker.opacity,
+        opacity: marker_opacity,
         coloraxis: "coloraxis"
     },
     hoverinfo: 'text',
@@ -26,9 +30,9 @@ var style_1 = {
 
 var style_2 = {
     marker: {
-        color: myPlot.data[1].marker.color,
+        color: color_2,
         size: 6,
-        opacity: myPlot.data[1].marker.opacity,
+        opacity: marker_opacity,
         coloraxis: "coloraxis2"
     },
     hoverinfo: 'text',
@@ -249,6 +253,7 @@ function highlight_cluster(data) {
         return;
     }
 
+    $(".points .point").removeClass("clear");
     results.html("...");
     reset_plot();
     results.removeClass("hide");
@@ -388,6 +393,7 @@ $(document).ready(function () { // on load
             $(this).fadeOut();
             search_contain.fadeIn();
             myPlot.classList.remove("loading");
+            $(".points .point").addClass("clear");
         }, 100);
     })
 
