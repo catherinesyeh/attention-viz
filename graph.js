@@ -9,7 +9,7 @@ var clear_input = $("#clear");
 var results = $("#results-count");
 var reset = $("#reset");
 
-var hov_template = "<b style='font-size:larger'>%{customdata[0]} (<i style='color:%{customdata[5]}'>%{customdata[4]}</i>, pos: %{customdata[2]} of %{customdata[3]})</b><br><br>%{customdata[1]}";
+var hov_template = "<b style='font-size:larger'>%{customdata[0]} (<i style='color:%{customdata[5]}'>%{customdata[4]}</i>, pos: %{customdata[2]} of %{customdata[3]}, norm: %{customdata[6]})</b><br><br>%{customdata[1]}";
 
 // preset styles
 var style_1 = {
@@ -127,6 +127,7 @@ function filterBySearch(search) {
             Plotly.addTraces(myPlot, found);
         }
         results.removeClass("hide");
+        clear_input.removeClass('hide');
         results.html(found.x.length + " results found");
         results.addClass("done");
         myPlot.classList.remove("loading");
@@ -192,7 +193,7 @@ function show_attention(data, point_num) {
 
         let symbols = Array(len).fill("circle");
         max_ind = attn.indexOf(max_attn);
-        symbols[max_ind] = "star";
+        // symbols[max_ind] = "star";
         symbols.push("star");
 
         let colors = Array(len).fill("rgb(247, 185, 86)");
@@ -287,6 +288,7 @@ function highlight_cluster(data) {
                     size: 10
                 },
                 arrowcolor: 'black',
+                arrowwidth: 0.1,
                 opacity: 0.5
             }
             if (!(word in unique_words)) {
