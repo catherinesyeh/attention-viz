@@ -3,18 +3,24 @@ var id = $(".plotly-graph-div").first().attr("id");
 var myPlot = document.getElementById(id);
 myPlot.classList.add("loading");
 
+var g = $("#graph");
 var search_contain = $("#search");
 var search = $("#search-text");
 var clear_input = $("#clear");
 var results = $("#results-count");
 var reset = $("#reset");
 var reset_cluster = $("#reset-cluster");
+var legend_title = $(".cbcoloraxis .hycbcoloraxistitle");
+legend_title.attr("title", "toggle legend");
 
 var hov_template = "<b style='font-size:larger'>%{customdata[0]} (<i style='color:%{customdata[5]}'>%{customdata[4]}</i>, pos: %{customdata[2]} of %{customdata[3]}, norm: %{customdata[6]})</b><br><br>%{customdata[1]}";
 
 var marker_opacity = myPlot.data[0].marker.opacity;
 var color_1 = myPlot.data[0].marker.color;
 var color_2 = myPlot.data[1].marker.color;
+
+var norm_color_1 = myPlot.data[0].customdata.map(x => x[6]);
+var norm_color_2 = myPlot.data[1].customdata.map(x => x[6]);
 
 // preset styles
 var style_1 = {
@@ -25,7 +31,7 @@ var style_1 = {
         coloraxis: "coloraxis"
     },
     hoverinfo: 'text',
-    hovertemplate: hov_template
+    hovertemplate: hov_template,
 }
 
 var style_2 = {
@@ -41,8 +47,8 @@ var style_2 = {
 
 var update = {
     marker: {
-        opacity: 0.05,
-        color: myPlot.data[0].marker.color,
+        opacity: 0.1,
+        color: color_1,
         coloraxis: "coloraxis"
     },
     hoverinfo: 'skip',
@@ -51,12 +57,26 @@ var update = {
 
 var update2 = {
     marker: {
-        opacity: 0.05,
-        color: myPlot.data[1].marker.color,
+        opacity: 0.1,
+        color: color_2,
         coloraxis: "coloraxis2"
     },
     hoverinfo: 'skip',
     hovertemplate: null
+}
+
+var colorbar_style = {
+    coloraxis: {
+        colorbar: {
+            title: {
+                text: "normalized position",
+                side: "right"
+            },
+            x: myPlot.layout.coloraxis.colorbar.x,
+            y: myPlot.layout.coloraxis.colorbar.y
+        },
+        colorscale: myPlot.layout.coloraxis.colorscale,
+    }
 }
 
 function reset_plot() {
@@ -86,7 +106,6 @@ function filterBySearch(search) {
         clear_input.addClass('hide');
         results.addClass("hide");
         myPlot.classList.remove("loading");
-        console.log("hello");
         return;
     }
 
@@ -241,9 +260,9 @@ function show_attention(data, point_num) {
         Plotly.addTraces(myPlot, same_sent);
 
         // hover largest over pair with largest attention
-        setTimeout(() => {
-            Plotly.Fx.hover(myPlot, [{ curveNumber: 2, pointNumber: len }, { curveNumber: 2, pointNumber: max_ind }]);
-        }, 100);
+        // setTimeout(() => {
+        //     Plotly.Fx.hover(myPlot, [{ curveNumber: 2, pointNumber: len }, { curveNumber: 2, pointNumber: max_ind }]);
+        // }, 100);
         search_contain.fadeOut();
         reset.fadeIn();
         results.addClass("hide");
@@ -329,6 +348,33 @@ function highlight_cluster(data) {
     }, 100);
 }
 
+function switch_colors(html) { // switch coloring of graph
+    if (html.includes("position")) { // switch to norm
+        style_1.marker.color = norm_color_1;
+        update.marker.color = norm_color_1;
+        style_2.marker.color = norm_color_2;
+        update2.marker.color = norm_color_2;
+        colorbar_style.coloraxis.colorbar.title.text = "vector norm";
+        g.addClass("norm");
+    } else { // switch to position
+        style_1.marker.color = color_1;
+        update.marker.color = color_1;
+        style_2.marker.color = color_2;
+        update2.marker.color = color_2;
+        colorbar_style.coloraxis.colorbar.title.text = "normalized position";
+        g.removeClass("norm");
+    }
+    Plotly.relayout(myPlot, colorbar_style);
+
+    if (myPlot.data.length > 2) { // update styling for current view     
+        Plotly.restyle(myPlot, update, [0]);
+        Plotly.restyle(myPlot, update2, [1]);
+    } else {
+        Plotly.restyle(myPlot, style_1, [0]);
+        Plotly.restyle(myPlot, style_2, [1]);
+    }
+}
+
 $(document).ready(function () { // on load
     myPlot.on('plotly_click', function (data) { // show attention info on click
         show_attention(data, false);
@@ -355,7 +401,6 @@ $(document).ready(function () { // on load
             search.val("");
             results.addClass("hide");
             myPlot.classList.remove("loading");
-            $(".points .point").css("opacity", marker_opacity);
         }, 100);
     })
 
@@ -400,11 +445,20 @@ $(document).ready(function () { // on load
         }, 100);
     })
 
+    legend_title.click(function () { // switch colors of plot
+        let html = $(this).html();
+        switch_colors(html);
+    })
+
     if (reset.attr("style") != "display: none;" && reset.data("data")) {
         // attention info active
         show_attention(reset.data("data"), reset.attr("pn"));
     } else {
         // search active
         filterBySearch(search);
+    }
+
+    if (g.hasClass("norm")) { // switch to norm color scale
+        switch_colors("normalized position");
     }
 })

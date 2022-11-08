@@ -23,6 +23,17 @@
     cursor: default;
 }
 
-.points .point.clear {
-    opacity: 0.5 !important;
+.points .point.unselected {
+    pointer-events: none !important;
+}
+
+.cbcoloraxis .hycbcoloraxistitle {
+    cursor: pointer !important;
+    transition: 0.5s !important;
+    pointer-events: all !important;
+}
+
+.cbcoloraxis .hycbcoloraxistitle:hover {
+    fill: rgb(231, 169, 147) !important;
+    letter-spacing: 1px !important;
 }
