@@ -103,6 +103,7 @@ function filterBySearch(search) {
         clear_input.removeClass('hide');
         val = val.toLowerCase();
     } else {
+        search_contain.fadeIn();
         clear_input.addClass('hide');
         results.addClass("hide");
         myPlot.classList.remove("loading");
@@ -456,6 +457,7 @@ $(document).ready(function () { // on load
     } else {
         // search active
         filterBySearch(search);
+        reset_cluster.fadeOut();
     }
 
     if (g.hasClass("norm")) { // switch to norm color scale
