@@ -86,7 +86,9 @@ function reset_plot() {
     // reset main traces
     Plotly.restyle(myPlot, style_1, [0]);
     Plotly.restyle(myPlot, style_2, [1]);
-    Plotly.relayout(myPlot, { annotations: [] }); // remove annotations
+    Plotly.relayout(myPlot, {
+        annotations: [],
+    }); // remove annotations
 }
 
 // search by keyword and highlight matching points
@@ -399,12 +401,21 @@ $(document).ready(function () { // on load
         myPlot.classList.add("loading");
 
         reset_plot();
+        Plotly.relayout(myPlot, {
+            xaxis: {
+                autorange: true
+            },
+            yaxis: {
+                autorange: true
+            }
+        });
 
         setTimeout(() => {
             $(this).addClass("hide");
             search.val("");
             results.addClass("hide");
             myPlot.classList.remove("loading");
+            $(".points .point").css("opacity", marker_opacity);
         }, 100);
     })
 
@@ -416,6 +427,14 @@ $(document).ready(function () { // on load
         $(this).fadeOut();
 
         reset_plot();
+        Plotly.relayout(myPlot, {
+            xaxis: {
+                autorange: true
+            },
+            yaxis: {
+                autorange: true
+            }
+        });
 
         setTimeout(() => {
             $(this).removeAttr("pn");
@@ -436,7 +455,16 @@ $(document).ready(function () { // on load
         myPlot.classList.add("loading");
 
         reset_plot();
-        Plotly.relayout(myPlot, { dragmode: "zoom", selections: [] });
+        Plotly.relayout(myPlot, {
+            dragmode: "zoom",
+            selections: [],
+            xaxis: {
+                autorange: true
+            },
+            yaxis: {
+                autorange: true
+            }
+        });
 
         setTimeout(() => {
             search.val("");
