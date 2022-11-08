@@ -1,7 +1,6 @@
 // save some variables
 var id = $(".plotly-graph-div").first().attr("id");
 var myPlot = document.getElementById(id);
-myPlot.classList.add("loading");
 
 var g = $("#graph");
 var search_contain = $("#search");
@@ -21,6 +20,11 @@ var color_2 = myPlot.data[1].marker.color;
 
 var norm_color_1 = myPlot.data[0].customdata.map(x => x[6]);
 var norm_color_2 = myPlot.data[1].customdata.map(x => x[6]);
+
+var tsne_key_x = myPlot.data[0].x;
+var tsne_key_y = myPlot.data[0].y;
+var tsne_query_x = myPlot.data[1].x;
+var tsne_query_y = myPlot.data[1].y;
 
 // preset styles
 var style_1 = {
@@ -109,6 +113,7 @@ function filterBySearch(search) {
         clear_input.addClass('hide');
         results.addClass("hide");
         myPlot.classList.remove("loading");
+        $(".points .point").css("opacity", marker_opacity);
         return;
     }
 
@@ -166,6 +171,11 @@ function filterBySearch(search) {
 function show_attention(data, point_num) {
     myPlot.classList.add("loading");
     reset_plot();
+    Plotly.relayout(myPlot, {
+        dragmode: "zoom",
+        selections: [],
+    });
+    reset_cluster.fadeOut();
     results.removeClass("hide");
     results.removeClass("done");
     results.html("...");
@@ -174,7 +184,7 @@ function show_attention(data, point_num) {
     setTimeout(() => {
         let same_sent;
         let len;
-        let max_ind;
+        // let max_ind;
 
         let pn = data.points[0].pointNumber;
         let tn = data.points[0].curveNumber;
@@ -267,6 +277,7 @@ function show_attention(data, point_num) {
         //     Plotly.Fx.hover(myPlot, [{ curveNumber: 2, pointNumber: len }, { curveNumber: 2, pointNumber: max_ind }]);
         // }, 100);
         search_contain.fadeOut();
+        reset_cluster.fadeOut();
         reset.fadeIn();
         results.addClass("hide");
         myPlot.classList.remove("loading");
@@ -378,10 +389,27 @@ function switch_colors(html) { // switch coloring of graph
     } else {
         Plotly.restyle(myPlot, style_1, [0]);
         Plotly.restyle(myPlot, style_2, [1]);
+        $(".points .point").css("opacity", marker_opacity);
+    }
+}
+
+function initialize() {
+    if (reset.attr("style") != "display: none;" && reset.data("data")) {
+        // attention info active
+        show_attention(reset.data("data"), reset.attr("pn"));
+    } else {
+        // search active
+        filterBySearch(search);
+        reset_cluster.fadeOut();
+    }
+
+    if (g.hasClass("norm")) { // switch to norm color scale
+        switch_colors("normalized position");
     }
 }
 
 $(document).ready(function () { // on load
+    myPlot.classList.add("loading");
     myPlot.on('plotly_click', function (data) { // show attention info on click
         show_attention(data, false);
     });
@@ -482,16 +510,16 @@ $(document).ready(function () { // on load
         switch_colors(html);
     })
 
-    if (reset.attr("style") != "display: none;" && reset.data("data")) {
-        // attention info active
-        show_attention(reset.data("data"), reset.attr("pn"));
-    } else {
-        // search active
-        filterBySearch(search);
-        reset_cluster.fadeOut();
-    }
+    setTimeout(() => {
+        if (graph_type.html() == "UMAP") { // change plot type if necessary
+            myPlot.data[0].x = key_x;
+            myPlot.data[0].y = key_y;
+            myPlot.data[1].x = query_x;
+            myPlot.data[1].y = query_y;
+            Plotly.redraw(myPlot);
+        }
 
-    if (g.hasClass("norm")) { // switch to norm color scale
-        switch_colors("normalized position");
-    }
+        initialize();
+        myPlot.classList.remove("loading");
+    }, 100);
 })

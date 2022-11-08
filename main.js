@@ -11,11 +11,9 @@ const matrix_umap = $("<div id='matrix'></div>");
 function load_graph(layer, head) {
     const g = $("#graph");
     g.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
+
     // change graph displayed on UI
     let directory = "plots/";
-    if (graph_type.html() == "UMAP") { // switch directory based on type of graph selected
-        directory = "umap/";
-    }
     g.load(directory + "layer" + layer + "_head" + head + ".html");
 }
 
@@ -106,24 +104,6 @@ $(document).ready(function () { // on load
         load_graph(layer, head);
     })
 
-    graph_type.click(function () { // when user changes graph type
-        const cur_type = $(this).html();
-        if (cur_type == "TSNE") {
-            $(this).html("UMAP");
-        } else {
-            $(this).html("TSNE"); // switch type
-        }
-
-        if (!graph.hasClass("active")) { // update plots
-            let layer = layer_menu.val();
-            let head = head_menu.val();
-
-            load_graph(layer, head);
-        } else {
-            matrix_control();
-        }
-    })
-
     view_all.click(function () { // when user presses 'view all' button
         // load matrix of all plots
         matrix_control();
@@ -132,6 +112,30 @@ $(document).ready(function () { // on load
         $("#reset").removeAttr("pn");
         $("#results-count").addClass("hide");
         $("#reset-cluster").fadeOut(); // hide buttons
+    })
+
+    graph_type.click(function () { // when user changes graph type
+        const cur_type = $(this).html();
+        if (cur_type == "TSNE") {
+            $(this).html("UMAP");
+            myPlot.data[0].x = key_x;
+            myPlot.data[0].y = key_y;
+            myPlot.data[1].x = query_x;
+            myPlot.data[1].y = query_y;
+        } else {
+            $(this).html("TSNE"); // switch type
+            myPlot.data[0].x = tsne_key_x;
+            myPlot.data[0].y = tsne_key_y;
+            myPlot.data[1].x = tsne_query_x;
+            myPlot.data[1].y = tsne_query_y;
+        }
+
+        if (!graph.hasClass("active")) { // update plots
+            initialize();
+            Plotly.redraw(myPlot);
+        } else {
+            matrix_control();
+        }
     })
 
     create_matrix(matrix, false); // pre create matrices
