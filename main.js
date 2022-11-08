@@ -131,6 +131,7 @@ $(document).ready(function () { // on load
         $("#reset").removeData("data");
         $("#reset").removeAttr("pn");
         $("#results-count").addClass("hide");
+        $("#reset-cluster").fadeOut(); // hide buttons
     })
 
     create_matrix(matrix, false); // pre create matrices
