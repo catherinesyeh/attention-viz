@@ -174,6 +174,12 @@ function show_attention(data, point_num) {
     Plotly.relayout(myPlot, {
         dragmode: "zoom",
         selections: [],
+        xaxis: {
+            autorange: true
+        },
+        yaxis: {
+            autorange: true
+        }
     });
     reset_cluster.fadeOut();
     results.removeClass("hide");
