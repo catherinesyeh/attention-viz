@@ -277,6 +277,9 @@ function highlight_cluster(data) {
     }
     results.html("...");
     reset_plot();
+    reset.removeData("data");
+    reset.removeAttr("pn");
+    search.val("");
     results.removeClass("hide");
     results.removeClass("done");
     search_contain.fadeOut();
