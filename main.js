@@ -215,6 +215,9 @@ $(document).ready(function () { // on load
             if (attn_filter.html().includes("reset")) { // filter view if necessary
                 filter_attention("show tokens with attention &ge; 0.2");
             }
+            if (myPlot.data.length < 3) {
+                $(".points .point").css("opacity", marker_opacity);
+            }
         } else {
             matrix_control();
         }
