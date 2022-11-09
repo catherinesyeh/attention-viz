@@ -10,12 +10,16 @@ const matrix = $("<div id='matrix'></div>");
 const matrix_umap = $("<div id='matrix'></div>");
 
 function load_graph(layer, head) {
+    attn_filter.fadeOut();
     const g = $("#graph");
     g.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
 
-    // change graph displayed on UI
-    let directory = "plots/";
-    g.load(directory + "layer" + layer + "_head" + head + ".html");
+    setTimeout(function () {
+        // change graph displayed on UI
+        let directory = "plots/";
+        g.load(directory + "layer" + layer + "_head" + head + ".html");
+        attn_filter.fadeIn();
+    }, 100);
 }
 
 function load_matrix() {
