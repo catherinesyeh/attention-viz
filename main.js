@@ -4,6 +4,7 @@ const head_menu = $("#head");
 const graph_type = $("#type-label");
 const view_all = $("#view-all");
 const graph = $("#graph");
+const attn_filter = $("#attn-filter");
 
 const matrix = $("<div id='matrix'></div>");
 const matrix_umap = $("<div id='matrix'></div>");
@@ -89,6 +90,80 @@ function matrix_control() { // control ui behavior when in matrix view
     })
 }
 
+function filter_attention(reset_view) {
+    reset_plot();
+    Plotly.relayout(myPlot, {
+        dragmode: "zoom",
+        selections: [],
+        xaxis: {
+            autorange: true,
+            title: {
+                text: '0'
+            }
+        },
+        yaxis: {
+            autorange: true,
+            title: {
+                text: '1'
+            }
+        }
+    });
+    results.removeClass("hide");
+    results.removeClass("done");
+    results.html("...");
+    myPlot.classList.add("loading");
+
+    reset_cluster.fadeOut();
+    reset.fadeOut();
+    if (reset_view.includes("reset")) {
+        // reset_plot();
+        attn_filter.html("show tokens with attention &ge; 0.2");
+        results.addClass("hide");
+        search_contain.fadeIn();
+        search.val("");
+        clear_input.addClass('hide');
+        reset_cluster.fadeOut();
+        myPlot.classList.remove("loading");
+        $(".points .point").css("opacity", marker_opacity);
+        return;
+    }
+
+    setTimeout(() => {
+        let new_style = {
+            type: 'scatter',
+            mode: 'markers+text',
+            showlegend: false,
+            marker: {
+                color: "rgb(247, 185, 86)",
+                size: 14,
+                line: { width: 2, color: 'black' },
+                symbol: "star",
+                opacity: 1
+            },
+            xaxis: 'x',
+            yaxis: 'y',
+            legendgroup: '',
+            name: '',
+            x: top_attention.x,
+            y: top_attention.y,
+            customdata: top_attention.customdata,
+            hovertemplate: hov_template,
+        };
+
+        Plotly.restyle(myPlot, update, [0]);
+        Plotly.restyle(myPlot, update2, [1]);
+        Plotly.addTraces(myPlot, new_style);
+
+        results.addClass("hide");
+        search_contain.fadeIn();
+        search.val("");
+        clear_input.addClass('hide');
+        reset_cluster.fadeOut();
+        attn_filter.html("reset (# points: <b>" + top_attention.x.length + "</b>, max attn: <b>" + top_attention.max.toFixed(2) + "</b>)");
+        myPlot.classList.remove("loading");
+    }, 100);
+}
+
 $(document).ready(function () { // on load
     layer_menu.on("change", function () { // when user changes layer
         let layer = $(this).val();
@@ -133,9 +208,16 @@ $(document).ready(function () { // on load
         if (!graph.hasClass("active")) { // update plots
             initialize();
             Plotly.redraw(myPlot);
+            if (attn_filter.html().includes("reset")) { // filter view if necessary
+                filter_attention("show tokens with attention &ge; 0.2");
+            }
         } else {
             matrix_control();
         }
+    })
+
+    attn_filter.click(function () { // filter top attention sentences
+        filter_attention($(this).html());
     })
 
     create_matrix(matrix, false); // pre create matrices

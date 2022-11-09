@@ -83,6 +83,40 @@ var colorbar_style = {
     }
 }
 
+var top_attention = { max: 0, x: [], y: [], customdata: [] };
+function find_top_attention() { // get points with highest attention
+    const filtered = attention.reduce(function (acc, curr, index) {
+        // filter attention array by those with highest attention
+        let max = Math.max(...curr);
+        if (max >= 0.2) {
+            acc.push(index);
+        }
+        if (max > top_attention.max) { // keep track of max too
+            top_attention.max = max;
+        }
+        return acc;
+    }, []);
+
+    const offset = myPlot.data[0].x.length;
+    for (let i = 0; i < filtered.length; i++) {
+        let f = filtered[i];
+        let x, y, cust_data;
+        if (f < offset) { // key
+            x = myPlot.data[0].x[f];
+            y = myPlot.data[0].y[f];
+            cust_data = myPlot.data[0].customdata[f];
+        } else { // query
+            let ind = f - offset;
+            x = myPlot.data[1].x[ind];
+            y = myPlot.data[1].y[ind];
+            cust_data = myPlot.data[1].customdata[ind];
+        }
+        top_attention.x.push(x);
+        top_attention.y.push(y);
+        top_attention.customdata.push(cust_data);
+    }
+}
+
 function reset_plot() {
     while (myPlot.data.length > 2) { // delete top trace
         Plotly.deleteTraces(myPlot, -1);
@@ -107,6 +141,7 @@ function filterBySearch(search) {
         results.removeClass("done");
         results.html("...");
         clear_input.removeClass('hide');
+        attn_filter.html("show tokens with attention &ge; 0.2");
         val = val.toLowerCase();
     } else {
         search_contain.fadeIn();
@@ -175,16 +210,23 @@ function show_attention(data, point_num) {
         dragmode: "zoom",
         selections: [],
         xaxis: {
-            autorange: true
+            autorange: true,
+            title: {
+                text: '0'
+            }
         },
         yaxis: {
-            autorange: true
+            autorange: true,
+            title: {
+                text: '1'
+            }
         }
     });
     reset_cluster.fadeOut();
     results.removeClass("hide");
     results.removeClass("done");
     results.html("...");
+    attn_filter.html("show tokens with attention &ge; 0.2");
     search_contain.fadeOut();
 
     setTimeout(() => {
@@ -208,7 +250,7 @@ function show_attention(data, point_num) {
         let trace = (tn == 0) ? 1 : 0; // find other trace
 
         // info about this point
-        let attn = attention[pn + (trace * offset)];
+        let attn = attention[pn + (tn * offset)];
         len = attn.length;
         let pos = cust_data[2] - 1;
 
@@ -291,7 +333,7 @@ function show_attention(data, point_num) {
 }
 
 function highlight_cluster(data) {
-    if (!data) { // nothing selected
+    if (!data || data.points.length == 0) { // nothing selected
         return;
     }
     results.html("...");
@@ -437,10 +479,16 @@ $(document).ready(function () { // on load
         reset_plot();
         Plotly.relayout(myPlot, {
             xaxis: {
-                autorange: true
+                autorange: true,
+                title: {
+                    text: '0'
+                }
             },
             yaxis: {
-                autorange: true
+                autorange: true,
+                title: {
+                    text: '1'
+                }
             }
         });
 
@@ -463,10 +511,16 @@ $(document).ready(function () { // on load
         reset_plot();
         Plotly.relayout(myPlot, {
             xaxis: {
-                autorange: true
+                autorange: true,
+                title: {
+                    text: '0'
+                }
             },
             yaxis: {
-                autorange: true
+                autorange: true,
+                title: {
+                    text: '1'
+                }
             }
         });
 
@@ -493,10 +547,16 @@ $(document).ready(function () { // on load
             dragmode: "zoom",
             selections: [],
             xaxis: {
-                autorange: true
+                autorange: true,
+                title: {
+                    text: '0'
+                }
             },
             yaxis: {
-                autorange: true
+                autorange: true,
+                title: {
+                    text: '1'
+                }
             }
         });
 
@@ -526,6 +586,11 @@ $(document).ready(function () { // on load
         }
 
         initialize();
+        find_top_attention();
+
+        if (attn_filter.html().includes("reset")) { // filter view if necessary
+            filter_attention("show tokens with attention &ge; 0.2");
+        }
         myPlot.classList.remove("loading");
     }, 100);
 })

@@ -208,7 +208,7 @@ label.emphasis {
     animation: none;
 }
 
-#reset, #reset-cluster {
+#reset, #reset-cluster, #attn-filter {
     font-size: small;
     letter-spacing: 1px;
     font-weight: 300;
@@ -220,8 +220,17 @@ label.emphasis {
     cursor: pointer;
 }
 
-#reset:hover, #reset-cluster:hover {
+#reset:hover, #reset-cluster:hover, #attn-filter:hover {
     opacity: 0.8;
+}
+
+#attn-filter {
+    background-color: var(--green);
+    margin: auto;
+    position: relative;
+    display: block;
+    width: fit-content;
+    padding: 0px 12px;
 }
 
 #graph {
