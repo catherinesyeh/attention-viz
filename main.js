@@ -227,7 +227,9 @@ $(document).ready(function () { // on load
                 while (myPlot.data.length > 2) { // delete top trace
                     Plotly.deleteTraces(myPlot, -1);
                 }
-                filter_attention("show tokens with attention &ge; 0.2");
+                setTimeout(function () {
+                    filter_attention("show tokens with attention &ge; 0.2");
+                }, 100);
             }
             if (myPlot.data.length < 3) {
                 $(".points .point").css("opacity", marker_opacity);
