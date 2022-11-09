@@ -133,6 +133,13 @@ function filter_attention(reset_view) { // show only points with high attention
     }
 
     setTimeout(() => {
+        let new_x = top_attention.x;
+        let new_y = top_attention.y;
+        if (graph_type.html() == "UMAP") { // filter active on umap
+            new_x = top_attention.x_u;
+            new_y = top_attention.y_u;
+        }
+
         let new_style = {
             type: 'scatter',
             mode: 'markers+text',
@@ -148,8 +155,8 @@ function filter_attention(reset_view) { // show only points with high attention
             yaxis: 'y',
             legendgroup: '',
             name: '',
-            x: top_attention.x,
-            y: top_attention.y,
+            x: new_x,
+            y: new_y,
             customdata: top_attention.customdata,
             hovertemplate: hov_template,
         };

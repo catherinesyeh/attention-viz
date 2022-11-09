@@ -83,7 +83,7 @@ var colorbar_style = {
     }
 }
 
-var top_attention = { max: 0, x: [], y: [], customdata: [] };
+var top_attention = { max: 0, x: [], y: [], x_u: [], y_u: [], customdata: [] };
 function find_top_attention() { // get points with highest attention
     const filtered = attention.reduce(function (acc, curr, index) {
         // filter attention array by those with highest attention
@@ -100,19 +100,25 @@ function find_top_attention() { // get points with highest attention
     const offset = myPlot.data[0].x.length;
     for (let i = 0; i < filtered.length; i++) {
         let f = filtered[i];
-        let x, y, cust_data;
+        let x, y, x_u, y_u, cust_data;
         if (f < offset) { // key
             x = myPlot.data[0].x[f];
+            x_u = key_x[f]; // push umap coords too
             y = myPlot.data[0].y[f];
+            y_u = key_y[f];
             cust_data = myPlot.data[0].customdata[f];
         } else { // query
             let ind = f - offset;
             x = myPlot.data[1].x[ind];
+            x_u = query_x[ind];
             y = myPlot.data[1].y[ind];
+            y_u = query_x[ind];
             cust_data = myPlot.data[1].customdata[ind];
         }
         top_attention.x.push(x);
+        top_attention.x_u.push(x_u);
         top_attention.y.push(y);
+        top_attention.y_u.push(y_u);
         top_attention.customdata.push(cust_data);
     }
 }
@@ -344,6 +350,7 @@ function highlight_cluster(data) {
     results.removeClass("hide");
     results.removeClass("done");
     search_contain.fadeOut();
+    attn_filter.html("show tokens with attention &ge; 0.2");
     myPlot.classList.add("loading");
 
     setTimeout(() => {
