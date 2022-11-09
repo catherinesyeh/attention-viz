@@ -127,14 +127,12 @@ function reset_plot() {
     while (myPlot.data.length > 2) { // delete top trace
         Plotly.deleteTraces(myPlot, -1);
     }
-    setTimeout(function () {
-        // reset main traces
-        Plotly.restyle(myPlot, style_1, [0]);
-        Plotly.restyle(myPlot, style_2, [1]);
-        Plotly.relayout(myPlot, {
-            annotations: [],
-        }); // remove annotations
-    }, 100);
+    // reset main traces
+    Plotly.restyle(myPlot, style_1, [0]);
+    Plotly.restyle(myPlot, style_2, [1]);
+    Plotly.relayout(myPlot, {
+        annotations: [],
+    }); // remove annotations
 }
 
 // search by keyword and highlight matching points
