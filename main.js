@@ -97,6 +97,9 @@ function matrix_control() { // control ui behavior when in matrix view
 
 function filter_attention(reset_view) { // show only points with high attention
     reset_plot();
+    while (myPlot.data.length > 2) { // delete top trace
+        Plotly.deleteTraces(myPlot, -1);
+    }
     Plotly.relayout(myPlot, {
         dragmode: "zoom",
         selections: [],
