@@ -223,6 +223,9 @@ $(document).ready(function () { // on load
         if (!graph.hasClass("active")) { // update plots
             initialize();
             Plotly.redraw(myPlot);
+            if (myPlot.data.length < 3) {
+                $(".points .point").css("opacity", marker_opacity);
+            }
             if (attn_filter.html().includes("reset")) { // filter view if necessary
                 while (myPlot.data.length > 2) { // delete top trace
                     Plotly.deleteTraces(myPlot, -1);
@@ -230,9 +233,6 @@ $(document).ready(function () { // on load
                 setTimeout(function () {
                     filter_attention("show tokens with attention &ge; 0.2");
                 }, 100);
-            }
-            if (myPlot.data.length < 3) {
-                $(".points .point").css("opacity", marker_opacity);
             }
             if (reset_cluster.attr("style") != "display: none;") {
                 reset_cluster.click();
