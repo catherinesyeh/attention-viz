@@ -112,7 +112,7 @@ function find_top_attention() { // get points with highest attention
             x = myPlot.data[1].x[ind];
             x_u = query_x[ind];
             y = myPlot.data[1].y[ind];
-            y_u = query_x[ind];
+            y_u = query_y[ind];
             cust_data = myPlot.data[1].customdata[ind];
         }
         top_attention.x.push(x);
@@ -127,12 +127,14 @@ function reset_plot() {
     while (myPlot.data.length > 2) { // delete top trace
         Plotly.deleteTraces(myPlot, -1);
     }
-    // reset main traces
-    Plotly.restyle(myPlot, style_1, [0]);
-    Plotly.restyle(myPlot, style_2, [1]);
-    Plotly.relayout(myPlot, {
-        annotations: [],
-    }); // remove annotations
+    setTimeout(function () {
+        // reset main traces
+        Plotly.restyle(myPlot, style_1, [0]);
+        Plotly.restyle(myPlot, style_2, [1]);
+        Plotly.relayout(myPlot, {
+            annotations: [],
+        }); // remove annotations
+    }, 100);
 }
 
 // search by keyword and highlight matching points
@@ -463,6 +465,9 @@ function initialize() {
     }
 
     if (attn_filter.html().includes("reset")) { // filter view if necessary
+        while (myPlot.data.length > 2) { // delete top trace
+            Plotly.deleteTraces(myPlot, -1);
+        }
         filter_attention("show tokens with attention &ge; 0.2");
     }
 }

@@ -224,6 +224,9 @@ $(document).ready(function () { // on load
             initialize();
             Plotly.redraw(myPlot);
             if (attn_filter.html().includes("reset")) { // filter view if necessary
+                while (myPlot.data.length > 2) { // delete top trace
+                    Plotly.deleteTraces(myPlot, -1);
+                }
                 filter_attention("show tokens with attention &ge; 0.2");
             }
             if (myPlot.data.length < 3) {
