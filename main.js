@@ -94,7 +94,7 @@ function matrix_control() { // control ui behavior when in matrix view
     })
 }
 
-function filter_attention(reset_view) {
+function filter_attention(reset_view) { // show only points with high attention
     reset_plot();
     Plotly.relayout(myPlot, {
         dragmode: "zoom",
@@ -217,6 +217,9 @@ $(document).ready(function () { // on load
             }
             if (myPlot.data.length < 3) {
                 $(".points .point").css("opacity", marker_opacity);
+            }
+            if (reset_cluster.attr("style") != "display: none;") {
+                reset_cluster.click();
             }
         } else {
             matrix_control();

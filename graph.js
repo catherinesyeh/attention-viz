@@ -454,6 +454,10 @@ function initialize() {
     if (g.hasClass("norm")) { // switch to norm color scale
         switch_colors("normalized position");
     }
+
+    if (attn_filter.html().includes("reset")) { // filter view if necessary
+        filter_attention("show tokens with attention &ge; 0.2");
+    }
 }
 
 $(document).ready(function () { // on load
@@ -585,12 +589,8 @@ $(document).ready(function () { // on load
             Plotly.redraw(myPlot);
         }
 
-        initialize();
         find_top_attention();
-
-        if (attn_filter.html().includes("reset")) { // filter view if necessary
-            filter_attention("show tokens with attention &ge; 0.2");
-        }
+        initialize();
         myPlot.classList.remove("loading");
     }, 100);
 })
