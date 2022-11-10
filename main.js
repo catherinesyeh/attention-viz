@@ -14,12 +14,10 @@ function load_graph(layer, head) {
     const g = $("#graph");
     g.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
 
-    setTimeout(function () {
-        // change graph displayed on UI
-        let directory = "plots/";
-        g.load(directory + "layer" + layer + "_head" + head + ".html");
-        attn_filter.fadeIn();
-    }, 100);
+    // change graph displayed on UI
+    let directory = "plots/";
+    g.load(directory + "layer" + layer + "_head" + head + ".html");
+    attn_filter.fadeIn();
 }
 
 function load_matrix() {
@@ -97,9 +95,6 @@ function matrix_control() { // control ui behavior when in matrix view
 
 function filter_attention(reset_view) { // show only points with high attention
     reset_plot();
-    while (myPlot.data.length > 2) { // delete top trace
-        Plotly.deleteTraces(myPlot, -1);
-    }
     Plotly.relayout(myPlot, {
         dragmode: "zoom",
         selections: [],
@@ -124,7 +119,6 @@ function filter_attention(reset_view) { // show only points with high attention
     reset_cluster.fadeOut();
     reset.fadeOut();
     if (reset_view.includes("reset")) {
-        // reset_plot();
         attn_filter.html("show tokens with attention &ge; 0.2");
         results.addClass("hide");
         search_contain.fadeIn();
@@ -132,7 +126,8 @@ function filter_attention(reset_view) { // show only points with high attention
         clear_input.addClass('hide');
         reset_cluster.fadeOut();
         myPlot.classList.remove("loading");
-        $(".points .point").css("opacity", marker_opacity);
+        $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+        $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
         return;
     }
 
@@ -140,6 +135,7 @@ function filter_attention(reset_view) { // show only points with high attention
         let new_x = top_attention.x;
         let new_y = top_attention.y;
         if (graph_type.html() == "UMAP") { // filter active on umap
+            console.log("hi!");
             new_x = top_attention.x_u;
             new_y = top_attention.y_u;
         }
@@ -150,7 +146,7 @@ function filter_attention(reset_view) { // show only points with high attention
             showlegend: false,
             marker: {
                 color: "rgb(247, 185, 86)",
-                size: 14,
+                size: 10,
                 line: { width: 2, color: 'black' },
                 symbol: "star",
                 opacity: 1
@@ -224,15 +220,10 @@ $(document).ready(function () { // on load
             initialize();
             Plotly.redraw(myPlot);
             if (myPlot.data.length < 3) {
-                $(".points .point").css("opacity", marker_opacity);
-            }
-            if (attn_filter.html().includes("reset")) { // filter view if necessary
-                while (myPlot.data.length > 2) { // delete top trace
-                    Plotly.deleteTraces(myPlot, -1);
-                }
-                setTimeout(function () {
-                    filter_attention("show tokens with attention &ge; 0.2");
-                }, 100);
+                $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+                $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+            } else if (attn_filter.html().includes("reset")) { // filter view if necessary
+                filter_attention("show tokens with attention &ge; 0.2");
             }
             if (reset_cluster.attr("style") != "display: none;") {
                 reset_cluster.click();

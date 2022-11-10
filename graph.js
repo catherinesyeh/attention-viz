@@ -154,7 +154,8 @@ function filterBySearch(search) {
         clear_input.addClass('hide');
         results.addClass("hide");
         myPlot.classList.remove("loading");
-        $(".points .point").css("opacity", marker_opacity);
+        $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+        $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
         return;
     }
 
@@ -199,7 +200,8 @@ function filterBySearch(search) {
             Plotly.restyle(myPlot, update2, [1]);
             Plotly.addTraces(myPlot, found);
         } else {
-            $(".points .point").css("opacity", marker_opacity);
+            $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+            $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
         }
         results.removeClass("hide");
         clear_input.removeClass('hide');
@@ -444,7 +446,9 @@ function switch_colors(html) { // switch coloring of graph
     } else {
         Plotly.restyle(myPlot, style_1, [0]);
         Plotly.restyle(myPlot, style_2, [1]);
-        $(".points .point").css("opacity", marker_opacity);
+
+        $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+        $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
     }
 }
 
@@ -463,12 +467,7 @@ function initialize() {
     }
 
     if (attn_filter.html().includes("reset")) { // filter view if necessary
-        while (myPlot.data.length > 2) { // delete top trace
-            Plotly.deleteTraces(myPlot, -1);
-        }
-        setTimeout(function () {
-            filter_attention("show tokens with attention &ge; 0.2");
-        }, 100);
+        filter_attention("show tokens with attention &ge; 0.2");
     }
 }
 
@@ -513,7 +512,8 @@ $(document).ready(function () { // on load
             search.val("");
             results.addClass("hide");
             myPlot.classList.remove("loading");
-            $(".points .point").css("opacity", marker_opacity);
+            $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+            $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
         }, 100);
     })
 
@@ -548,7 +548,8 @@ $(document).ready(function () { // on load
             results.addClass("hide");
             search_contain.fadeIn();
             myPlot.classList.remove("loading");
-            $(".points .point").css("opacity", marker_opacity);
+            $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+            $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
         }, 100);
     })
 
@@ -583,7 +584,8 @@ $(document).ready(function () { // on load
             $(this).fadeOut();
             search_contain.fadeIn();
             myPlot.classList.remove("loading");
-            $(".points .point").css("opacity", marker_opacity);
+            $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+            $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
         }, 100);
     })
 
@@ -593,6 +595,7 @@ $(document).ready(function () { // on load
     })
 
     setTimeout(() => {
+        find_top_attention();
         if (graph_type.html() == "UMAP") { // change plot type if necessary
             myPlot.data[0].x = key_x;
             myPlot.data[0].y = key_y;
@@ -600,8 +603,6 @@ $(document).ready(function () { // on load
             myPlot.data[1].y = query_y;
             Plotly.redraw(myPlot);
         }
-
-        find_top_attention();
         initialize();
         myPlot.classList.remove("loading");
     }, 100);
