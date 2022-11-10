@@ -12,7 +12,7 @@ var reset_cluster = $("#reset-cluster");
 var legend_title = $(".cbcoloraxis .hycbcoloraxistitle");
 legend_title.attr("title", "toggle legend");
 
-var hov_template = "<b style='font-size:larger'>%{customdata[0]} (<i style='color:%{customdata[5]}'>%{customdata[4]}</i>, pos: %{customdata[2]} of %{customdata[3]}, norm: %{customdata[6]})</b><br><br>%{customdata[1]}";
+var hov_template = "<b style='font-size:larger'><span style='color:%{customdata[5]}'>%{customdata[0]}</span> (<i>%{customdata[4]}</i>, pos: %{customdata[2]} of %{customdata[3]}, norm: %{customdata[6]})</b><br><br>%{customdata[1]}";
 
 var marker_opacity = myPlot.data[0].marker.opacity;
 var color_1 = myPlot.data[0].marker.color;
@@ -25,6 +25,9 @@ var tsne_key_x = myPlot.data[0].x;
 var tsne_key_y = myPlot.data[0].y;
 var tsne_query_x = myPlot.data[1].x;
 var tsne_query_y = myPlot.data[1].y;
+
+var x_range = myPlot.layout.xaxis.range;
+var y_range = myPlot.layout.yaxis.range;
 
 // preset styles
 var style_1 = {
@@ -83,6 +86,42 @@ var colorbar_style = {
     }
 }
 
+var relayout_short = {
+    xaxis: {
+        autorange: true,
+        range: x_range,
+        title: {
+            text: '0'
+        }
+    },
+    yaxis: {
+        autorange: true,
+        range: y_range,
+        title: {
+            text: '1'
+        }
+    }
+}
+
+var relayout_long = {
+    dragmode: "zoom",
+    selections: [],
+    xaxis: {
+        autorange: true,
+        range: x_range,
+        title: {
+            text: '0'
+        }
+    },
+    yaxis: {
+        autorange: true,
+        range: y_range,
+        title: {
+            text: '1'
+        }
+    }
+}
+
 var top_attention = { max: 0, x: [], y: [], x_u: [], y_u: [], customdata: [] };
 function find_top_attention() { // get points with highest attention
     const filtered = attention.reduce(function (acc, curr, index) {
@@ -128,11 +167,52 @@ function reset_plot() {
         Plotly.deleteTraces(myPlot, -1);
     }
     // reset main traces
-    Plotly.restyle(myPlot, style_1, [0]);
-    Plotly.restyle(myPlot, style_2, [1]);
+    restyle_helper(style_1, style_2);
     Plotly.relayout(myPlot, {
         annotations: [],
     }); // remove annotations
+}
+
+function mini_reset() {
+    // reset state of interface
+    myPlot.classList.add("loading");
+    reset_plot();
+    results.removeClass("hide");
+    results.removeClass("done");
+    results.html("...");
+}
+
+function finish_loading() { // done loading new view
+    results.addClass("hide");
+    myPlot.classList.remove("loading");
+}
+
+function load_and_opacity() { // wrapper function
+    finish_loading();
+    reset_opacity();
+}
+
+function restyle_helper(style1, style2) { // restyle key + query traces
+    Plotly.restyle(myPlot, style1, [0]);
+    Plotly.restyle(myPlot, style2, [1]);
+}
+
+function reset_to_search() { // reset back to search mode
+    search_contain.fadeIn();
+    search.val("");
+    clear_input.addClass('hide');
+    reset_cluster.fadeOut();
+    reset.fadeOut();
+}
+
+function reset_and_opacity() { // wrapper function
+    reset_to_search();
+    load_and_opacity();
+}
+
+function remove_data() { // clear attention data for switching b/t plots
+    reset.removeData("data");
+    reset.removeAttr("pn");
 }
 
 // search by keyword and highlight matching points
@@ -141,24 +221,18 @@ function filterBySearch(search) {
     let val = search.val();
 
     if (val != "" && val != " ") {
-        myPlot.classList.add("loading");
-        reset_plot();
-        results.removeClass("hide");
-        results.removeClass("done");
-        results.html("...");
+        mini_reset();
         clear_input.removeClass('hide');
         attn_filter.html("show tokens with attention &ge; 0.2");
         val = val.toLowerCase();
     } else {
         search_contain.fadeIn();
         clear_input.addClass('hide');
-        results.addClass("hide");
-        myPlot.classList.remove("loading");
-        $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-        $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+        load_and_opacity();
         return;
     }
 
+    Plotly.relayout(myPlot, relayout_long);
     setTimeout(() => {
         let data = myPlot.data;
 
@@ -196,14 +270,11 @@ function filterBySearch(search) {
             });
         }
         if (found && found.x.length != 0) {
-            Plotly.restyle(myPlot, update, [0]);
-            Plotly.restyle(myPlot, update2, [1]);
+            restyle_helper(update, update2);
             Plotly.addTraces(myPlot, found);
         } else {
-            $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-            $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+            reset_opacity();
         }
-        results.removeClass("hide");
         clear_input.removeClass('hide');
         results.html(found.x.length + " results found");
         results.addClass("done");
@@ -212,28 +283,11 @@ function filterBySearch(search) {
 }
 
 function show_attention(data, point_num) {
-    myPlot.classList.add("loading");
-    reset_plot();
-    Plotly.relayout(myPlot, {
-        dragmode: "zoom",
-        selections: [],
-        xaxis: {
-            autorange: true,
-            title: {
-                text: '0'
-            }
-        },
-        yaxis: {
-            autorange: true,
-            title: {
-                text: '1'
-            }
-        }
-    });
+    mini_reset();
+    Plotly.relayout(myPlot, relayout_long);
+    restyle_helper(update, update2);
+
     reset_cluster.fadeOut();
-    results.removeClass("hide");
-    results.removeClass("done");
-    results.html("...");
     attn_filter.html("show tokens with attention &ge; 0.2");
     search_contain.fadeOut();
 
@@ -323,9 +377,6 @@ function show_attention(data, point_num) {
 
         reset.data("data", data);
         reset.attr("pn", pn);
-
-        Plotly.restyle(myPlot, update, [0]);
-        Plotly.restyle(myPlot, update2, [1]);
         Plotly.addTraces(myPlot, same_sent);
 
         // hover largest over pair with largest attention
@@ -335,8 +386,7 @@ function show_attention(data, point_num) {
         search_contain.fadeOut();
         reset_cluster.fadeOut();
         reset.fadeIn();
-        results.addClass("hide");
-        myPlot.classList.remove("loading");
+        finish_loading();
     }, 100);
 }
 
@@ -344,16 +394,11 @@ function highlight_cluster(data) {
     if (!data || data.points.length == 0) { // nothing selected
         return;
     }
-    results.html("...");
-    reset_plot();
-    reset.removeData("data");
-    reset.removeAttr("pn");
+    mini_reset();
+    remove_data();
     search.val("");
-    results.removeClass("hide");
-    results.removeClass("done");
     search_contain.fadeOut();
     attn_filter.html("show tokens with attention &ge; 0.2");
-    myPlot.classList.add("loading");
 
     setTimeout(() => {
         reset.fadeOut();
@@ -415,10 +460,8 @@ function highlight_cluster(data) {
             annotations: annotations
         }
         Plotly.relayout(myPlot, update);
-
-        results.addClass("hide");
         reset_cluster.fadeIn();
-        myPlot.classList.remove("loading");
+        finish_loading();
     }, 100);
 }
 
@@ -441,14 +484,10 @@ function switch_colors(html) { // switch coloring of graph
     Plotly.relayout(myPlot, colorbar_style);
 
     if (myPlot.data.length > 2) { // update styling for current view     
-        Plotly.restyle(myPlot, update, [0]);
-        Plotly.restyle(myPlot, update2, [1]);
+        restyle_helper(update, update2);
     } else {
-        Plotly.restyle(myPlot, style_1, [0]);
-        Plotly.restyle(myPlot, style_2, [1]);
-
-        $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-        $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+        restyle_helper(style_1, style_2);
+        reset_opacity();
     }
 }
 
@@ -486,106 +525,32 @@ $(document).ready(function () { // on load
     })
 
     clear_input.click(function () {
-        results.html("...");
-        results.removeClass("hide");
-        results.removeClass("done");
-        myPlot.classList.add("loading");
-
-        reset_plot();
-        Plotly.relayout(myPlot, {
-            xaxis: {
-                autorange: true,
-                title: {
-                    text: '0'
-                }
-            },
-            yaxis: {
-                autorange: true,
-                title: {
-                    text: '1'
-                }
-            }
-        });
+        mini_reset();
+        Plotly.relayout(myPlot, relayout_short);
 
         setTimeout(() => {
             $(this).addClass("hide");
             search.val("");
-            results.addClass("hide");
-            myPlot.classList.remove("loading");
-            $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-            $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+            load_and_opacity();
         }, 100);
     })
 
     reset.click(function () { // remove attention annotations on reset
-        results.html("...");
-        results.removeClass("hide");
-        results.removeClass("done");
-        myPlot.classList.add("loading");
-        $(this).fadeOut();
-
-        reset_plot();
-        Plotly.relayout(myPlot, {
-            xaxis: {
-                autorange: true,
-                title: {
-                    text: '0'
-                }
-            },
-            yaxis: {
-                autorange: true,
-                title: {
-                    text: '1'
-                }
-            }
-        });
+        mini_reset();
+        Plotly.relayout(myPlot, relayout_short);
 
         setTimeout(() => {
-            $(this).removeAttr("pn");
-            $(this).removeData("data");
-            search.val("");
-            clear_input.addClass("hide");
-            results.addClass("hide");
-            search_contain.fadeIn();
-            myPlot.classList.remove("loading");
-            $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-            $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+            remove_data();
+            reset_and_opacity();
         }, 100);
     })
 
     reset_cluster.click(function () { // remove cluster annotations on reset
-        results.html("...");
-        results.removeClass("hide");
-        results.removeClass("done");
-        myPlot.classList.add("loading");
-
-        reset_plot();
-        Plotly.relayout(myPlot, {
-            dragmode: "zoom",
-            selections: [],
-            xaxis: {
-                autorange: true,
-                title: {
-                    text: '0'
-                }
-            },
-            yaxis: {
-                autorange: true,
-                title: {
-                    text: '1'
-                }
-            }
-        });
+        mini_reset();
+        Plotly.relayout(myPlot, relayout_long);
 
         setTimeout(() => {
-            search.val("");
-            clear_input.addClass("hide");
-            results.addClass("hide");
-            $(this).fadeOut();
-            search_contain.fadeIn();
-            myPlot.classList.remove("loading");
-            $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-            $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+            reset_and_opacity();
         }, 100);
     })
 

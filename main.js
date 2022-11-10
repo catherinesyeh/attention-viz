@@ -94,40 +94,12 @@ function matrix_control() { // control ui behavior when in matrix view
 }
 
 function filter_attention(reset_view) { // show only points with high attention
-    reset_plot();
-    Plotly.relayout(myPlot, {
-        dragmode: "zoom",
-        selections: [],
-        xaxis: {
-            autorange: true,
-            title: {
-                text: '0'
-            }
-        },
-        yaxis: {
-            autorange: true,
-            title: {
-                text: '1'
-            }
-        }
-    });
-    results.removeClass("hide");
-    results.removeClass("done");
-    results.html("...");
-    myPlot.classList.add("loading");
+    mini_reset();
+    Plotly.relayout(myPlot, relayout_long);
 
-    reset_cluster.fadeOut();
-    reset.fadeOut();
     if (reset_view.includes("reset")) {
         attn_filter.html("show tokens with attention &ge; 0.2");
-        results.addClass("hide");
-        search_contain.fadeIn();
-        search.val("");
-        clear_input.addClass('hide');
-        reset_cluster.fadeOut();
-        myPlot.classList.remove("loading");
-        $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-        $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+        reset_and_opacity();
         return;
     }
 
@@ -135,7 +107,6 @@ function filter_attention(reset_view) { // show only points with high attention
         let new_x = top_attention.x;
         let new_y = top_attention.y;
         if (graph_type.html() == "UMAP") { // filter active on umap
-            console.log("hi!");
             new_x = top_attention.x_u;
             new_y = top_attention.y_u;
         }
@@ -161,18 +132,18 @@ function filter_attention(reset_view) { // show only points with high attention
             hovertemplate: hov_template,
         };
 
-        Plotly.restyle(myPlot, update, [0]);
-        Plotly.restyle(myPlot, update2, [1]);
+        restyle_helper(update, update2);
         Plotly.addTraces(myPlot, new_style);
 
-        results.addClass("hide");
-        search_contain.fadeIn();
-        search.val("");
-        clear_input.addClass('hide');
-        reset_cluster.fadeOut();
         attn_filter.html("reset (# points: <b>" + top_attention.x.length + "</b>, max attn: <b>" + top_attention.max.toFixed(2) + "</b>)");
-        myPlot.classList.remove("loading");
+        reset_to_search();
+        finish_loading();
     }, 100);
+}
+
+function reset_opacity() { // reset opacity of key and query traces
+    $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+    $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
 }
 
 $(document).ready(function () { // on load
@@ -193,9 +164,8 @@ $(document).ready(function () { // on load
     view_all.click(function () { // when user presses 'view all' button
         // load matrix of all plots
         matrix_control();
+        remove_data();
         $("#reset").fadeOut(); // hide buttons
-        $("#reset").removeData("data");
-        $("#reset").removeAttr("pn");
         $("#results-count").addClass("hide");
         $("#reset-cluster").fadeOut(); // hide buttons
     })
@@ -220,8 +190,7 @@ $(document).ready(function () { // on load
             initialize();
             Plotly.redraw(myPlot);
             if (myPlot.data.length < 3) {
-                $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-                $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+                reset_opacity();
             } else if (attn_filter.html().includes("reset")) { // filter view if necessary
                 filter_attention("show tokens with attention &ge; 0.2");
             }
