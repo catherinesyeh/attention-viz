@@ -26,9 +26,6 @@ var tsne_key_y = myPlot.data[0].y;
 var tsne_query_x = myPlot.data[1].x;
 var tsne_query_y = myPlot.data[1].y;
 
-var x_range = myPlot.layout.xaxis.range;
-var y_range = myPlot.layout.yaxis.range;
-
 // preset styles
 var style_1 = {
     marker: {
@@ -89,14 +86,12 @@ var colorbar_style = {
 var relayout_short = {
     xaxis: {
         autorange: true,
-        range: x_range,
         title: {
             text: '0'
         }
     },
     yaxis: {
         autorange: true,
-        range: y_range,
         title: {
             text: '1'
         }
@@ -108,14 +103,12 @@ var relayout_long = {
     selections: [],
     xaxis: {
         autorange: true,
-        range: x_range,
         title: {
             text: '0'
         }
     },
     yaxis: {
         autorange: true,
-        range: y_range,
         title: {
             text: '1'
         }
@@ -285,7 +278,6 @@ function filterBySearch(search) {
 function show_attention(data, point_num) {
     mini_reset();
     Plotly.relayout(myPlot, relayout_long);
-    restyle_helper(update, update2);
 
     reset_cluster.fadeOut();
     attn_filter.html("show tokens with attention &ge; 0.2");
@@ -377,6 +369,8 @@ function show_attention(data, point_num) {
 
         reset.data("data", data);
         reset.attr("pn", pn);
+
+        restyle_helper(update, update2);
         Plotly.addTraces(myPlot, same_sent);
 
         // hover largest over pair with largest attention
