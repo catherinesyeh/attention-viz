@@ -272,7 +272,7 @@ function filterBySearch(search) {
         results.html(found.x.length + " results found");
         results.addClass("done");
         myPlot.classList.remove("loading");
-    }, 100);
+    }, 150);
 }
 
 function show_attention(data, point_num) {
@@ -376,12 +376,12 @@ function show_attention(data, point_num) {
         // hover largest over pair with largest attention
         // setTimeout(() => {
         //     Plotly.Fx.hover(myPlot, [{ curveNumber: 2, pointNumber: len }, { curveNumber: 2, pointNumber: max_ind }]);
-        // }, 100);
+        // }, 150);
         search_contain.fadeOut();
         reset_cluster.fadeOut();
         reset.fadeIn();
         finish_loading();
-    }, 100);
+    }, 150);
 }
 
 function highlight_cluster(data) {
@@ -456,7 +456,7 @@ function highlight_cluster(data) {
         Plotly.relayout(myPlot, update);
         reset_cluster.fadeIn();
         finish_loading();
-    }, 100);
+    }, 150);
 }
 
 function switch_colors(html) { // switch coloring of graph
@@ -481,12 +481,12 @@ function switch_colors(html) { // switch coloring of graph
         restyle_helper(update, update2);
     } else {
         restyle_helper(style_1, style_2);
-        reset_opacity();
+        // reset_opacity();
     }
 }
 
 function initialize() {
-    if (reset.attr("style") != "display: none;" && reset.data("data")) {
+    if (!reset.attr("style").includes("display: none") && reset.data("data")) {
         // attention info active
         show_attention(reset.data("data"), reset.attr("pn"));
     } else {
@@ -526,7 +526,7 @@ $(document).ready(function () { // on load
             $(this).addClass("hide");
             search.val("");
             load_and_opacity();
-        }, 100);
+        }, 150);
     })
 
     reset.click(function () { // remove attention annotations on reset
@@ -536,7 +536,7 @@ $(document).ready(function () { // on load
         setTimeout(() => {
             remove_data();
             reset_and_opacity();
-        }, 100);
+        }, 150);
     })
 
     reset_cluster.click(function () { // remove cluster annotations on reset
@@ -545,13 +545,24 @@ $(document).ready(function () { // on load
 
         setTimeout(() => {
             reset_and_opacity();
-        }, 100);
+        }, 150);
     })
 
     legend_title.click(function () { // switch colors of plot
         let html = $(this).html();
         switch_colors(html);
     })
+
+    myPlot.on('plotly_relayout', function (e) { // reset opacity on relayout
+        if (e.dragmode) { // don't trigger change for dragmode events
+            return;
+        }
+        setTimeout(() => {
+            if (myPlot.data.length < 3 && reset_cluster.attr("style").includes("display: none")) {
+                reset_opacity();
+            }
+        }, 150);
+    });
 
     setTimeout(() => {
         find_top_attention();
@@ -563,6 +574,7 @@ $(document).ready(function () { // on load
             Plotly.redraw(myPlot);
         }
         initialize();
+
         myPlot.classList.remove("loading");
-    }, 100);
+    }, 150);
 })

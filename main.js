@@ -97,13 +97,12 @@ function filter_attention(reset_view) { // show only points with high attention
     mini_reset();
     Plotly.relayout(myPlot, relayout_long);
 
-    if (reset_view.includes("reset")) {
-        attn_filter.html("show tokens with attention &ge; 0.2");
-        reset_and_opacity();
-        return;
-    }
-
     setTimeout(() => {
+        if (reset_view.includes("reset")) {
+            attn_filter.html("show tokens with attention &ge; 0.2");
+            reset_and_opacity();
+            return;
+        }
         let new_x = top_attention.x;
         let new_y = top_attention.y;
         if (graph_type.html() == "UMAP") { // filter active on umap
@@ -135,15 +134,35 @@ function filter_attention(reset_view) { // show only points with high attention
         restyle_helper(update, update2);
         Plotly.addTraces(myPlot, new_style);
 
-        attn_filter.html("reset (# points: <b>" + top_attention.x.length + "</b>, max attn: <b>" + top_attention.max.toFixed(2) + "</b>)");
-        reset_to_search();
-        finish_loading();
-    }, 100);
+        setTimeout(() => {
+            attn_filter.html("reset (# points: <b>" + top_attention.x.length + "</b>, max attn: <b>" + top_attention.max.toFixed(2) + "</b>)");
+            reset_to_search();
+            finish_loading();
+        }, 150);
+    }, 150);
 }
 
 function reset_opacity() { // reset opacity of key and query traces
-    $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
-    $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+    console.log("ran");
+    let redraw = false;
+    let key_points = myPlot.data[0].selectedpoints;
+    let query_points = myPlot.data[1].selectedpoints;
+    if (key_points && key_points.length > 0) { // only reset if necessary
+        key_points = [];
+        redraw = true;
+    }
+    if (query_points && query_points.length > 0) {
+        query_points = [];
+        redraw = true;
+    }
+    if (redraw) {
+        Plotly.redraw(myPlot);
+    }
+
+    setTimeout(() => {
+        $(".trace:nth-child(1) .points .point").css("opacity", marker_opacity);
+        $(".trace:nth-child(2) .points .point").css("opacity", marker_opacity);
+    }, 150);
 }
 
 $(document).ready(function () { // on load
@@ -189,14 +208,14 @@ $(document).ready(function () { // on load
         if (!graph.hasClass("active")) { // update plots
             initialize();
             Plotly.redraw(myPlot);
-            if (myPlot.data.length < 3) {
-                reset_opacity();
-            } else if (attn_filter.html().includes("reset")) { // filter view if necessary
-                filter_attention("show tokens with attention &ge; 0.2");
-            }
-            if (reset_cluster.attr("style") != "display: none;") {
+            if (!reset_cluster.attr("style").includes("display: none")) {
                 reset_cluster.click();
             }
+            setTimeout(() => {
+                if (myPlot.data.length < 3) {
+                    reset_opacity();
+                }
+            }, 150);
         } else {
             matrix_control();
         }
