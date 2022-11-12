@@ -277,11 +277,11 @@ function filterBySearch(search) {
 
 function show_attention(data, point_num) {
     mini_reset();
-    Plotly.relayout(myPlot, relayout_long);
-
     reset_cluster.fadeOut();
     attn_filter.html("show tokens with attention &ge; 0.2");
     search_contain.fadeOut();
+
+    Plotly.relayout(myPlot, relayout_long);
 
     setTimeout(() => {
         let same_sent;
