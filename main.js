@@ -5,18 +5,22 @@ const graph_type = $("#type-label");
 const view_all = $("#view-all");
 const graph = $("#graph");
 const attn_filter = $("#attn-filter");
+const attn_view = $("#att-view");
 
 const matrix = $("<div id='matrix'></div>");
 const matrix_umap = $("<div id='matrix'></div>");
 
 function load_graph(layer, head) {
     attn_filter.fadeOut();
-    const g = $("#graph");
-    g.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
+    // attn_view.html("");
+    graph.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
 
     // change graph displayed on UI
     let directory = "plots/";
-    g.load(directory + "layer" + layer + "_head" + head + ".html");
+    graph.load(directory + "layer" + layer + "_head" + head + ".html");
+
+    // load attn plot
+    // attn_view.load("att.html");
     attn_filter.fadeIn();
 }
 
@@ -84,11 +88,11 @@ function matrix_control() { // control ui behavior when in matrix view
         view_all.addClass("inactive");
         view_all.html("click on a plot below to explore");
         $('.control').fadeOut();
-        $("#search-text").val(""); // clear search
-        filter_attention("reset"); // clear attention filter
     }
 
     $('.mini-plot').click(function () { // when user presses plot in matrix view
+        $("#search-text").val(""); // clear search
+        filter_attention("reset"); // clear attention filter
         load_single_view($(this));
     })
 }
@@ -143,7 +147,6 @@ function filter_attention(reset_view) { // show only points with high attention
 }
 
 function reset_opacity() { // reset opacity of key and query traces
-    console.log("ran");
     let redraw = false;
     let key_points = myPlot.data[0].selectedpoints;
     let query_points = myPlot.data[1].selectedpoints;
