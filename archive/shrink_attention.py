@@ -2,8 +2,8 @@
 import os
 import re
 
-directory = "../attention/"
-new_dir = "../new_attention/"
+directory = "../old attention/"
+new_dir = "../attention/"
 
 # iterate through all attention files
 for filename in os.listdir(directory):
@@ -13,12 +13,12 @@ for filename in os.listdir(directory):
             contents = a.read()
 
         commas = [m.start() for m in re.finditer(r"],", contents)]
-        key_end = commas[5020]
-        query_start = commas[30070]
-        query_end = commas[30070+5020]
+        query_end = commas[5020]
+        key_start = commas[30069]
+        key_end = commas[30069+5021]
         attention_end = contents.index("]]")
-        contents = contents[:key_end] + \
-            contents[query_start:query_end] + contents[attention_end:]
+        contents = contents[:query_end] + \
+            contents[key_start:key_end] + contents[attention_end:]
 
         with open(new_dir + filename, "w") as o:
             o.write(contents)

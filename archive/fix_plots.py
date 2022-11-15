@@ -17,6 +17,18 @@ for filename in os.listdir(directory):
         with open(new_f, 'r') as t:
             contents = t.read()
 
+            # layer number
+            attention_file = "../attention/" + filename[:-4] + "js"
+            with open(attention_file, "r") as a:
+                attention = a.read()
+
+            # fix attention info
+            start_ind = contents.index("var attention")
+            end_ind = contents.index("</script>", start_ind)
+            contents = contents[:start_ind] + \
+                attention + \
+                contents[end_ind:]
+
             # start_ind = contents.index("</head>")
             # contents = contents[:start_ind] + \
             #     '<link rel="stylesheet" type="text/css" href="graph.css" />' + \
@@ -27,23 +39,23 @@ for filename in os.listdir(directory):
             #     '<script src="graph.js" type="text/javascript"></script>' + \
             #     contents[start_ind:]
 
-            ls = filename.index("layer") + 5
-            le = filename.index("_")
-            layer = filename[ls:le]
+            # ls = filename.index("layer") + 5
+            # le = filename.index("_")
+            # layer = filename[ls:le]
 
-            hs = filename.index("head") + 4
-            he = filename.index(".")
-            head = filename[hs:he]
+            # hs = filename.index("head") + 4
+            # he = filename.index(".")
+            # head = filename[hs:he]
 
-            coords_file = "../coords/" + filename[:-4] + "js"
-            with open(coords_file, "r") as a:
-                coords = a.read()
+            # coords_file = "../coords/" + filename[:-4] + "js"
+            # with open(coords_file, "r") as a:
+            #     coords = a.read()
 
             # attach coords info
-            start_ind = contents.index("</body>")
-            contents = contents[:start_ind] + \
-                '<script>' + coords + '</script>' + \
-                contents[start_ind:]
+            # start_ind = contents.index("</body>")
+            # contents = contents[:start_ind] + \
+            #     '<script>' + coords + '</script>' + \
+            #     contents[start_ind:]
 
             # plot_type = 'TSNE' if directory == "../plots/" else 'UMAP'
 
