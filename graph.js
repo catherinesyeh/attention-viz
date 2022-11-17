@@ -26,6 +26,9 @@ var tsne_key_y = myPlot.data[0].y;
 var tsne_query_x = myPlot.data[1].x;
 var tsne_query_y = myPlot.data[1].y;
 
+// special chars for regex that need to be replaced
+var special_chars = ['.', '+', '*', '?', '^', '$', '(', ')', '[', ']', '{', '}', '|', '\\'];
+
 // preset styles
 var style_1 = {
     marker: {
@@ -242,8 +245,8 @@ function filterBySearch(search) {
             marker: {
                 color: [],
                 size: 10,
-                line: { width: 2, color: 'black' },
-                symbol: 'star'
+                line: { width: 2, color: [] },
+                symbol: 'circle'
             },
             xaxis: 'x',
             yaxis: 'y',
@@ -255,13 +258,18 @@ function filterBySearch(search) {
             hovertemplate: hov_template,
         };
 
+        if (special_chars.includes(val)) { // make sure regex is valid later
+            val = '\\' + val;
+        }
         let expr = new RegExp(val, "gi");
         const trace_colors = ["rgb(151, 73, 96)", "rgb(58, 107, 109)"];
+        const trace_colors_light = ["#FBD9B9", "#BFE5C0"];
         let num_traces = 2;
         for (let trace = 0; trace < num_traces; trace++) {
             data[trace].customdata.filter((e, i) => {
                 if (expr.test(e[0])) {
-                    found.marker.color.push(trace_colors[trace]);
+                    found.marker.color.push(trace_colors_light[trace]);
+                    found.marker.line.color.push(trace_colors[trace])
                     found.x.push(data[trace].x[i]);
                     found.y.push(data[trace].y[i]);
                     found.customdata.push(e);

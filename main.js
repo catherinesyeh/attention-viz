@@ -121,7 +121,7 @@ function filter_attention(reset_view) { // show only points with high attention
                 color: "rgb(247, 185, 86)",
                 size: 10,
                 line: { width: 2, color: 'black' },
-                symbol: "star",
+                symbol: "circle",
                 opacity: 1
             },
             xaxis: 'x',
