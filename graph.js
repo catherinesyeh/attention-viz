@@ -30,8 +30,8 @@ var tsne_query_y = myPlot.data[1].y;
 var special_chars = ['.', '+', '*', '?', '^', '$', '(', ')', '[', ']', '{', '}', '|', '\\'];
 
 // colors for points
-const trace_colors = ["rgb(151, 73, 96)", "rgb(58, 107, 109)"];
-const trace_colors_light = ["#FBD9B9", "#BFE5C0"];
+var trace_colors = ["rgb(151, 73, 96)", "rgb(58, 107, 109)"];
+var trace_colors_light = ["#FBD9B9", "#BFE5C0"];
 
 // preset styles
 var style_1 = {
