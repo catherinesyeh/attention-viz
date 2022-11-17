@@ -29,6 +29,10 @@ var tsne_query_y = myPlot.data[1].y;
 // special chars for regex that need to be replaced
 var special_chars = ['.', '+', '*', '?', '^', '$', '(', ')', '[', ']', '{', '}', '|', '\\'];
 
+// colors for points
+const trace_colors = ["rgb(151, 73, 96)", "rgb(58, 107, 109)"];
+const trace_colors_light = ["#FBD9B9", "#BFE5C0"];
+
 // preset styles
 var style_1 = {
     marker: {
@@ -262,8 +266,6 @@ function filterBySearch(search) {
             val = '\\' + val;
         }
         let expr = new RegExp(val, "gi");
-        const trace_colors = ["rgb(151, 73, 96)", "rgb(58, 107, 109)"];
-        const trace_colors_light = ["#FBD9B9", "#BFE5C0"];
         let num_traces = 2;
         for (let trace = 0; trace < num_traces; trace++) {
             data[trace].customdata.filter((e, i) => {
@@ -414,6 +416,57 @@ function show_attention(data, point_num) { // show attention info when click on 
     }, 150);
 }
 
+function add_to_cluster(word, unique_words, pt) { // helper for highlight cluster function
+    if (!(word in unique_words)) { // new word
+        unique_words[word] = {
+            x: [pt.x],
+            y: [pt.y],
+        }
+    } else { // add coords to existing lists
+        unique_words[word].x.push(pt.x);
+        unique_words[word].y.push(pt.y);
+    }
+
+    return unique_words;
+}
+
+function make_cluster_annotations(annotations, unique_words, trace) {
+    let min_num = myPlot.data[0].customdata.length;
+    let max_num = 0;
+    for (word in unique_words) {
+        let length = unique_words[word].x.length;
+        if (length < min_num) { // found new min
+            min_num = length;
+        }
+        if (length > max_num) { // found new max
+            max_num = length;
+        }
+    }
+    let range = max_num - min_num;
+
+    for (word in unique_words) {
+        let avg = array => array.reduce((a, b) => a + b) / array.length; const avg_x = avg(unique_words[word].x);
+        const avg_y = avg(unique_words[word].y);
+
+        let size = unique_words[word].x.length;
+        let annotation = {
+            // add annotation for each point in cluster
+            x: avg_x,
+            y: avg_y,
+            text: word + " (" + parseInt(size) + ")",
+            font: {
+                color: trace_colors[trace],
+                size: (((size - min_num) / range) * 6) + 10
+            },
+            arrowcolor: 'black',
+            arrowwidth: 0.1,
+            opacity: (((size - min_num) / range) * 0.5) + 0.5
+        }
+        annotations.push(annotation);
+    }
+    return annotations;
+}
+
 function highlight_cluster(data) { // show words in cluster when selected
     if (!data || data.points.length == 0) { // nothing selected
         return;
@@ -433,53 +486,20 @@ function highlight_cluster(data) { // show words in cluster when selected
 
         let annotations = [];
         let unique_words = {};
+        let unique_words_2 = {};
 
         clicked.forEach(function (pt) { // collect unique set of words
             let word = pt.customdata[0];
-            if (!(word in unique_words)) { // new word
-                unique_words[word] = {
-                    x: [pt.x],
-                    y: [pt.y],
-                }
-            } else { // add coords to existing lists
-                unique_words[word].x.push(pt.x);
-                unique_words[word].y.push(pt.y);
+            let type = pt.customdata[4];
+            if (type == "key") { // key
+                unique_words = add_to_cluster(word, unique_words, pt);
+            } else { // query
+                unique_words_2 = add_to_cluster(word, unique_words_2, pt);
             }
         })
 
-        let min_num = myPlot.data[0].customdata.length;
-        let max_num = 0;
-        for (word in unique_words) {
-            let length = unique_words[word].x.length;
-            if (length < min_num) { // found new min
-                min_num = length;
-            }
-            if (length > max_num) { // found new max
-                max_num = length;
-            }
-        }
-        let range = max_num - min_num;
-
-        for (word in unique_words) {
-            let avg = array => array.reduce((a, b) => a + b) / array.length; const avg_x = avg(unique_words[word].x);
-            const avg_y = avg(unique_words[word].y);
-
-            let size = unique_words[word].x.length;
-            let annotation = {
-                // add annotation for each point in cluster
-                x: avg_x,
-                y: avg_y,
-                text: word + " (" + parseInt(size) + ")",
-                font: {
-                    color: 'black',
-                    size: (((size - min_num) / range) * 6) + 10
-                },
-                arrowcolor: 'black',
-                arrowwidth: 0.1,
-                opacity: (((size - min_num) / range) * 0.5) + 0.5
-            }
-            annotations.push(annotation);
-        }
+        annotations = make_cluster_annotations(annotations, unique_words, 0);
+        annotations = make_cluster_annotations(annotations, unique_words_2, 1);
 
         let update = {
             annotations: annotations
