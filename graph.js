@@ -133,19 +133,19 @@ function find_top_attention() { // get points with highest attention
     for (let i = 0; i < filtered.length; i++) {
         let f = filtered[i];
         let x, y, x_u, y_u, cust_data;
-        if (f < offset) { // key
-            x = myPlot.data[0].x[f];
-            x_u = key_x[f]; // push umap coords too
-            y = myPlot.data[0].y[f];
-            y_u = key_y[f];
-            cust_data = myPlot.data[0].customdata[f];
-        } else { // query
+        if (f >= offset) { // key
             let ind = f - offset;
-            x = myPlot.data[1].x[ind];
-            x_u = query_x[ind];
-            y = myPlot.data[1].y[ind];
-            y_u = query_y[ind];
-            cust_data = myPlot.data[1].customdata[ind];
+            x = myPlot.data[0].x[ind];
+            x_u = key_x[ind]; // push umap coords too
+            y = myPlot.data[0].y[ind];
+            y_u = key_y[ind];
+            cust_data = myPlot.data[0].customdata[ind];
+        } else { // query
+            x = myPlot.data[1].x[f];
+            x_u = query_x[f];
+            y = myPlot.data[1].y[f];
+            y_u = query_y[f];
+            cust_data = myPlot.data[1].customdata[f];
         }
         top_attention.x.push(x);
         top_attention.x_u.push(x_u);
@@ -164,6 +164,12 @@ function reset_plot() {
     Plotly.relayout(myPlot, {
         annotations: [],
     }); // remove annotations
+}
+
+function clear_att_plot() { // clear single attention view
+    attn_view.data("attn", []);
+    attn_view.data("cd", []);
+    $("#attn-update").click();
 }
 
 function mini_reset() {
@@ -229,7 +235,7 @@ function filterBySearch(search) {
     setTimeout(() => {
         let data = myPlot.data;
 
-        let found = {
+        let found = { // new styling
             type: 'scatter',
             mode: 'markers',
             showlegend: false,
@@ -275,7 +281,7 @@ function filterBySearch(search) {
     }, 150);
 }
 
-function show_attention(data, point_num) {
+function show_attention(data, point_num) { // show attention info when click on a point
     mini_reset();
     reset_cluster.fadeOut();
     attn_filter.html("show tokens with attention &ge; 0.2");
@@ -292,6 +298,11 @@ function show_attention(data, point_num) {
         let tn = data.points[0].curveNumber;
         let cust_data = data.points[0].customdata;
 
+        // if (!cust_data) {
+        //     // have to find it
+        //     cust_data = myPlot.data[tn].customdata[pn];
+        // }
+
         if (tn > 1) {
             // attention mode already activated
             token_type = cust_data[4];
@@ -304,9 +315,14 @@ function show_attention(data, point_num) {
         let trace = (tn == 0) ? 1 : 0; // find other trace
 
         // info about this point
-        let attn = attention[pn + (tn * offset)];
+        let attn = attention[pn + (trace * offset)];
         len = attn.length;
         let pos = cust_data[2] - 1;
+        let start = pn - pos;
+        let end = start + len;
+
+        // get all attn in sentence
+        let all_attn = attention.slice(start, end);
 
         // normalize attn values as size of data points (b/t 6 - 16)
         let min_attn = Math.min(...attn);
@@ -320,8 +336,6 @@ function show_attention(data, point_num) {
         norm_size.push(16);
 
         // other tokens of opp type in sentence
-        let start = pn - pos;
-        let end = start + len;
         let all_data = myPlot.data[trace];
         let old_data = myPlot.data[tn];
         let new_x = all_data.x.slice(start, end);
@@ -329,7 +343,14 @@ function show_attention(data, point_num) {
         let new_y = all_data.y.slice(start, end);
         new_y.push(old_data.y[pn]);
         let new_cust = all_data.customdata.slice(start, end);
-        new_cust.push(cust_data);
+
+        let attn_tokens = new_cust.map(i => i[0]); // get all tokens
+        attn_view.data("attn", all_attn); // store data
+        attn_view.data("cd", attn_tokens);
+        attn_view.data("pos", cust_data[2] - 1);
+        attn_view.data("side", (tn == 1) ? "left" : "right");
+        // attn_view.data("start", start);
+        new_cust.push(cust_data); // add clicked on point too
 
         let symbols = Array(len).fill("circle");
         max_ind = attn.indexOf(max_attn);
@@ -341,7 +362,7 @@ function show_attention(data, point_num) {
 
         attn = attn.map(i => i.toFixed(2));
 
-        same_sent = {
+        same_sent = { // new styling
             type: 'scatter',
             mode: 'markers+text',
             showlegend: false,
@@ -380,16 +401,18 @@ function show_attention(data, point_num) {
         search_contain.fadeOut();
         reset_cluster.fadeOut();
         reset.fadeIn();
+        $("#attn-update").click();
         finish_loading();
     }, 150);
 }
 
-function highlight_cluster(data) {
+function highlight_cluster(data) { // show words in cluster when selected
     if (!data || data.points.length == 0) { // nothing selected
         return;
     }
     mini_reset();
     remove_data();
+    clear_att_plot();
     search.val("");
     search_contain.fadeOut();
     attn_filter.html("show tokens with attention &ge; 0.2");
@@ -485,7 +508,7 @@ function switch_colors(html) { // switch coloring of graph
     }
 }
 
-function initialize() {
+function initialize() { // make sure plot is set up correctly on load
     if (!reset.attr("style").includes("display: none") && reset.data("data")) {
         // attention info active
         show_attention(reset.data("data"), reset.attr("pn"));
@@ -535,6 +558,7 @@ $(document).ready(function () { // on load
 
         setTimeout(() => {
             remove_data();
+            clear_att_plot();
             reset_and_opacity();
         }, 150);
     })

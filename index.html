@@ -28,13 +28,18 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
 
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.14.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
     <!-- Main content -->
     <div id="content">
-      <center>
+      <center id="heading">
         <h1>
           visualizing <span class="green emphasis">query</span> +
           <span class="pink emphasis">key</span> vectors in
@@ -102,13 +107,21 @@
         >
         <span id="results-count" class="hide">...</span>
       </div>
-      <div id="graph"></div>
-      <span
-        id="attn-filter"
-        title="toggle attention filter"
-        class="control emphasis"
-        >show tokens with attention &ge; 0.2</span
-      >
+      <div id="content-wrapper">
+        <div class="control">
+          <p id="att-view-label">Attention - Sentence View</p>
+          <p id="att-caption">click a point to explore its attention!</p>
+          <div id="att-view"></div>
+          <input id="attn-update" type="checkbox" style="display: none" />
+          <span
+            id="attn-filter"
+            title="toggle attention filter"
+            class="control emphasis"
+            >show tokens with attention &ge; 0.2</span
+          >
+        </div>
+        <div id="graph"></div>
+      </div>
     </div>
 
     <!-- Javascript files -->

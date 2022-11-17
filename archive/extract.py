@@ -1,7 +1,7 @@
 # extract coords from plotly html output
 import os
-# directory = "../extract/"
-directory = "../umap/"
+directory = "../extract/"
+# directory = "../umap/"
 output_dir = "../coords/"
 # output_umap = "../coords_umap/"
 

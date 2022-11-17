@@ -130,6 +130,11 @@ a:hover, .link:hover {
     margin: calc(12px + 1.2vw) calc(20px + 2vw);
 }
 
+#heading {
+    z-index: 9999;
+    position: relative;
+}
+
 #type-label {
     cursor: pointer;
     transition: 0.5s;
@@ -226,11 +231,13 @@ label.emphasis {
 
 #attn-filter {
     background-color: var(--green);
-    margin: auto;
-    position: relative;
+    /* margin: auto; */
+    /* position: relative; */
     display: block;
-    width: fit-content;
-    padding: 0px 12px;
+    width: 100%;
+    text-align: center;
+    padding: 6px 12px;
+    line-height: calc(16px + 0.2vw);
 }
 
 #graph {
@@ -289,4 +296,40 @@ label.emphasis {
 
 .head-label {
     text-align: center;
+}
+
+/* single attention plot */
+#content-wrapper {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 5fr;
+    transition: 0.5s;
+}
+
+#content-wrapper.matrix {
+    grid-template-columns: 1fr;
+}
+
+#att-view-label {
+    font-size: smaller;
+    text-transform: lowercase;
+    font-weight: 400;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    transition: 0.5s;
+}
+
+#att-caption {
+    font-size: small;
+    font-family: monospace;
+    margin-bottom: 5px;
+    margin-top: 0px;
+    color: var(--gray);
+    line-height: calc(16px + 0.2vw);
+    transition: 0.5s;
+}
+
+#att-view {
+    margin-bottom: 15px;
+    transition: 0.5s;
 }

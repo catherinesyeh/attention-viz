@@ -12,15 +12,11 @@ const matrix_umap = $("<div id='matrix'></div>");
 
 function load_graph(layer, head) {
     attn_filter.fadeOut();
-    // attn_view.html("");
     graph.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
 
     // change graph displayed on UI
     let directory = "plots/";
     graph.load(directory + "layer" + layer + "_head" + head + ".html");
-
-    // load attn plot
-    // attn_view.load("att.html");
     attn_filter.fadeIn();
 }
 
@@ -87,10 +83,12 @@ function matrix_control() { // control ui behavior when in matrix view
         graph.addClass("active");
         view_all.addClass("inactive");
         view_all.html("click on a plot below to explore");
+        $("#content-wrapper").addClass("matrix");
         $('.control').fadeOut();
     }
 
     $('.mini-plot').click(function () { // when user presses plot in matrix view
+        $("#content-wrapper").removeClass("matrix");
         $("#search-text").val(""); // clear search
         filter_attention("reset"); // clear attention filter
         load_single_view($(this));
@@ -102,6 +100,7 @@ function filter_attention(reset_view) { // show only points with high attention
     Plotly.relayout(myPlot, relayout_long);
 
     setTimeout(() => {
+        clear_att_plot();
         if (reset_view.includes("reset")) {
             attn_filter.html("show tokens with attention &ge; 0.2");
             reset_and_opacity();
@@ -187,6 +186,7 @@ $(document).ready(function () { // on load
         // load matrix of all plots
         matrix_control();
         remove_data();
+        clear_att_plot();
         $("#reset").fadeOut(); // hide buttons
         $("#results-count").addClass("hide");
         $("#reset-cluster").fadeOut(); // hide buttons
@@ -231,4 +231,6 @@ $(document).ready(function () { // on load
     create_matrix(matrix, false); // pre create matrices
     create_matrix(matrix_umap, true);
     load_graph(layer_menu.val(), head_menu.val()); // default to layer 0, head 0
+    // load attn plot
+    attn_view.load("att.html");
 });
