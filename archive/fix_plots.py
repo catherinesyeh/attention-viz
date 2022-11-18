@@ -47,16 +47,61 @@ for filename in os.listdir(directory):
             # he = filename.index(".")
             # head = filename[hs:he]
 
-            # coords_file = "../coords/" + filename[:-4] + "js"
-            coords_file = "../coords/layer11_head11_umap.js"
-            with open(coords_file, "r") as a:
+            tsne_coords_file = "../coords/" + filename[:-5] + "_tsne.js"
+            umap_coords_file = "../coords/" + filename[:-5] + "_umap.js"
+            # coords_file = "../coords/layer11_head11_umap.js"
+            with open(tsne_coords_file, "r") as a:
                 coords = a.read()
 
+            with open(umap_coords_file, "r") as b:
+                umap_coords = b.read()
+
             # attach coords info
+            # find indices to replace x and y coords
+            tx_start = contents.index('"x":[') + 5
+            tx_end = contents.index("]", tx_start)
+
+            ty_start = contents.index('"y":[') + 5
+            ty_end = contents.index("]", ty_start)
+
+            # fix TSNE
+            min_x = 0
+            min_y = 0
+            for i in range(2):
+                # x-coords
+                fx_start = coords.index('x = [', min_x) + 5
+                fx_end = coords.index(']', fx_start)
+                x = coords[fx_start:fx_end]
+                min_x = fx_end
+
+                tx_s = tx_start
+                tx_e = tx_end
+
+                if i == 1:  # find second round of indices
+                    tx_s = contents.index('"x":[', tx_e) + 5
+                    tx_e = contents.index("]", tx_s)
+
+                # y-coords
+                fy_start = coords.index('y = [', min_y) + 5
+                fy_end = coords.index(']', fy_start)
+                y = coords[fy_start:fy_end]
+                min_y = fy_end
+
+                ty_s = ty_start
+                ty_e = ty_end
+
+                if i == 1:  # find second round of indices
+                    ty_s = contents.index('"y":[', ty_e) + 5
+                    ty_e = contents.index("]", ty_s)
+
+                contents = contents[:tx_s] + x + \
+                    contents[tx_e:ty_s] + y + contents[ty_e:]
+
+            # replace UMAP coords
             # start_ind = contents.index("</body>")
             start_ind = contents.index("var key_x")
             end_ind = contents.index("</script>", start_ind)
-            contents = contents[:start_ind] + coords + contents[end_ind:]
+            contents = contents[:start_ind] + umap_coords + contents[end_ind:]
             # contents = contents[:start_ind] + \
             #     '<script>' + coords + '</script>' + \
             #     contents[start_ind:]
@@ -72,17 +117,7 @@ for filename in os.listdir(directory):
             # for r in replace:
             #     contents = contents.replace(r, replace[r])
 
-            # attention_file = "../attention/" + filename[:-4] + "js"
-            # with open(attention_file, "r") as a:
-            #     attention = a.read()
-
-            # # attach attention info
-            # start_ind = contents.index("</body>")
-            # contents = contents[:start_ind] + \
-            #     '<script>' + attention + '</script>' + \
-            #     contents[start_ind:]
-
             with open(directory + filename, 'w') as o:
                 o.write(contents)
             os.remove(new_f)
-    break
+    # break

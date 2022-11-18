@@ -489,14 +489,11 @@
     }
 
     function transpose(mat) {
-      console.log(mat);
-      let res = mat[0].map(function (col, i) {
+      return mat[0].map(function (col, i) {
         return mat.map(function (row) {
           return row[i];
         });
       });
-      console.log(res);
-      return res;
     }
   });
 </script>

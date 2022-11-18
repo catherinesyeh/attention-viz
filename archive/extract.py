@@ -39,7 +39,12 @@ for filename in os.listdir(directory):
 
         # save to js file
         # output_dir = output_tsne if "tsne" in filename else output_umap
-        output = output_dir + filename[:-4] + "js"
+        crop_index = filename.index(".")
+        suffix = "tsne"
+        if " " in filename:
+            crop_index = filename.index(" ")
+            suffix = "umap"
+        output = output_dir + filename[:crop_index] + "_" + suffix + ".js"
 
         with open(output, 'w') as o:
             o.write(coords)
