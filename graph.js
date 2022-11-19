@@ -41,8 +41,6 @@ var style_1 = {
         opacity: marker_opacity,
         coloraxis: "coloraxis"
     },
-    hoverinfo: 'text',
-    hovertemplate: hov_template,
 }
 
 var style_2 = {
@@ -52,8 +50,6 @@ var style_2 = {
         opacity: marker_opacity,
         coloraxis: "coloraxis2"
     },
-    hoverinfo: 'text',
-    hovertemplate: hov_template
 }
 
 var update = {
@@ -62,8 +58,6 @@ var update = {
         color: color_1,
         coloraxis: "coloraxis"
     },
-    hoverinfo: 'skip',
-    hovertemplate: null
 }
 
 var update2 = {
@@ -72,8 +66,6 @@ var update2 = {
         color: color_2,
         coloraxis: "coloraxis2"
     },
-    hoverinfo: 'skip',
-    hovertemplate: null
 }
 
 var colorbar_style = {
