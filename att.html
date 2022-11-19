@@ -173,10 +173,12 @@
 
       if (!leftText || leftText.length == 0) {
         $("#att-caption").html("click a point to explore its attention!");
+        $("#att-labels").fadeOut();
         return;
       }
 
       $("#att-caption").html("click a token to toggle lines on/off!");
+      $("#att-labels").fadeIn();
       // Select attention for given layer
       const layerAttention = attnData.attn[config.layer_seq];
 
@@ -239,7 +241,8 @@
         .attr("width", BOXWIDTH / activeHeads())
         .attr("height", BOXHEIGHT)
         .attr("fill", function () {
-          return headColors(+this.parentNode.getAttribute("head-index"));
+          // return headColors(+this.parentNode.getAttribute("head-index"));
+          return isLeft ? "rgb(172, 214, 175)" : "rgb(231, 169, 147)";
         })
         .style("opacity", 0.0);
 
@@ -414,9 +417,11 @@
         )
         .attr("stroke-width", 2)
         .attr("stroke", function () {
-          const headIndex =
-            +this.parentNode.parentNode.getAttribute("head-index");
-          return headColors(headIndex);
+          console.log(this.parentNode);
+          // const headIndex =
+          //   +this.parentNode.parentNode.getAttribute("head-index");
+          // return headColors(headIndex);
+          return "#ffd99c";
         })
         .attr("left-token-index", function () {
           return +this.parentNode.getAttribute("left-token-index");

@@ -329,6 +329,21 @@ label.emphasis {
     transition: 0.5s;
 }
 
+#att-labels {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+}
+
+#att-labels span {
+    text-align: center;
+    font-weight: bold;
+    color: var(--pink);
+}
+
+#att-labels .left {
+    color: var(--dark-green);
+}
+
 #att-view {
     margin-bottom: 15px;
     transition: 0.5s;
