@@ -298,6 +298,20 @@ label.emphasis {
     text-align: center;
 }
 
+#leg-labels {
+    position: absolute;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: calc(50px + 2.6vw);
+    text-align: center;
+    top: 25px;
+    right: 52px;
+    color: white;
+    font-size: small;
+    font-weight: bold;
+    transition: 0.5s;
+}
+
 /* single attention plot */
 #content-wrapper {
     position: relative;
