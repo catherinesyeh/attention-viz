@@ -172,11 +172,11 @@
       $(`#${config.rootDivId} #vis`).empty();
 
       if (!leftText || leftText.length == 0) {
-        $("#att-caption").fadeIn();
+        $("#att-caption").html("click a point to explore its attention!");
         return;
       }
 
-      $("#att-caption").fadeOut();
+      $("#att-caption").html("click a token to toggle lines on/off!");
       // Select attention for given layer
       const layerAttention = attnData.attn[config.layer_seq];
 
@@ -283,6 +283,23 @@
           .attr("dy", TEXT_SIZE);
       }
 
+      tokenContainer.on("click", function (d, index) {
+        // toggle lines on and off on token click
+        let hidden = d3.select(this).classed("clicked");
+        d3.select(this).classed("clicked", !hidden);
+        if (isLeft) {
+          let selected = svg
+            .select("#attention")
+            .selectAll("line[left-token-index='" + index + "']");
+          selected.classed("hide", !hidden);
+        } else {
+          let selected = svg
+            .select("#attention")
+            .selectAll("line[right-token-index='" + index + "']");
+          selected.classed("hide", !hidden);
+        }
+      });
+
       tokenContainer.on("mouseover", function (d, index) {
         // Show gray background for moused-over token
         textContainer
@@ -297,7 +314,6 @@
 
         // Hide group containing attention arcs
         svg.select("#attention").attr("visibility", "hidden");
-
         // Set to visible appropriate attention arcs to be highlighted
         if (isLeft) {
           svg
@@ -348,6 +364,7 @@
           .select("#attention")
           .selectAll("line[visibility='visible']")
           .attr("visibility", null);
+
         svg.select("#attention").attr("visibility", "visible");
 
         // Reset highlights superimposed over tokens
@@ -509,5 +526,11 @@
 
   text.bold {
     font-weight: bold;
+  }
+
+  .hide {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 </style>
