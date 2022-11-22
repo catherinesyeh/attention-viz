@@ -1,0 +1,53 @@
+import Vue from "vue";
+import axios from "axios";
+// import * as types from "@/utils/types";
+
+// Assume the port of the data Server is 5000, for test only
+// const dataServerUrl = "http://vastback.s44.hkustvis.org";
+const dataServerUrl = "http://localhost:8560";
+
+// const $http = (Vue as any).http;
+
+function get(field: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const url = `${dataServerUrl}/` + field;
+    axios
+      .get(url)
+      .then((response: any) => {
+        console.log("promose resolve: " + field, response);
+        resolve(response.data);
+      })
+      .catch((errResponse: any) => {
+        console.log("promose reject: " + field);
+        reject(errResponse);
+      });
+  });
+}
+
+function post(field: string, payload: any): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const url = `${dataServerUrl}/` + field;
+    axios
+      .post(url, payload)
+      .then((response: any) => {
+        console.log("promose resolve: " + field, response);
+        resolve(response.data);
+      })
+      .catch((errResponse: any) => {
+        console.log("promose reject: " + field);
+        reject(errResponse);
+      });
+  });
+}
+
+export async function getRuleList() {
+    return get(`getRuleList`);
+}
+
+// export async function getPitfallById(id: string) {
+//   return get(`getPitfallById/${id}`);
+// }
+
+// export async function saveCurrentVideo(videoinfo: any) {
+//   return post("saveCurrentVideo", videoinfo)
+// }

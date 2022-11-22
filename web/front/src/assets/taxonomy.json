@@ -1,0 +1,399 @@
+[
+    {
+        "title": "Mise-en-Scene",
+        "description": "the stage design and arrangement of actors (visualizations) in scenes",
+        "key": "0-0",
+        "children": [
+            {
+                "title": "setting",
+                "description": "the setting of a scene and the objects (props) visible in a scene",
+                "key": "0-0-0",
+                "children": [
+                    {
+                        "title": "background",
+                        "description": "",
+                        "key": "0-0-0-0",
+                        "children": [
+                            {
+                                "title": "real",
+                                "description": "simulation of real-world scenes",
+                                "example": "background-real.png",
+                                "key": "0-0-0-0-0",
+                                "children": []
+                            },
+                            {
+                                "title": "symbolic",
+                                "description": "the anonymous symbols that function as an abstraction onto which reality is constituted",
+                                "example": "background-symbolism.png",
+                                "key": "0-0-0-0-1",
+                                "children": []
+                            },
+                            {
+                                "title": "imaginary",
+                                "description": "imaginary scenes that are not in real-world",
+                                "example": "background-virtual.png",
+                                "key": "0-0-0-0-2",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "prop",
+                        "description": "an object used on stage",
+                        "key": "0-0-0-1",
+                        "children": [
+                            {
+                                "title": "anchor",
+                                "description": "a particular reference point",
+                                "example": "anchor-with.png",
+                                "key": "0-0-0-1-0",
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "title": "visualization",
+                "description": "the actor, costume and makeup",
+                "key": "0-0-1",
+                "children": [
+                    {
+                        "title": "marktype",
+                        "description": "",
+                        "key": "0-0-1-0",
+                        "children": [
+                            {
+                                "title": "bar",
+                                "description": "",
+                                "example": "chart-type-bar.png",
+                                "key": "0-0-1-0-0",
+                                "children": []
+                            },
+                            {
+                                "title": "point",
+                                "description": "",
+                                "example": "chart-type-scatter.png",
+                                "key": "0-0-1-0-1",
+                                "children": []
+                            },
+                            {
+                                "title": "bubble",
+                                "description": "",
+                                "example": "chart-type-bubble.png",
+                                "key": "0-0-1-0-2",
+                                "children": []
+                            },
+                            {
+                                "title": "line",
+                                "description": "",
+                                "example": "chart-type-line.png",
+                                "key": "0-0-1-0-3",
+                                "children": []
+                            },
+                            {
+                                "title": "glyph",
+                                "description": "",
+                                "example": "chart-type-glyph.png",
+                                "key": "0-0-1-0-4",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "alpha data type",
+                        "description": "",
+                        "key": "0-0-1-1",
+                        "children": [
+                            {
+                                "title": "temporal",
+                                "description": "",
+                                "example": "alpha-type-temporal.png",
+                                "key": "0-0-1-1-0",
+                                "children": []
+                            },
+                            {
+                                "title": "nominal",
+                                "description": "",
+                                "example": "alpha-type-nominal.png",
+                                "key": "0-0-1-1-1",
+                                "children": []
+                            },
+                            {
+                                "title": "geojson",
+                                "description": "",
+                                "example": "",
+                                "key": "0-0-1-1-2",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "alpha encoding trajectory",
+                        "description": "the trajectory",
+                        "key": "0-0-1-2",
+                        "children": [
+                            {
+                                "title": "linear",
+                                "description": "",
+                                "example": "alpha-encoding-trajectory-linear.png",
+                                "key": "0-0-1-2-0",
+                                "children": []
+                            },
+                            {
+                                "title": "circle",
+                                "description": "",
+                                "example": "alpha-trajectory-encoding-circle.png",
+                                "key": "0-0-1-2-1",
+                                "children": []
+                            },
+                            {
+                                "title": "zigzag",
+                                "description": "",
+                                "example": "alpha-trajectory-encoding-zigzag.png",
+                                "key": "0-0-1-2-2",
+                                "children": []
+                            },
+                            {
+                                "title": "arbitrary",
+                                "description": "",
+                                "example": "alpha-encoding-trajectory-arbitrary.png",
+                                "key": "0-0-1-2-3",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "alpha encoding space",
+                        "description": "",
+                        "key": "0-0-1-3",
+                        "children": [
+                            {
+                                "title": "horizontal plane",
+                                "description": "",
+                                "example": "alpha-encoding-surface-xy.png",
+                                "key": "0-0-1-3-0",
+                                "children": []
+                            },
+                            {
+                                "title": "vertical plane",
+                                "description": "",
+                                "example": "alpha-encoding-surface-z.png",
+                                "key": "0-0-1-3-1",
+                                "children": []
+                            },
+                            {
+                                "title": "arbitrary",
+                                "description": "",
+                                "example": "alpha-encoding-surface-xyz.mp4",
+                                "key": "0-0-1-3-2",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "beta data type",
+                        "description": "",
+                        "key": "0-0-1-4",
+                        "children": [
+                            {
+                                "title": "nominal",
+                                "description": "",
+                                "example": "beta-type-nominal.png",
+                                "key": "0-0-1-4-0",
+                                "children": []
+                            },
+                            {
+                                "title": "quantitative",
+                                "description": "",
+                                "example": "beta-type-quantative.png",
+                                "key": "0-0-1-4-1",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "beta encoding",
+                        "description": "",
+                        "key": "0-0-1-4",
+                        "children": [
+                            {
+                                "title": "constant",
+                                "description": "",
+                                "example": "beta-encoding-constant.png",
+                                "key": "0-0-1-4-0",
+                                "children": []
+                            },
+                            {
+                                "title": "position",
+                                "description": "",
+                                "example": "beta-encoding-z-position.png",
+                                "key": "0-0-1-4-1",
+                                "children": []
+                            },
+                            {
+                                "title": "length",
+                                "description": "",
+                                "example": "beta-encoding-x-length.png",
+                                "key": "0-0-1-4-2",
+                                "children": []
+                            },
+                            {
+                                "title": "area",
+                                "description": "",
+                                "example": "beta-encoding-xy-area.png",
+                                "key": "0-0-1-4-3",
+                                "children": []
+                            },
+                            {
+                                "title": "volume",
+                                "description": "",
+                                "example": "beta-encoding-volume.png",
+                                "key": "0-0-1-4-4",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "beta encoding real-life scale",
+                        "description": "",
+                        "key": "0-0-1-5",
+                        "children": [
+                            {
+                                "title": "volume",
+                                "description": "",
+                                "example": "beta-encoding-volume.png",
+                                "key": "0-0-1-5-0",
+                                "children": []
+                            },
+                            {
+                                "title": "size",
+                                "description": "",
+                                "example": "beta-real-life-scale-xy-area.png",
+                                "key": "0-0-1-5-1",
+                                "children": []
+                            },
+                            {
+                                "title": "height",
+                                "description": "",
+                                "example": "beta-real-life-scale-height.png",
+                                "key": "0-0-1-5-2",
+                                "children": []
+                            },
+                            {
+                                "title": "speed",
+                                "description": "",
+                                "example": "",
+                                "key": "0-0-1-5-3",
+                                "children": []
+                            },
+                            {
+                                "title": "length",
+                                "description": "",
+                                "example": "beta-encoding-length.png",
+                                "key": "0-0-1-5-4",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "mark semantic",
+                        "description": "",
+                        "key": "0-0-1-6",
+                        "children": [
+                            {
+                                "title": "real",
+                                "description": "",
+                                "example": "beta-encoding-z-position.png",
+                                "key": "0-0-1-6-0",
+                                "children": []
+                            },
+                            {
+                                "title": "symbolic",
+                                "description": "",
+                                "example": "mark-realism-symbolism.png",
+                                "key": "0-0-1-6-1",
+                                "children": []
+                            },
+                            {
+                                "title": "virtual",
+                                "description": "",
+                                "example": "mark-realism-abstract.png",
+                                "key": "0-0-1-6-2",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "title": "composited charts",
+                        "description": "",
+                        "key": "0-0-1-7",
+                        "children": [
+                            {
+                                "title": "layer",
+                                "description": "",
+                                "example": "composite-layer.png",
+                                "key": "0-0-1-7-0",
+                                "children": []
+                            },
+                            {
+                                "title": "repeat",
+                                "description": "",
+                                "example": "composite-repeat.png",
+                                "key": "0-0-1-7-0",
+                                "children": []
+                            },
+                            {
+                                "title": "facet",
+                                "description": "",
+                                "example": "composite-facet.png",
+                                "key": "0-0-1-7-0",
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "title": "animation",
+                "description": "staging: movement and performance",
+                "key": "0-0-2",
+                "children": [
+                    {
+                        "title": "fly in",
+                        "description": "",
+                        "example": "",
+                        "key": "0-0-2-0",
+                        "children": []
+                    },
+                    {
+                        "title": "grow in",
+                        "description": "",
+                        "example": "",
+                        "key": "0-0-2-1",
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "title": "",
+                "description": "",
+                "key": "",
+                "children": []
+            }
+        ]
+    },
+    {
+        "title": "Cinematography",
+        "description": "the art of motion picture photography",
+        "key": "0-1",
+        "children": [
+            {
+                "title": "",
+                "description": "",
+                "key": "",
+                "children": []
+            }
+        ]
+    }
+]
