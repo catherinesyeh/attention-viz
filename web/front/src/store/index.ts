@@ -7,7 +7,7 @@ import { TypeOfList } from "underscore";
 import { Typing } from "@/utils/typing";
 
 export interface State {
-  ruleList: Typing.Rule[]
+  rawdata: string;
 }
 
 // define injection key
@@ -15,21 +15,22 @@ export const key: InjectionKey<Store<State>> = Symbol()
 
 export const store = createStore<State>({
   state: {
-    ruleList: [] 
+    rawdata: ""
   },
   modules: {
   },
   getters: {
   },
   mutations: {
-    setRuleList(state, ruleList: Typing.Rule[]) {
-      state.ruleList = ruleList
+    setRawData(state, rawdata: string) {
+      state.rawdata = rawdata
     }
   },
   actions: {
     async init({ state, commit }) {
-      const data = (await dataService.getRuleList()).data;
-      commit('setRuleList', data);
+      let data = await dataService.getRawData();
+      commit('setRawData', data);
+      console.log('setRawData', data)
     }
   },
   strict: process.env.NODE_ENV !== "production"

@@ -4,7 +4,7 @@ import axios from "axios";
 
 // Assume the port of the data Server is 5000, for test only
 // const dataServerUrl = "http://vastback.s44.hkustvis.org";
-const dataServerUrl = "http://localhost:8560";
+const dataServerUrl = "http://localhost:8500";
 
 // const $http = (Vue as any).http;
 
@@ -40,8 +40,8 @@ function post(field: string, payload: any): Promise<any> {
   });
 }
 
-export async function getRuleList() {
-    return get(`getRuleList`);
+export async function getRawData() {
+    return get(`get_raw_data`);
 }
 
 // export async function getPitfallById(id: string) {

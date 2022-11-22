@@ -1,3 +1,4 @@
+// define the types here
 export namespace Typing {
     export interface Rule {
         acc: number,
