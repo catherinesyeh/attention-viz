@@ -347,7 +347,6 @@ function show_attention(data, point_num) { // show attention info when click on 
         let new_cust = all_data.customdata.slice(start, end);
 
         let attn_tokens = new_cust.map(i => i[0]); // get all tokens
-        console.log(attn_tokens);
         attn_view.data("attn", all_attn); // store data
         attn_view.data("cd", attn_tokens);
         attn_view.data("pos", cust_data[2] - 1);
