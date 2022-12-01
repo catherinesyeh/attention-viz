@@ -1,0 +1,4 @@
+numpy==1.16.4
+Flask==2.1.0
+pandas==0.24.2
+Flask_Cors==3.0.7

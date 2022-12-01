@@ -1,0 +1,364 @@
+/* COLORS */
+:root {
+    --text: rgb(22, 21, 21); 
+    --dark-green: rgb(58, 107, 109);
+    --green: rgb(110, 170, 138);
+    --light-green: rgb(172, 214, 175);
+    --pink: rgb(151, 73, 96);
+    --light-pink: rgb(231, 169, 147);
+    --gray: rgb(111, 108, 108);
+    --light-gray: rgb(232, 228, 228);
+}
+
+::-moz-selection { /* highlight color */
+    background: var(--green);
+    color: white;
+}
+
+::selection {
+    background: var(--green);
+    color: white;
+}
+
+.green {
+    color: var(--green);
+}
+
+.pink {
+    color: var(--pink);
+}
+
+/* GENERAL */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html { /* add smooth scrolling behavior */
+    scroll-behavior: smooth;
+}
+
+body { /* default styling for whole document body */
+    font-family: Mulish;
+    font-size: calc(14px + 0.4vw);
+    line-height: calc(20px + 0.6vw);
+    font-weight: 300;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* FONT STYLING */
+p { /* page text styling */
+    margin-bottom: calc(10px + 0.5vw);
+    transition: 0.5s;
+}
+
+p:last-child {
+    margin-bottom: 0;
+}
+
+.bold {
+    font-weight: 700;
+}
+
+.center {
+    text-align: center;
+}
+
+h1, h2, h3, h4, h5 { /* headings */
+    font-family: Be Vietnam Pro;
+    font-weight: 800;
+    transition: 0.5s;
+}
+
+h1 {
+    line-height: calc(32px + 1.5vw);
+    font-size: calc(20px + 1vw);
+    margin-bottom: 10px;
+}
+
+h3 {
+    font-size: calc(18px + 1vw);
+    line-height: calc(36px + 2vw);
+    font-weight: 400;
+}
+
+h5 {
+    font-size: calc(16px + 0.4vw);
+    line-height: calc(20px + 1vw);
+    font-weight: 600;
+}
+
+a, .link { /* links */
+    text-decoration: none;
+    color: var(--dark-green);
+    font-weight: 400;
+    transition: 0.5s;
+    font-size: smaller;
+    cursor: pointer;
+    font-family: monospace;
+    border-bottom: 1px solid transparent;
+}
+
+a:hover, .link:hover {
+   opacity: 0.8;
+   border-bottom: 1px solid var(--dark-green);
+}
+
+.emphasis {
+    font-style: italic;
+    font-weight: 300;
+    letter-spacing: 4px;
+}
+
+.mono {
+    font-family: monospace;
+    letter-spacing: 4px;
+    font-weight: 100;
+    font-size: larger;
+}
+
+.bar {
+    margin-left: 6px;
+    margin-right: 10px;
+}
+
+/* MAIN CONTENT */
+#content {
+    margin: calc(12px + 1.2vw) calc(20px + 2vw);
+}
+
+#heading {
+    z-index: 9999;
+    position: relative;
+}
+
+#type-label {
+    cursor: pointer;
+    transition: 0.5s;
+}
+
+#type-label:hover {
+    color: var(--light-pink);
+    letter-spacing: 1px;
+}
+
+.loading {
+    text-align: center; 
+    line-height: 50vh;
+}
+
+#graph-dropdown {
+    margin-top: 10px;
+    margin-right: 5px;
+    display: inline-block;
+}
+
+label.emphasis {
+    font-size: smaller;
+    letter-spacing: 1px;
+    font-weight: 400;
+    color: var(--gray);
+}
+
+.top-menu {
+    position: relative;
+}
+
+#search {
+    margin-top: 10px;
+    display: inline-block;
+}
+
+#search input {
+    padding: 0 5px;
+}
+
+#clear {
+    margin-left: -20px;
+    cursor: pointer;
+    transition: 0.5s;
+    color: var(--gray);
+}
+
+#clear:hover {
+    opacity: 0.8;
+}
+
+#clear.hide, #results-count.hide {
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+}
+
+@keyframes loading {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+#results-count {
+    margin-left: 10px;
+    transition: 0.5s;
+    font-size: smaller;
+    animation: loading 2s infinite;
+}
+
+#results-count.done {
+    animation: none;
+}
+
+#reset, #reset-cluster, #attn-filter {
+    font-size: small;
+    letter-spacing: 1px;
+    font-weight: 300;
+    background-color: var(--light-pink);
+    color: white;
+    border-radius: 2px;
+    padding: 3px 8px;
+    transition: 0.5s;
+    cursor: pointer;
+}
+
+#reset:hover, #reset-cluster:hover, #attn-filter:hover {
+    opacity: 0.8;
+}
+
+#attn-filter {
+    background-color: var(--green);
+    /* margin: auto; */
+    /* position: relative; */
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 6px 12px;
+    line-height: calc(16px + 0.2vw);
+}
+
+#graph {
+    margin-top: -85px;
+}
+
+#graph.active {
+    margin-top: 5px;
+}
+
+#view-all.inactive {
+    pointer-events: none;
+}
+
+.main-svg {
+    background: transparent !important;
+}
+
+.modebar {
+    top: 60px !important;
+}
+
+#matrix {
+    display: grid;
+    grid-template-columns: 0.5fr repeat(12, 1fr);
+    align-items: center;
+}
+
+#matrix p {
+    font-size: x-small;
+    line-height: initial;
+    margin-bottom: 0;
+}
+
+.mini-plot {
+    width: 100%;
+    height: calc(20px + 4.5vw);
+    transition: 0.5s;
+    cursor: pointer;
+    border: 2px solid white;
+}
+
+.mini-plot:hover {
+    opacity: 0.8;
+    border: 2px solid var(--light-pink);
+    transform: scale(1.1);
+}
+
+.axis-label {
+    font-weight: 400;
+}
+
+.axis-label span {
+    display: block;
+}
+
+.head-label {
+    text-align: center;
+}
+
+#leg-labels {
+    position: absolute;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: calc(50px + 2.6vw);
+    text-align: center;
+    top: 25px;
+    right: 52px;
+    color: white;
+    font-size: small;
+    font-weight: bold;
+    transition: 0.5s;
+}
+
+/* single attention plot */
+#content-wrapper {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 5fr;
+    transition: 0.5s;
+}
+
+#content-wrapper.matrix {
+    grid-template-columns: 1fr;
+}
+
+#att-view-label {
+    font-size: smaller;
+    text-transform: lowercase;
+    font-weight: 400;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    transition: 0.5s;
+}
+
+#att-caption {
+    font-size: small;
+    font-family: monospace;
+    margin-bottom: 5px;
+    margin-top: 0px;
+    color: var(--gray);
+    line-height: calc(16px + 0.2vw);
+    transition: 0.5s;
+}
+
+#att-labels {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+}
+
+#att-labels span {
+    text-align: center;
+    font-weight: bold;
+    color: var(--pink);
+}
+
+#att-labels .left {
+    color: var(--dark-green);
+}
+
+#att-view {
+    margin-bottom: 15px;
+    transition: 0.5s;
+}
