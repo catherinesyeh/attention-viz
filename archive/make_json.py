@@ -23,6 +23,20 @@ json_temp = {
 df = pd.read_csv(csv_file)
 num_tokens = len(df)
 
+# save all shared data first
+shared_json = {"tokens": []}
+for i in range(num_tokens):
+    new_token = {}
+    new_token["value"] = df['token'][i]
+    new_token["type"] = df['type'][i]
+    new_token["position"] = df['position'][i]
+    shared_json["tokens"].append(new_token)
+
+json_str = json.dumps(shared_json)
+with open("json/shared.json", "w") as f:
+    f.write(json_str)
+
+# now generate file for each layer/head
 for layer in range(12):
     for head in range(12):
         new_json = {}
@@ -32,9 +46,6 @@ for layer in range(12):
 
         for i in range(num_tokens):
             new_token = {}
-            new_token["value"] = df['token'][i]
-            new_token["type"] = df['type'][i]
-            new_token["position"] = df['position'][i]
             new_token["tsne_x"] = df['tsne_x_{}_{}'.format(layer, head)][i]
             new_token["tsne_y"] = df['tsne_y_{}_{}'.format(layer, head)][i]
             new_token["umap_x"] = df['umap_x_{}_{}'.format(layer, head)][i]
