@@ -28,7 +28,7 @@ print(rootDir)
 def read_matrix_data():
     matrix_data = []
 
-    for f in sorted(glob(join(rootDir, 'data', '*.json'))):
+    for f in sorted(glob(join(rootDir, 'data', 'byLayerHead', '*.json'))):
         d = json.load(open(f, 'r'))
         matrix_data.append(d)
     

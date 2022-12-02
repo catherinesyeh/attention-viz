@@ -5,7 +5,7 @@
         <div id="matrix-wrapper">
             <ScatterPlot
                 v-for="d in matrixData"
-                :key="d.head"
+                :key="d.head + '-' + d.layer"
                 class="matrix-cell"
                 :style="{
                     top: d.head * (matrixCellWidth + matrixCellMargin) + 'px',
