@@ -9,7 +9,7 @@ import { Typing } from "@/utils/typing";
 // Vuex docs: https://vuex.vuejs.org/
 
 export interface State {
-  rawdata: string;
+  matrixData: Typing.MatrixData[];
 }
 
 // define injection key
@@ -17,22 +17,22 @@ export const key: InjectionKey<Store<State>> = Symbol()
 
 export const store = createStore<State>({
   state: {
-    rawdata: ""
+    matrixData: []
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
   getters: {
   },
   mutations: {
-    setRawData(state, rawdata: string) {
-      state.rawdata = rawdata
-    }
+    setMatrixData(state, matrixData) {
+      state.matrixData = matrixData
+    },
   },
   actions: { // actions commit mutations
     async init({ state, commit }) {
-      let data = await dataService.getRawData();
-      commit('setRawData', data);
-      console.log('setRawData', data)
+      let matrixData = (await dataService.getMatrixData()).data;
+      commit('setMatrixData', matrixData);
+      console.log('setMatrixData', matrixData)
     }
   },
   strict: process.env.NODE_ENV !== "production"

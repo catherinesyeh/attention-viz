@@ -35,3 +35,6 @@ npm-debug.log
 .idea/
 __pycache__/
 .ipynb_checkpoints/
+
+# Playground
+web/notebook

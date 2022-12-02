@@ -33,6 +33,11 @@ def test():
     data = dataService.get_raw_data()
     return data
 
+@app.route("/getMatrixData", methods=['GET'])
+def _get_matrix_data():
+    data = dataService.get_matrix_data()  # return a list
+    return {'data': data}  # a response cannot be a list
+
 # @app.route("/test", methods=['GET'])
 # def test():
 #     return send_file(

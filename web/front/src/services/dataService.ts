@@ -44,6 +44,10 @@ export async function getRawData() {
     return get(`get_raw_data`);
 }
 
+export async function getMatrixData() {
+  return get(`getMatrixData`);
+}
+
 // export async function getPitfallById(id: string) {
 //   return get(`getPitfallById/${id}`);
 // }

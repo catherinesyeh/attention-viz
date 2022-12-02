@@ -25,19 +25,30 @@ import json
 rootDir = dirname(abspath(''))
 print(rootDir)
 
+def read_matrix_data():
+    matrix_data = []
+
+    for f in sorted(glob(join(rootDir, 'data', '*.json'))):
+        d = json.load(open(f, 'r'))
+        matrix_data.append(d)
+    
+    return matrix_data
 
 class DataService(object):
     def __init__(self):
         print('------inited------')
         # self.df = pd.read_csv(join(rootDir, 'prodata', 'pro_data_results.csv')) .h5 .npy
         # read data here
-        f = open(join(rootDir, 'data', 'layer0_head0.json'))
-        self.data = json.load(f)
+        self.matrix_data = read_matrix_data()
+
         return None
 
     def get_raw_data(self):
         # return data to the front end
         return self.data
+
+    def get_matrix_data(self):
+        return self.matrix_data
 
 
 if __name__ == '__main__':
