@@ -22,6 +22,7 @@
     "regl": "^2.1.0",
     "regl-scatterplot": "^1.4.0",
     "sass": "^1.50.1",
+    "scatter-gl": "^0.0.13",
     "underscore": "^1.13.1",
     "url-loader": "^4.1.1",
     "vue": "^3.0.9",

@@ -1,5 +1,8 @@
 .DS_Store
 
+## viscose
+*.code-workspace
+
 ## dataset
 *.npy
 *.h5
