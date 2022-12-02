@@ -34,12 +34,17 @@ def read_matrix_data():
     
     return matrix_data
 
+def read_token_data():
+    d = json.load(open(join(rootDir, 'data', 'tokens.json')))
+    return d
+
 class DataService(object):
     def __init__(self):
         print('------inited------')
         # self.df = pd.read_csv(join(rootDir, 'prodata', 'pro_data_results.csv')) .h5 .npy
         # read data here
         self.matrix_data = read_matrix_data()
+        self.token_data = read_token_data()
 
         return None
 
@@ -49,6 +54,9 @@ class DataService(object):
 
     def get_matrix_data(self):
         return self.matrix_data
+
+    def get_token_data(self):
+        return self.token_data
 
 
 if __name__ == '__main__':

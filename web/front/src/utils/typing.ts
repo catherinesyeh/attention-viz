@@ -3,15 +3,17 @@ export namespace Typing {
     export interface MatrixData {
         head: number;
         layer: number;
-        tokens: TokenData[];
+        tokens: TokenCoordinate[];
+    }
+    export interface TokenCoordinate {
+        tsne_x: number;
+        tsne_y: number;
+        umap_x: number;
+        umap_y: number;
     }
     export interface TokenData {
         position: number;
-        tsne_x: number;
-        tsne_y: number;
         type: string;
-        umap_x: number;
-        umap_y: number;
         value: string;
     }
 

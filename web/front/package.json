@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^6.0.1",
+    "@deck.gl/core": "^8.8.20",
+    "@deck.gl/layers": "^8.8.20",
     "@types/underscore": "^1.11.3",
     "ant-design-vue": "^2.0.0",
     "axios": "^0.24.0",

@@ -48,6 +48,10 @@ export async function getMatrixData() {
   return get(`getMatrixData`);
 }
 
+export async function getTokenData() {
+  return get(`getTokenData`);
+}
+
 // export async function getPitfallById(id: string) {
 //   return get(`getPitfallById/${id}`);
 // }
