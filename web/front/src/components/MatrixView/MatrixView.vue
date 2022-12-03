@@ -1,7 +1,7 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
     <div class="viewHead">
-        Matrix View
+        <!-- Matrix View -->
         <div id="matrix-wrapper">
             <canvas id="matrix-canvas" />
         </div>
@@ -104,6 +104,7 @@ export default defineComponent({
                     new ScatterplotLayer({
                         pickable: true,
                         data: points,
+                        opacity: 0.5,
                         getPosition: (d: Point) => d.coordinate,
                         getRadius: (d) => 0.4,
                         getFillColor: (d: Point) => d.color,
@@ -117,6 +118,7 @@ export default defineComponent({
                         getText: (d: PlotHead) => d.title,
                         getSize: 10,
                         getAngle: 0,
+                        sizeUnits: 'common',
                         getTextAnchor: "start",
                         getAlignmentBaseline: "center",
                         onClick: (info, event) => console.log("Clicked:", info, event),
@@ -137,7 +139,7 @@ export default defineComponent({
                 results.push({
                     layer: md.layer,
                     head: md.head,
-                    title: `L.${md.layer} H.${md.head}`,
+                    title: `L${md.layer} H${md.head}`,
                     coordinate: [
                         md.head * (matrixCellWidth + matrixCellMargin),
                         -md.layer * (matrixCellHeight + matrixCellMargin),
@@ -174,7 +176,7 @@ export default defineComponent({
 
             // compute msgs for each token
             const msgs = tokenData.map(
-                (td) => `${td.value}. Position: ${td.position}. Type: ${td.type}`
+                (td) => `${td.value} (type: ${td.type}, position: ${td.position.toFixed(2)})`
             );
 
             // loop each plot (layer-head pair)

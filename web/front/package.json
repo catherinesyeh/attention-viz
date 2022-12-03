@@ -17,6 +17,7 @@
     "axios": "^0.24.0",
     "bootstrap": "^5.0.0-beta3",
     "d3": "^7.6.1",
+    "deck.gl": "^8.8.20",
     "less": "3.13.0",
     "less-loader": "^7.1.0",
     "pub-sub-es": "^2.0.1",
