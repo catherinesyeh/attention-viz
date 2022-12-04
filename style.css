@@ -148,6 +148,7 @@ a:hover, .link:hover {
 .loading {
     text-align: center; 
     line-height: 50vh;
+    transition: 0.5s;
 }
 
 #graph-dropdown {

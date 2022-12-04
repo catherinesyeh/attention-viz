@@ -72,6 +72,26 @@ body {
     color: #1d1d1f;
 }
 
+@keyframes loading {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+#loading {
+  animation: loading 2s infinite;
+  line-height: 50vh;
+}
+
+#loading.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 div#header-block {
     height: 10px;
     width: 100%;

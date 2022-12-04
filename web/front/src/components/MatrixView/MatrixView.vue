@@ -3,6 +3,7 @@
     <div class="viewHead">
         <!-- Matrix View -->
         <div id="matrix-wrapper">
+            <span id="loading">Loading...</span>
             <canvas id="matrix-canvas" />
         </div>
     </div>
@@ -70,6 +71,8 @@ export default defineComponent({
          * The main function for drawing the scatter matrices
          */
         const drawMatrices = () => {
+            const loading = document.getElementById("loading");
+            loading!.classList.remove("hide");
             let { matrixData, tokenData } = state;
             if (!matrixData.length || !tokenData.length) return;
 
@@ -131,6 +134,7 @@ export default defineComponent({
                     }
                 },
             });
+            loading!.classList.add("hide");
         };
 
         /**
