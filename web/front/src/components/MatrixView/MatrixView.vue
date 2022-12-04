@@ -108,7 +108,7 @@ export default defineComponent({
                         getPosition: (d: Point) => d.coordinate,
                         getRadius: (d) => 0.4,
                         getFillColor: (d: Point) => d.color,
-                        onHover: (info, event) => console.log("Hovered:", info, event),
+                        // onHover: (info, event) => console.log("Hovered:", info, event),
                     }),
                     new TextLayer({
                         id: "text-layer",
@@ -121,10 +121,15 @@ export default defineComponent({
                         sizeUnits: 'common',
                         getTextAnchor: "start",
                         getAlignmentBaseline: "center",
-                        onClick: (info, event) => console.log("Clicked:", info, event),
+                        // onClick: (info, event) => console.log("Clicked:", info, event),
                     }),
                 ],
-                getTooltip: ({ object }) => object && object.msg,
+                getTooltip: ({ object }) => object && {
+                    html: object.msg,
+                    style: {
+                        color: '#fff'
+                    }
+                },
             });
         };
 
@@ -159,8 +164,8 @@ export default defineComponent({
             console.log(matrixCellWidth, matrixCellHeight, matrixCellMargin);
 
             // compute colors for each token
-            const queryColor = d3.scaleSequential().domain([0, 1]).interpolator(d3.interpolatePuRd);
-            const keyColor = d3.scaleSequential().domain([0, 1]).interpolator(d3.interpolateYlGn);
+            const queryColor = d3.scaleSequential().domain([0, 1]).interpolator(d3.interpolateYlGn);
+            const keyColor = d3.scaleSequential().domain([0, 1]).interpolator(d3.interpolatePuRd);
             const getColor = (td: Typing.TokenData) => {
                 var colorstr = "rgb()";
                 if (td.type === "query") {
@@ -176,7 +181,7 @@ export default defineComponent({
 
             // compute msgs for each token
             const msgs = tokenData.map(
-                (td) => `${td.value} (type: ${td.type}, position: ${td.position.toFixed(2)})`
+                (td) => `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
             );
 
             // loop each plot (layer-head pair)

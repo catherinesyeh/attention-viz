@@ -55,6 +55,8 @@ export default defineComponent({
 $blue: #263459;
 $color1: #96351e;
 $color2: #dbb98f;
+$query: #c2e8b4;
+$key: #f0b3c7;
 
 html,
 body {
@@ -76,4 +78,13 @@ div#header-block {
     background-color: $blue;
     margin-bottom: 10px;
 }
+
+.deck-tooltip .query {
+  color: $query;
+}
+
+.deck-tooltip .key {
+  color: $key;
+}
+
 </style>

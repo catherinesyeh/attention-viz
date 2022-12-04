@@ -10,9 +10,13 @@ export namespace Typing {
         tsne_y: number;
         umap_x: number;
         umap_y: number;
+        norm: number;
     }
     export interface TokenData {
         position: number;
+        pos_int: number;
+        length: number;
+        sentence: string;
         type: string;
         value: string;
     }

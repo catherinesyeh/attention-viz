@@ -130,44 +130,55 @@ columns = df.columns
 
 # add columns for x/y coords, attn, dot prod, norms
 
+# print(df['tsne_x_0_0'].tail(20))
+
 for layer in range(12):
     for head in range(12):
         #         print("layer {}, head {}".format(layer, head))
 
         #         tsne_file = coord_dir + "layer{}_head{}_tsne.js".format(layer, head)
         #         umap_file = coord_dir + "layer{}_head{}_umap.js".format(layer, head)
-        info_file = tsv_dir + "layer{}/labels{}.tsv".format(layer, head)
+        # info_file = tsv_dir + "layer{}/labels{}.tsv".format(layer, head)
 
-#         # extract coords
-#         with open(tsne_file, "r") as f:
-#             tsne_coords = f.read()
-#         tsne_x, tsne_y = extract_coords(tsne_coords)
+        #         # extract coords
+        #         with open(tsne_file, "r") as f:
+        #             tsne_coords = f.read()
+        #         tsne_x, tsne_y = extract_coords(tsne_coords)
 
-#         with open(umap_file, "r") as f:
-#             umap_coords = f.read()
-#         umap_x, umap_y = extract_coords(umap_coords)
+        #         with open(umap_file, "r") as f:
+        #             umap_coords = f.read()
+        #         umap_x, umap_y = extract_coords(umap_coords)
 
-#         df['tsne_x_{}_{}'.format(layer, head)] = tsne_x
-#         df['tsne_y_{}_{}'.format(layer, head)] = tsne_y
-#         df['umap_x_{}_{}'.format(layer, head)] = umap_x
-#         df['umap_y_{}_{}'.format(layer, head)] = umap_y
+        # reverse coords
+        new_tx = df['tsne_x_{}_{}'.format(
+            layer, head)][5021:].append(df['tsne_x_{}_{}'.format(layer, head)][:5021], ignore_index=True)
+        new_ty = df['tsne_y_{}_{}'.format(
+            layer, head)][5021:].append(df['tsne_y_{}_{}'.format(layer, head)][:5021], ignore_index=True)
+        new_qx = df['umap_x_{}_{}'.format(
+            layer, head)][5021:].append(df['umap_x_{}_{}'.format(layer, head)][:5021], ignore_index=True)
+        new_qy = df['umap_y_{}_{}'.format(
+            layer, head)][5021:].append(df['umap_y_{}_{}'.format(layer, head)][:5021], ignore_index=True)
+        df['tsne_x_{}_{}'.format(layer, head)] = new_tx
+        df['tsne_y_{}_{}'.format(layer, head)] = new_ty
+        df['umap_x_{}_{}'.format(layer, head)] = new_qx
+        df['umap_y_{}_{}'.format(layer, head)] = new_qy
 
 #         # add other info
-        df_mini = pd.read_csv(info_file, sep='\t')
+        # df_mini = pd.read_csv(info_file, sep='\t')
         # df1 = df_mini.iloc[:5021, 5:]
-        df2 = df_mini.iloc[30070:30070+5021, 5:]
+        # df2 = df_mini.iloc[30070:30070+5021, 5:]
         # df_merge = pd.concat([df1, df2])
 
         # df.drop(['attn_{}_{}'.format(layer, head), 'dp_{}_{}'.format(
         #     layer, head), 'norm_{}_{}'.format(layer, head)], axis=1)
-        df['attn_{}_{}'.format(layer, head)][5021:] = df2['attn']
-        df['dp_{}_{}'.format(layer, head)][5021:] = df2['dot_prod']
-        df['norm_{}_{}'.format(layer, head)][5021:] = df2['norm']
+        # df['attn_{}_{}'.format(layer, head)][5021:] = df2['attn']
+        # df['dp_{}_{}'.format(layer, head)][5021:] = df2['dot_prod']
+        # df['norm_{}_{}'.format(layer, head)][5021:] = df2['norm']
 
-        # break
+    #     break
     # break
 
 # print(df.head(20))
 # print(df.dtypes)
-print(df.tail(20))
+# print(df['tsne_x_0_0'].tail(20))
 df.to_csv("new_data.csv", index=False)  # save updated file
