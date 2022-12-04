@@ -84,12 +84,17 @@ body {
 #loading {
   animation: loading 2s infinite;
   line-height: 50vh;
+  transition: 0.5s;
 }
 
-#loading.hide {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+.hide {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    transform: scale(0) !important;
+    line-height: 0 !important;
 }
 
 div#header-block {

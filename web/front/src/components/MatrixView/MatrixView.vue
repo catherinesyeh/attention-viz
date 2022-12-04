@@ -3,7 +3,16 @@
     <div class="viewHead">
         <!-- Matrix View -->
         <div id="matrix-wrapper">
-            <span id="loading">Loading...</span>
+            <div id="label-wrapper">
+                <span id="loading">Loading...</span>
+            <div id="matrix-labels">
+                <p class="axis-label">
+                    <span class="head-axis">head →</span>
+                    <span class="layer-axis">layer ↓</span>
+                </p>
+                <button id="matrix-reset" type="button" class="btn btn-dark btn-sm reset">reset</button>
+            </div>
+            </div>
             <canvas id="matrix-canvas" />
         </div>
     </div>
@@ -21,6 +30,7 @@ import { Typing } from "@/utils/typing";
 
 import { Deck, OrthographicView } from "@deck.gl/core/typed";
 import { ScatterplotLayer, TextLayer } from "@deck.gl/layers/typed";
+import { duration } from "moment";
 
 interface Point {
     coordinate: Point2D;
@@ -73,7 +83,10 @@ export default defineComponent({
          */
         const drawMatrices = () => {
             const loading = document.getElementById("loading");
+            const leftLabels = document.getElementById("matrix-labels");
             loading!.classList.remove("hide");
+            leftLabels!.classList.add("hide");
+            
             let { matrixData, tokenData } = state;
             if (!matrixData.length || !tokenData.length) return;
 
@@ -89,6 +102,13 @@ export default defineComponent({
                 _.max(points.map((x) => x.coordinate[1])) +
                 _.min(points.map((x) => x.coordinate[1]));
 
+            const initialView = {
+                    target: [canvasWidth / 2, canvasHeight / 2, 0],
+                    zoom: -1,
+                    minZoom: -2,
+                    maxZoom: 40,
+                };
+
             const deckgl = new Deck({
                 canvas: "matrix-canvas",
                 // initialViewState: INITIAL_VIEW_STATE,
@@ -98,12 +118,7 @@ export default defineComponent({
                     // near: 0.1,
                     // far: 1000,
                 }),
-                initialViewState: {
-                    target: [canvasWidth / 2, canvasHeight / 2, 0],
-                    zoom: -1,
-                    minZoom: -2,
-                    maxZoom: 40,
-                },
+                initialViewState: initialView,
                 layers: [
                     new ScatterplotLayer({
                         pickable: true,
@@ -135,7 +150,23 @@ export default defineComponent({
                     }
                 },
             });
+
+            // add reset functionality
+            const reset = document.getElementById("matrix-reset");
+            reset!.onclick = () => {
+                console.log("reset!");
+                deckgl.setProps({ 
+                    initialViewState: {
+                        target: deckgl.props.viewState
+                    }
+                });
+                deckgl.setProps({ // this alone doesn't change anything apparently?
+                    initialViewState: initialView
+                });
+            }
+
             loading!.classList.add("hide");
+            leftLabels!.classList.remove("hide");
         };
 
         /**
@@ -249,6 +280,24 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+#label-wrapper {
+    position: absolute;
+    left: 10px;
+    z-index: 9999;
+}
+
+#matrix-labels {
+    transition: 0.5s;
+}
+.axis-label {
+    transition: 0.5s;
+}
+.axis-label span {
+    display: block;
+    font-size: smaller;
+    transition: 0.5s;
+}
+
 div#matrix-wrapper {
     position: relative;
     height: 100vh;
