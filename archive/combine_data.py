@@ -75,7 +75,7 @@ def extract_coords(coords):
 
 # load csv
 # start = time.time()
-# df = pd.read_csv(new_csv)
+df = pd.read_csv(new_csv)
 # end = time.time()
 
 # print("csv took {} seconds to run".format(end - start))
@@ -99,21 +99,29 @@ def extract_coords(coords):
 # test other pickle method
 # pd.to_pickle(df, "data.pkl")
 
-df = pd.read_pickle("data.pkl")
+# df = pd.read_pickle("data.pkl")
 columns = df.columns
-print(len(columns))
+# print(len(columns))
 
-df.drop("pos_int", inplace=True, axis=1)
-df.drop("sentence", inplace=True, axis=1)
 
-for col in columns:
-    if "attn" in col or "norm" in col or "dp" in col:
-        df.drop(col, inplace=True, axis=1)
+# len_col = df["sentence"].str.split().str.len() - 1
+# df.insert(loc=3, column='length', value=len_col)
+# print(df['length'][:100])
 
-print(len(df.columns))
+# df.drop("pos_int", inplace=True, axis=1)
+# df.drop("sentence", inplace=True, axis=1)
 
-df.to_csv(new_csv, index=False)
-pd.to_pickle(df, "data_small.pkl")
+# for col in columns:
+#     #     if "attn" in col or "norm" in col or "dp" in col:
+#     #         df.drop(col, inplace=True, axis=1)
+#     print("col: {}, len: {}".format(col, len(df[col])))
+
+# print(df.isna().any())
+
+# print(len(df.columns))
+
+# df.to_csv(new_csv, index=False)
+# pd.to_pickle(df, "data_small.pkl")
 
 # convert to npy pckl file
 # save_numpickle(df, "data.npy")
@@ -122,13 +130,13 @@ pd.to_pickle(df, "data_small.pkl")
 
 # add columns for x/y coords, attn, dot prod, norms
 
-# for layer in range(12):
-#     for head in range(12):
-#         print("layer {}, head {}".format(layer, head))
+for layer in range(12):
+    for head in range(12):
+        #         print("layer {}, head {}".format(layer, head))
 
-#         tsne_file = coord_dir + "layer{}_head{}_tsne.js".format(layer, head)
-#         umap_file = coord_dir + "layer{}_head{}_umap.js".format(layer, head)
-#         info_file = tsv_dir + "layer{}/labels{}.tsv".format(layer, head)
+        #         tsne_file = coord_dir + "layer{}_head{}_tsne.js".format(layer, head)
+        #         umap_file = coord_dir + "layer{}_head{}_umap.js".format(layer, head)
+        info_file = tsv_dir + "layer{}/labels{}.tsv".format(layer, head)
 
 #         # extract coords
 #         with open(tsne_file, "r") as f:
@@ -145,18 +153,21 @@ pd.to_pickle(df, "data_small.pkl")
 #         df['umap_y_{}_{}'.format(layer, head)] = umap_y
 
 #         # add other info
-#         df_mini = pd.read_csv(info_file, sep='\t')
-#         df1 = df_mini.iloc[:5021, 5:]
-#         df2 = df_mini.iloc[30070:30070+5021, 5:]
-#         df_merge = pd.concat([df1, df2])
+        df_mini = pd.read_csv(info_file, sep='\t')
+        # df1 = df_mini.iloc[:5021, 5:]
+        df2 = df_mini.iloc[30070:30070+5021, 5:]
+        # df_merge = pd.concat([df1, df2])
 
-#         df['attn_{}_{}'.format(layer, head)] = df_merge['attn']
-#         df['dp_{}_{}'.format(layer, head)] = df_merge['dot_prod']
-#         df['norm_{}_{}'.format(layer, head)] = df_merge['norm']
+        # df.drop(['attn_{}_{}'.format(layer, head), 'dp_{}_{}'.format(
+        #     layer, head), 'norm_{}_{}'.format(layer, head)], axis=1)
+        df['attn_{}_{}'.format(layer, head)][5021:] = df2['attn']
+        df['dp_{}_{}'.format(layer, head)][5021:] = df2['dot_prod']
+        df['norm_{}_{}'.format(layer, head)][5021:] = df2['norm']
 
-# break
-# break
+        # break
+    # break
 
 # print(df.head(20))
 # print(df.dtypes)
-# df.to_csv("new_data.csv", index=False)  # save updated file
+print(df.tail(20))
+df.to_csv("new_data.csv", index=False)  # save updated file
