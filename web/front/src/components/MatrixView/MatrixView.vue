@@ -61,6 +61,7 @@ export default defineComponent({
 
         const state = reactive({
             matrixData: computed(() => store.state.matrixData),
+            attentionData: computed(() => store.state.attentionData),
             tokenData: computed(() => store.state.tokenData),
             matrixCellHeight: 100,
             matrixCellWidth: 100,
@@ -219,6 +220,13 @@ export default defineComponent({
 
         watch(
             () => state.matrixData,
+            () => {
+                drawMatrices();
+            }
+        );
+
+        watch(
+            () => state.attentionData,
             () => {
                 drawMatrices();
             }

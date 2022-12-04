@@ -5,14 +5,22 @@ export namespace Typing {
         layer: number;
         tokens: TokenCoordinate[];
     }
-    export interface TokenCoordinate {
+    export interface TokenCoordinate { // depends on head and layer
         tsne_x: number;
         tsne_y: number;
         umap_x: number;
         umap_y: number;
         norm: number;
     }
-    export interface TokenData {
+    export interface AttentionData {
+        head: number;
+        layer: number;
+        tokens: AttnCoordinate[];
+    }
+    export interface AttnCoordinate {
+        attention: number[];
+    }
+    export interface TokenData { // shared by all heads and layers
         position: number;
         pos_int: number;
         length: number;

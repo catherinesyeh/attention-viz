@@ -33,10 +33,18 @@ def test():
     data = dataService.get_raw_data()
     return data
 
+
 @app.route("/getMatrixData", methods=['GET'])
 def _get_matrix_data():
     data = dataService.get_matrix_data()  # return a list
     return {'data': data}  # a response cannot be a list
+
+
+@app.route("/getAttentionData", methods=['GET'])
+def _get_attention_data():
+    data = dataService.get_attention_data()  # return a list
+    return {'data': data}  # a response cannot be a list
+
 
 @app.route("/getTokenData", methods=['GET'])
 def _get_token_data():

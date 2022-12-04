@@ -10,6 +10,7 @@ import { Typing } from "@/utils/typing";
 
 export interface State {
   matrixData: Typing.MatrixData[];
+  attentionData: Typing.AttentionData[];
   tokenData: Typing.TokenData[];
 }
 
@@ -19,6 +20,7 @@ export const key: InjectionKey<Store<State>> = Symbol()
 export const store = createStore<State>({
   state: {
     matrixData: [],
+    attentionData: [],
     tokenData: []
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
@@ -29,6 +31,9 @@ export const store = createStore<State>({
     setMatrixData(state, matrixData) {
       state.matrixData = matrixData
     },
+    setAttentionData(state, attentionData) {
+      state.attentionData = attentionData
+    },
     setTokenData(state, tokenData) {
       state.tokenData = tokenData
     }
@@ -37,10 +42,15 @@ export const store = createStore<State>({
     async init({ state, commit }) {
       const matrixData = (await dataService.getMatrixData()).data;
       commit('setMatrixData', matrixData);
-      console.log('setMatrixData', matrixData)
+      console.log('setMatrixData', matrixData);
+
+      const attentionData = (await dataService.getAttentionData()).data;
+      commit('setAttentionData', attentionData);
+      console.log('setAttentionData', attentionData);
 
       const tokenData = (await dataService.getTokenData()).tokens;
       commit('setTokenData', tokenData);
+      console.log('setTokenData', tokenData);
     }
   },
   strict: process.env.NODE_ENV !== "production"

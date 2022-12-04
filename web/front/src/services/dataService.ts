@@ -48,6 +48,10 @@ export async function getMatrixData() {
   return get(`getMatrixData`);
 }
 
+export async function getAttentionData() {
+  return get(`getAttentionData`);
+}
+
 export async function getTokenData() {
   return get(`getTokenData`);
 }
