@@ -2,7 +2,20 @@
   <nav class="navbar navbar-light bg-light">
     <div class="container-fluid">
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
+      <div class="dropdown">
+        <label for="graph-type">Graph Type:</label>
+        <select class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" name="graph-type" id="graph-type">
+          <option value="tsne" selected>tsne</option>
+          <option value="umap">umap</option>
+        </select>
+        <label for="color-by">Color By:</label>
+        <select class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" name="color-by" id="color-by">
+          <option value="position" selected>position</option>
+          <option value="norm">norm</option>
+        </select>
+      </div>
     </div>
+
   </nav>
   <div class="main">
     <div class="row">
@@ -52,6 +65,7 @@ export default defineComponent({
 <style rel="stylesheet" lang="scss">
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
 
+$background: #f5f5f7;
 $blue: #263459;
 $color1: #96351e;
 $color2: #dbb98f;
@@ -67,7 +81,7 @@ body {
 
     font-family: "Roboto", sans-serif;
     font-size: 16px;
-    background: #f5f5f7;
+    background: $background;
 
     color: #1d1d1f;
 }
@@ -97,12 +111,12 @@ body {
     line-height: 0 !important;
 }
 
-div#header-block {
-    height: 10px;
-    width: 100%;
-    background-color: $blue;
-    margin-bottom: 10px;
+label {
+  margin-right: 5px;
+  margin-left: 10px;
 }
+
+
 
 .deck-tooltip .query {
   color: $query;

@@ -1,18 +1,20 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
-    <div class="viewHead">
+    <div>
         <!-- Matrix View -->
         <div id="matrix-wrapper">
             <div id="label-wrapper">
                 <span id="loading">Loading...</span>
-            <div id="matrix-labels">
-                <p class="axis-label">
-                    <span class="head-axis">head →</span>
-                    <span class="layer-axis">layer ↓</span>
-                </p>
-                <button id="matrix-reset" type="button" class="btn btn-dark btn-sm reset">reset</button>
+                <div id="matrix-labels">
+                    <p class="axis-label">
+                        <span class="head-axis">head →</span>
+                        <span class="layer-axis">layer ↓</span>
+                    </p>
+                    <button id="matrix-reset" type="button" class="btn btn-dark btn-sm reset">reset</button>
+                </div>
             </div>
-            </div>
+            <div class="gradient-edge"></div>
+            <div class="gradient-edge right"></div>
             <canvas id="matrix-canvas" />
         </div>
     </div>
@@ -280,6 +282,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+$background: #f5f5f7;
+
 #label-wrapper {
     position: absolute;
     left: 10px;
@@ -307,6 +311,22 @@ div#matrix-wrapper {
         height: 100%;
         width: 100%;
     }
+}
+
+.gradient-edge {
+    position: absolute;
+    top: 0;
+    z-index: 1;
+    left: 0;
+    height: 100vh;
+    width: calc(100px + 8vw);
+    background: linear-gradient(to right, #f5f5f7, rgba(255, 255, 255, 0));
+}
+
+.gradient-edge.right {
+    left: unset;
+    right: 0;
+    background: linear-gradient(to left, #f5f5f7, rgba(255, 255, 255, 0));
 }
 
 div.matrix-cell {
