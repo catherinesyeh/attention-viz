@@ -12,6 +12,7 @@ export interface State {
   matrixData: Typing.MatrixData[];
   attentionData: Typing.AttentionData[];
   tokenData: Typing.TokenData[];
+  renderState: boolean;
 }
 
 // define injection key
@@ -21,7 +22,8 @@ export const store = createStore<State>({
   state: {
     matrixData: [],
     attentionData: [],
-    tokenData: []
+    tokenData: [],
+    renderState: false
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -36,6 +38,9 @@ export const store = createStore<State>({
     },
     setTokenData(state, tokenData) {
       state.tokenData = tokenData
+    },
+    updateRenderState(state, renderState) {
+      state.renderState = renderState
     }
   },
   actions: { // actions commit mutations
@@ -44,9 +49,9 @@ export const store = createStore<State>({
       commit('setMatrixData', matrixData);
       console.log('setMatrixData', matrixData);
 
-      const attentionData = (await dataService.getAttentionData()).data;
-      commit('setAttentionData', attentionData);
-      console.log('setAttentionData', attentionData);
+      // const attentionData = (await dataService.getAttentionData()).data;
+      // commit('setAttentionData', attentionData);
+      // console.log('setAttentionData', attentionData);
 
       const tokenData = (await dataService.getTokenData()).tokens;
       commit('setTokenData', tokenData);

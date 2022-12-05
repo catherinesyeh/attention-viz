@@ -23,7 +23,7 @@
         <UserPanel />
       </div>
     <div class="col-10">
-        <MatrixView />
+        <Projection />
       </div>
     </div>
   </div>
@@ -36,13 +36,13 @@ import { defineComponent } from "vue";
 import { useStore } from "@/store/index";
 
 import UserPanel from "./UserPanel/UserPanel.vue";
-import MatrixView from "./MatrixView/MatrixView.vue";
+import Projection from "./Projection/Projection.vue";
 
 import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
 
 export default defineComponent({
     name: "App",
-    components: { UserPanel, MatrixView },
+    components: { UserPanel, Projection },
     setup() {
         const store = useStore();
 

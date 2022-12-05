@@ -1,23 +1,6 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
-    <div>
-        <!-- Matrix View -->
-        <div id="matrix-wrapper">
-            <div id="label-wrapper">
-                <span id="loading">Loading...</span>
-                <div id="matrix-labels">
-                    <p class="axis-label">
-                        <span class="head-axis">head →</span>
-                        <span class="layer-axis">layer ↓</span>
-                    </p>
-                    <button id="matrix-reset" type="button" class="btn btn-dark btn-sm reset">reset</button>
-                </div>
-            </div>
-            <div class="gradient-edge"></div>
-            <div class="gradient-edge right"></div>
-            <canvas id="matrix-canvas" />
-        </div>
-    </div>
+    <canvas id="matrix-canvas" />
 </template>
 
 <script lang="ts">
@@ -26,13 +9,12 @@ import * as _ from "underscore";
 import * as d3 from "d3";
 import { useStore } from "@/store/index";
 import { ScatterGL, Point2D } from "scatter-gl";
-import createScatterplot from "regl-scatterplot";
 
 import { Typing } from "@/utils/typing";
 
 import { Deck, OrthographicView } from "@deck.gl/core/typed";
+// import interface {Deck} from "@deck.gl/core/typed";
 import { ScatterplotLayer, TextLayer } from "@deck.gl/layers/typed";
-import { duration } from "moment";
 
 interface Point {
     coordinate: Point2D;
@@ -46,6 +28,19 @@ interface PlotHead {
     title: string;
     coordinate: Point2D;
 }
+
+interface ViewState {
+    target: number[];
+    zoom: number;
+    minZoom: number;
+    maxZoom: number;
+}
+const nullInitialView: ViewState = {
+    target: [0, 0, 0],
+    zoom: -1,
+    minZoom: -2,
+    maxZoom: 40,
+};
 
 /**
  * Fit the canvas to the parent container size
@@ -68,7 +63,7 @@ function fitToContainer(canvas: HTMLCanvasElement | HTMLElement) {
 
 export default defineComponent({
     components: {},
-    setup() {
+    setup(props, context) {
         const store = useStore();
 
         const state = reactive({
@@ -78,17 +73,17 @@ export default defineComponent({
             matrixCellHeight: 100,
             matrixCellWidth: 100,
             matrixCellMargin: 20,
+            viewState: nullInitialView,
         });
+
+        var deckgl = {} as Deck;
 
         /**
          * The main function for drawing the scatter matrices
          */
         const drawMatrices = () => {
-            const loading = document.getElementById("loading");
-            const leftLabels = document.getElementById("matrix-labels");
-            loading!.classList.remove("hide");
-            leftLabels!.classList.add("hide");
-            
+            store.commit("updateRenderState", true);
+
             let { matrixData, tokenData } = state;
             if (!matrixData.length || !tokenData.length) return;
 
@@ -104,32 +99,29 @@ export default defineComponent({
                 _.max(points.map((x) => x.coordinate[1])) +
                 _.min(points.map((x) => x.coordinate[1]));
 
-            const initialView = {
-                    target: [canvasWidth / 2, canvasHeight / 2, 0],
-                    zoom: -1,
-                    minZoom: -2,
-                    maxZoom: 40,
-                };
+            state.viewState = {
+                target: [canvasWidth / 2, canvasHeight / 2, 0],
+                zoom: -1,
+                minZoom: -2,
+                maxZoom: 40,
+            };
 
-            const deckgl = new Deck({
+            deckgl = new Deck({
                 canvas: "matrix-canvas",
-                // initialViewState: INITIAL_VIEW_STATE,
                 controller: true,
                 views: new OrthographicView({
                     flipY: false,
-                    // near: 0.1,
-                    // far: 1000,
                 }),
-                initialViewState: initialView,
+                initialViewState: state.viewState,
                 layers: [
                     new ScatterplotLayer({
                         pickable: true,
                         data: points,
                         opacity: 0.5,
                         getPosition: (d: Point) => d.coordinate,
-                        getRadius: (d) => 0.4,
+                        getRadius: (d: Point) => 0.4,
                         getFillColor: (d: Point) => d.color,
-                        // onHover: (info, event) => console.log("Hovered:", info, event),
+                        onClick: (info, event) => console.log("Clicked:", info, event),
                     }),
                     new TextLayer({
                         id: "text-layer",
@@ -139,36 +131,22 @@ export default defineComponent({
                         getText: (d: PlotHead) => d.title,
                         getSize: 10,
                         getAngle: 0,
-                        sizeUnits: 'common',
+                        sizeUnits: "common",
                         getTextAnchor: "start",
                         getAlignmentBaseline: "center",
                         // onClick: (info, event) => console.log("Clicked:", info, event),
                     }),
                 ],
-                getTooltip: ({ object }) => object && {
-                    html: object.msg,
-                    style: {
-                        color: '#fff'
-                    }
-                },
+                getTooltip: ({ object }) =>
+                    object && {
+                        html: object.msg,
+                        style: {
+                            color: "#fff",
+                        },
+                    },
             });
 
-            // add reset functionality
-            const reset = document.getElementById("matrix-reset");
-            reset!.onclick = () => {
-                console.log("reset!");
-                deckgl.setProps({ 
-                    initialViewState: {
-                        target: deckgl.props.viewState
-                    }
-                });
-                deckgl.setProps({ // this alone doesn't change anything apparently?
-                    initialViewState: initialView
-                });
-            }
-
-            loading!.classList.add("hide");
-            leftLabels!.classList.remove("hide");
+            store.commit("updateRenderState", false);
         };
 
         /**
@@ -219,7 +197,8 @@ export default defineComponent({
 
             // compute msgs for each token
             const msgs = tokenData.map(
-                (td) => `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
+                (td) =>
+                    `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
             );
 
             // loop each plot (layer-head pair)
@@ -251,6 +230,23 @@ export default defineComponent({
             return results;
         };
 
+        const reset = () => {
+            console.log("reset!");
+
+            console.log(deckgl, state.viewState);
+
+            deckgl.setProps({
+                initialViewState: {
+                    target: deckgl.props.viewState,
+                },
+            });
+
+            deckgl.setProps({
+                // this alone doesn't change anything apparently?
+                initialViewState: state.viewState,
+            });
+        };
+
         watch(
             () => state.matrixData,
             () => {
@@ -274,8 +270,11 @@ export default defineComponent({
 
         onMounted(() => drawMatrices());
 
+        context.expose({ reset })
+
         return {
             ...toRefs(state),
+            reset
         };
     },
 });

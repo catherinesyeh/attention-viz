@@ -29,4 +29,9 @@ export namespace Typing {
         value: string;
     }
 
+    export interface Point {
+        coordinate: [number, number];
+        color: any;
+        msg: string;
+    }
 }

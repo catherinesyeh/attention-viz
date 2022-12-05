@@ -5,10 +5,10 @@ import App from "./components/App.vue";
 import { store, key } from '@/store/index'
 
 import {
-    Checkbox, Card, Tag, Tree, Table, Select, Button, Form, InputNumber
+    Radio
 } from "ant-design-vue";
 
 createApp(App)
     .use(store, key)
-    .use(Checkbox).use(Card).use(Tag).use(Tree).use(Table).use(Select).use(Button).use(Form).use(InputNumber)
+    .use(Radio)
     .mount("#app");
