@@ -1,10 +1,13 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as baseUseStore, Store } from 'vuex'
 import * as dataService from "@/services/dataService";
+import {computeMatrixProjection} from "@/utils/dataTransform";
+
 import { TypeOfList } from "underscore";
 
 // init default 
 import { Typing } from "@/utils/typing";
+import { ConsoleSqlOutlined } from '@ant-design/icons-vue';
 
 // Vuex docs: https://vuex.vuejs.org/
 
@@ -12,7 +15,9 @@ export interface State {
   matrixData: Typing.MatrixData[];
   attentionData: Typing.AttentionData[];
   tokenData: Typing.TokenData[];
-  renderState: boolean;
+  renderState: boolean; // true when the canvas is being rendered; false upon finished
+  attentionByToken: Typing.AttnByToken;
+  attentionByTokenLock: boolean; 
 }
 
 // define injection key
@@ -23,7 +28,9 @@ export const store = createStore<State>({
     matrixData: [],
     attentionData: [],
     tokenData: [],
-    renderState: false
+    renderState: true,
+    attentionByToken: {attns: [], token: {} as Typing.TokenData},
+    attentionByTokenLock: false
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -40,7 +47,14 @@ export const store = createStore<State>({
       state.tokenData = tokenData
     },
     updateRenderState(state, renderState) {
-      state.renderState = renderState
+      state.renderState = renderState;
+      console.log('state: renderState', renderState);
+    },
+    setAttentionByToken(state, attentionByToken) {
+      state.attentionByToken = attentionByToken
+    },
+    setAttentionByTokenLock(state, attentionByTokenLock) {
+      state.attentionByTokenLock = attentionByTokenLock;
     }
   },
   actions: { // actions commit mutations
@@ -49,13 +63,20 @@ export const store = createStore<State>({
       commit('setMatrixData', matrixData);
       console.log('setMatrixData', matrixData);
 
-      // const attentionData = (await dataService.getAttentionData()).data;
-      // commit('setAttentionData', attentionData);
-      // console.log('setAttentionData', attentionData);
-
       const tokenData = (await dataService.getTokenData()).tokens;
       commit('setTokenData', tokenData);
       console.log('setTokenData', tokenData);
+    },
+    async setClickedPoint({state, commit}, pt: Typing.Point) {
+      if (state.attentionByTokenLock) {
+        console.log('Lock');
+        return;
+      } 
+      commit('setAttentionByTokenLock', true); 
+      const attentionByToken = (await dataService.getAttentionByToken(pt));
+      console.log('attentionDataByToken', attentionByToken);
+      commit('setAttentionByToken', attentionByToken);
+      commit('setAttentionByTokenLock', false)
     }
   },
   strict: process.env.NODE_ENV !== "production"
