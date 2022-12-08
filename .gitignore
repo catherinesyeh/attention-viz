@@ -17,6 +17,9 @@ node_modules
 .env.local
 .env.*.local
 
+# local archive files
+/archive
+
 # Log files
 npm-debug.log*
 yarn-debug.log*

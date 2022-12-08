@@ -14,12 +14,10 @@
                         reset
                     </button>
 
-                    <br />
-
-                    Mode <br />
+                    <p class="label">mode</p>
                     <a-radio-group v-model:value="mode">
-                        <a-radio-button value="single">Single</a-radio-button>
-                        <a-radio-button value="matrix">Matrix</a-radio-button>
+                        <a-radio-button value="single">single</a-radio-button>
+                        <a-radio-button value="matrix">matrix</a-radio-button>
                     </a-radio-group>
                 </div>
             </div>
@@ -71,6 +69,7 @@ $background: #f5f5f7;
 
 #label-wrapper {
     position: absolute;
+    top: 15px; 
     left: 10px;
     z-index: 9999;
 }
@@ -85,6 +84,21 @@ $background: #f5f5f7;
     display: block;
     font-size: smaller;
     transition: 0.5s;
+}
+
+p.label {
+    margin-top: 15px;
+    margin-bottom: 0;
+    font-size: smaller;
+}
+
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+    color: black !important;
+    background: #fff;
+    border-color: black !important;
+}
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
+    background-color: black !important;
 }
 
 div#matrix-wrapper {
