@@ -4,7 +4,17 @@
 </template>
 
 <script lang="ts">
-import { onMounted, computed, reactive, toRefs, h, watch, defineComponent } from "vue";
+import {
+    onMounted,
+    computed,
+    reactive,
+    toRefs,
+    h,
+    watch,
+    defineComponent,
+    PropType,
+    shallowRef,
+} from "vue";
 import * as _ from "underscore";
 import * as d3 from "d3";
 import { useStore } from "@/store/index";
@@ -15,19 +25,9 @@ import { Typing } from "@/utils/typing";
 import { Deck, OrthographicView } from "@deck.gl/core/typed";
 // import interface {Deck} from "@deck.gl/core/typed";
 import { ScatterplotLayer, TextLayer } from "@deck.gl/layers/typed";
+import { toTypeString } from "@vue/shared";
 
-interface Point {
-    coordinate: Point2D;
-    color: any;
-    msg: string;
-}
-
-interface PlotHead {
-    layer: number;
-    head: number;
-    title: string;
-    coordinate: Point2D;
-}
+import { computeMatrixProjection } from "@/utils/dataTransform";
 
 interface ViewState {
     target: number[];
@@ -63,18 +63,29 @@ function fitToContainer(canvas: HTMLCanvasElement | HTMLElement) {
 
 export default defineComponent({
     components: {},
+    props: {},
     setup(props, context) {
         const store = useStore();
 
         const state = reactive({
             matrixData: computed(() => store.state.matrixData),
-            attentionData: computed(() => store.state.attentionData),
+            // attentionData: computed(() => store.state.attentionData),
             tokenData: computed(() => store.state.tokenData),
+            // points: computed(() => store.state.points),
             matrixCellHeight: 100,
             matrixCellWidth: 100,
             matrixCellMargin: 20,
             viewState: nullInitialView,
         });
+
+        var shallowData = shallowRef({
+            points: [],
+            headings: [],
+            range: {
+                x: [0, 0],
+                y: [0, 0],
+            },
+        } as Typing.Projection);
 
         var deckgl = {} as Deck;
 
@@ -84,21 +95,13 @@ export default defineComponent({
         const drawMatrices = () => {
             store.commit("updateRenderState", true);
 
-            let { matrixData, tokenData } = state;
-            if (!matrixData.length || !tokenData.length) return;
+            const {points, headings, range} = shallowData.value;
+            console.log('drawMatrices', points, headings);
+            if (!points || !points.length) return;
 
-            const points = computePoints(matrixData, tokenData);
-            console.log("drawMatrices", points);
-
-            const textLabels = computeTextLabels(matrixData);
-
-            const canvasWidth =
-                _.max(points.map((x) => x.coordinate[0])) +
-                _.min(points.map((x) => x.coordinate[0]));
-            const canvasHeight =
-                _.max(points.map((x) => x.coordinate[1])) +
-                _.min(points.map((x) => x.coordinate[1]));
-
+            // put init view state in the centre
+            const canvasWidth = range.x[0] + range.x[1];
+            const canvasHeight = range.y[0] + range.y[1];
             state.viewState = {
                 target: [canvasWidth / 2, canvasHeight / 2, 0],
                 zoom: -1,
@@ -118,17 +121,20 @@ export default defineComponent({
                         pickable: true,
                         data: points,
                         opacity: 0.5,
-                        getPosition: (d: Point) => d.coordinate,
-                        getRadius: (d: Point) => 0.4,
-                        getFillColor: (d: Point) => d.color,
-                        onClick: (info, event) => console.log("Clicked:", info, event),
+                        getPosition: (d: Typing.Point) => d.coordinate,
+                        getRadius: (d: Typing.Point) => 0.4,
+                        getFillColor: (d: Typing.Point) => d.color,
+                        onClick: (info, event) => {
+                            let pt = info.object as Typing.Point
+                            store.dispatch('setClickedPoint', pt);
+                        },
                     }),
                     new TextLayer({
                         id: "text-layer",
-                        data: textLabels,
+                        data: headings,
                         pickable: true,
-                        getPosition: (d: PlotHead) => d.coordinate,
-                        getText: (d: PlotHead) => d.title,
+                        getPosition: (d: Typing.PlotHead) => d.coordinate,
+                        getText: (d: Typing.PlotHead) => d.title,
                         getSize: 10,
                         getAngle: 0,
                         sizeUnits: "common",
@@ -150,91 +156,9 @@ export default defineComponent({
         };
 
         /**
-         * Compute text headings for each plot (head-layer)
+         * Reset the view state
          */
-        const computeTextLabels = (matrixData: Typing.MatrixData[]) => {
-            var results = [] as PlotHead[];
-
-            let { matrixCellWidth, matrixCellHeight, matrixCellMargin } = state;
-            for (let md of matrixData) {
-                results.push({
-                    layer: md.layer,
-                    head: md.head,
-                    title: `L${md.layer} H${md.head}`,
-                    coordinate: [
-                        md.head * (matrixCellWidth + matrixCellMargin),
-                        -md.layer * (matrixCellHeight + matrixCellMargin),
-                    ],
-                });
-            }
-            return results;
-        };
-
-        /**
-         * Offset the points according to the x/y offset per plot
-         * Add color and on-hover msg
-         */
-        const computePoints = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[]) => {
-            let results = [] as Point[];
-            let { matrixCellWidth, matrixCellHeight, matrixCellMargin } = state;
-            console.log(matrixCellWidth, matrixCellHeight, matrixCellMargin);
-
-            // compute colors for each token
-            const queryColor = d3.scaleSequential().domain([0, 1]).interpolator(d3.interpolateYlGn);
-            const keyColor = d3.scaleSequential().domain([0, 1]).interpolator(d3.interpolatePuRd);
-            const getColor = (td: Typing.TokenData) => {
-                var colorstr = "rgb()";
-                if (td.type === "query") {
-                    colorstr = queryColor(td.position);
-                } else if (td.type === "key") {
-                    colorstr = keyColor(td.position);
-                }
-                let color = d3.color(colorstr)?.rgb();
-                if (!color) return [0, 0, 0];
-                return [color.r, color.g, color.b];
-            };
-            const colors = tokenData.map((td) => getColor(td));
-
-            // compute msgs for each token
-            const msgs = tokenData.map(
-                (td) =>
-                    `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
-            );
-
-            // loop each plot (layer-head pair)
-            for (let md of matrixData) {
-                // compute plot-wise offset
-                let xoffset = md.head * (matrixCellWidth + matrixCellMargin);
-                let yoffset = -md.layer * (matrixCellHeight + matrixCellMargin);
-                console.log(`compute data: layer ${md.layer}, head ${md.head}`);
-
-                // compute coordinates for each token
-                let data = md.tokens;
-                let xScale = d3
-                    .scaleLinear()
-                    .domain(d3.extent(data.map((x) => x.tsne_x)) as any)
-                    .range([0, matrixCellWidth]);
-                let yScale = d3
-                    .scaleLinear()
-                    .domain(d3.extent(data.map((x) => x.tsne_y)) as any)
-                    .range([0, matrixCellHeight]);
-                let points = data.map((d, idx) => ({
-                    coordinate: [xScale(d.tsne_x) + xoffset, yScale(d.tsne_y) + yoffset] as Point2D,
-                    color: colors[idx],
-                    msg: msgs[idx],
-                }));
-
-                results.push(...points);
-            }
-
-            return results;
-        };
-
         const reset = () => {
-            console.log("reset!");
-
-            console.log(deckgl, state.viewState);
-
             deckgl.setProps({
                 initialViewState: {
                     target: deckgl.props.viewState,
@@ -247,34 +171,32 @@ export default defineComponent({
             });
         };
 
-        watch(
-            () => state.matrixData,
-            () => {
-                drawMatrices();
+        const computedProjection = () => {
+            let { matrixData, tokenData } = state;
+            if (matrixData.length && tokenData.length) {
+                let projData = computeMatrixProjection(matrixData, tokenData);                
+                shallowData.value = projData;
             }
-        );
+        };
 
-        watch(
-            () => state.attentionData,
-            () => {
-                drawMatrices();
-            }
-        );
+        watch([() => state.matrixData, () => state.tokenData], () => computedProjection());
 
-        watch(
-            () => state.tokenData,
-            () => {
-                drawMatrices();
-            }
-        );
+        watch(shallowData, () => {
+            console.log("watch", shallowData);
+            drawMatrices();
+        });
 
-        onMounted(() => drawMatrices());
+        onMounted(() => {
+            console.log("onMounted");
+            computedProjection();
+        });
 
-        context.expose({ reset })
+        // expose reset functions to the parent
+        context.expose({ reset });
 
         return {
             ...toRefs(state),
-            reset
+            reset,
         };
     },
 });

@@ -51,6 +51,11 @@ def _get_token_data():
     data = dataService.get_token_data()
     return data
 
+@app.route('/getAttentionByToken', methods=['POST'])
+def _get_attention_by_token():
+    post_data = json.loads(request.data.decode())
+    return dataService.get_attention_by_token(post_data)
+
 # @app.route("/test", methods=['GET'])
 # def test():
 #     return send_file(

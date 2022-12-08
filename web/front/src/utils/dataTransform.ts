@@ -2,8 +2,8 @@ import { Typing } from "@/utils/typing";
 import * as d3 from "d3";
 import * as _ from "underscore";
 
-const computeMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20) => {
-    let points = [] as Typing.Point[];
+const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20) => {
+    var results = [] as Typing.Point[];
 
     console.log(matrixCellWidth, matrixCellHeight, matrixCellMargin);
 
@@ -29,8 +29,14 @@ const computeMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typ
             `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
     );
 
+    // for recording the x/y ranges
+    let xs = [];
+    let ys = [];
+
     // loop each plot (layer-head pair)
     for (const md of matrixData) {
+        const { layer, head } = md;
+
         // compute plot-wise offset
         const xoffset = md.head * (matrixCellWidth + matrixCellMargin);
         const yoffset = -md.layer * (matrixCellHeight + matrixCellMargin);
@@ -46,17 +52,59 @@ const computeMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typ
             .scaleLinear()
             .domain(d3.extent(data.map((x) => x.tsne_y)) as any)
             .range([0, matrixCellHeight]);
-        const points = data.map((d, idx) => ({
+        const points = data.map((d, index) => ({
             coordinate: [xScale(d.tsne_x) + xoffset, yScale(d.tsne_y) + yoffset] as [number, number],
-            color: colors[idx],
-            msg: msgs[idx],
+            color: colors[index],
+            msg: msgs[index],
+            layer,
+            head,
+            index
         }));
 
-        points.push(...points);
+        xs.push(...[xoffset, matrixCellWidth + xoffset]);
+        ys.push(...[yoffset, matrixCellHeight + yoffset])
+
+        results.push(...points);
     }
 
-    return points;
+    return {
+        'points': results,
+        'range': {
+            'x': d3.extent(xs) as [number, number],
+            'y': d3.extent(ys) as [number, number]
+        }
+    }
 };
+
+/**
+ * Compute text headings for each plot (head-layer)
+ */
+const computeMatrixProjectionLabel = (matrixData: Typing.MatrixData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20) => {
+    var results = [] as Typing.PlotHead[];
+
+    for (const md of matrixData) {
+        results.push({
+            layer: md.layer,
+            head: md.head,
+            title: `L${md.layer} H${md.head}`,
+            coordinate: [
+                md.head * (matrixCellWidth + matrixCellMargin),
+                -md.layer * (matrixCellHeight + matrixCellMargin),
+            ],
+        });
+    }
+    return results;
+};
+
+const computeMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20) : Typing.Projection => {
+    const pts = computeMatrixProjectionPoint(matrixData, tokenData, matrixCellWidth, matrixCellHeight, matrixCellMargin)
+    return {
+        'points': pts.points,
+        'range': pts.range,
+        'headings': computeMatrixProjectionLabel(matrixData, matrixCellWidth, matrixCellHeight, matrixCellMargin)
+    }
+}
+
 export {
     computeMatrixProjection
 }

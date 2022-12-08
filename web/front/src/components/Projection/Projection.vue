@@ -48,7 +48,7 @@ export default defineComponent({
 
         const state = reactive({
             mode: "matrix",
-            renderState: computed(() => store.state.renderState)
+            renderState: computed(() => store.state.renderState),
         });
 
         const onClickReset = () => {

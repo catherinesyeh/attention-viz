@@ -33,5 +33,27 @@ export namespace Typing {
         coordinate: [number, number];
         color: any;
         msg: string;
+        layer: number;
+        head: number;
+        index: number;
+    }
+    export interface PlotHead {
+        layer: number;
+        head: number;
+        title: string;
+        coordinate: Point2D;
+    }
+    export interface Projection {
+        points: Point[];
+        headings: PlotHead[];
+        range: {
+            x: [number, number];
+            y: [number, number];
+        }
+    }
+
+    export interface AttnByToken {
+        attns: number[];
+        token: TokenData
     }
 }

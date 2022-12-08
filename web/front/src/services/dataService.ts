@@ -1,5 +1,6 @@
 import Vue from "vue";
 import axios from "axios";
+import { Typing } from "@/utils/typing";
 // import * as types from "@/utils/types";
 
 // Assume the port of the data Server is 5000, for test only
@@ -56,6 +57,9 @@ export async function getTokenData() {
   return get(`getTokenData`);
 }
 
+export async function getAttentionByToken(token: Typing.Point) : Promise<Typing.AttentionData> {
+  return post("getAttentionByToken", token) 
+}
 // export async function getPitfallById(id: string) {
 //   return get(`getPitfallById/${id}`);
 // }

@@ -20,7 +20,7 @@
   <div class="main">
     <div class="row">
       <div class="col-2">
-        <UserPanel />
+        <AttnMap />
       </div>
     <div class="col-10">
         <Projection />
@@ -37,12 +37,13 @@ import { useStore } from "@/store/index";
 
 import UserPanel from "./UserPanel/UserPanel.vue";
 import Projection from "./Projection/Projection.vue";
+import AttnMap from "./AttnMap/AttnMap.vue";
 
 import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
 
 export default defineComponent({
     name: "App",
-    components: { UserPanel, Projection },
+    components: { UserPanel, Projection, AttnMap },
     setup() {
         const store = useStore();
 
