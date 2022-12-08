@@ -60,23 +60,24 @@ export const store = createStore<State>({
   actions: { // actions commit mutations
     async init({ state, commit }) {
       const matrixData = (await dataService.getMatrixData()).data;
-      commit('setMatrixData', matrixData);
-      console.log('setMatrixData', matrixData);
+      commit('setMatrixData', Object.freeze(matrixData));
+      // console.log('setMatrixData', Object.freeze(matrixData));
 
       const tokenData = (await dataService.getTokenData()).tokens;
-      commit('setTokenData', tokenData);
-      console.log('setTokenData', tokenData);
+      commit('setTokenData', Object.freeze(tokenData));
+      // console.log('setTokenData', Object.freeze(tokenData));
     },
     async setClickedPoint({state, commit}, pt: Typing.Point) {
-      if (state.attentionByTokenLock) {
-        console.log('Lock');
-        return;
-      } 
-      commit('setAttentionByTokenLock', true); 
+      // if (state.attentionByTokenLock) {
+      //   console.log('Lock');
+      //   return;
+      // } 
+      // commit('setAttentionByTokenLock', true); 
+      console.log('setClickedPoint', pt);
       const attentionByToken = (await dataService.getAttentionByToken(pt));
       console.log('attentionDataByToken', attentionByToken);
       commit('setAttentionByToken', attentionByToken);
-      commit('setAttentionByTokenLock', false)
+      // commit('setAttentionByTokenLock', false)
     }
   },
   strict: process.env.NODE_ENV !== "production"
