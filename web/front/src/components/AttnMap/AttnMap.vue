@@ -1,5 +1,5 @@
 <template>
-    <div class="viewHead">
+    <div class="viewHead" id="attn-map-view">
         <p>sentence view</p>
         <div id="bertviz" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif">
             <div id="vis"></div>
@@ -445,6 +445,11 @@ export default {
 #vis {
     width: fit-content !important;
     display: inline-block;
+}
+
+#vis {
+    overflow-y: scroll;
+    max-height: calc(100vh - 100px);
 }
 
 #main-svg {

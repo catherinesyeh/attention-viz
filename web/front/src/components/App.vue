@@ -20,10 +20,10 @@
   </nav>
   <div class="main">
     <div class="row">
-      <div class="col-2">
+      <div class="col-3">
         <AttnMap />
       </div>
-      <div class="col-10">
+      <div class="col-9">
         <Projection />
       </div>
     </div>
