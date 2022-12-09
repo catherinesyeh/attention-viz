@@ -53,7 +53,7 @@ export namespace Typing {
     }
 
     export interface AttnByToken {
-        attns: number[];
+        attns: number[][];
         token: TokenData
     }
 }

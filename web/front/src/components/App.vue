@@ -4,7 +4,8 @@
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
       <div class="dropdown">
         <label for="graph-type">Graph Type:</label>
-        <select class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" name="graph-type" id="graph-type">
+        <select class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" name="graph-type"
+          id="graph-type">
           <option value="tsne" selected>tsne</option>
           <option value="umap">umap</option>
         </select>
@@ -22,7 +23,7 @@
       <div class="col-2">
         <AttnMap />
       </div>
-    <div class="col-10">
+      <div class="col-10">
         <Projection />
       </div>
     </div>
@@ -42,24 +43,24 @@ import AttnMap from "./AttnMap/AttnMap.vue";
 import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
 
 export default defineComponent({
-    name: "App",
-    components: { UserPanel, Projection, AttnMap },
-    setup() {
-        const store = useStore();
+  name: "App",
+  components: { UserPanel, Projection, AttnMap },
+  setup() {
+    const store = useStore();
 
-        const state = reactive({
-        });
+    const state = reactive({
+    });
 
-        // Init the store to read data from backend
-        onMounted(async () => {
-            await store.dispatch("init");
-        });
+    // Init the store to read data from backend
+    onMounted(async () => {
+      await store.dispatch("init");
+    });
 
-        return {
-            ...toRefs(state),
-        };
-    },
-    computed: {},
+    return {
+      ...toRefs(state),
+    };
+  },
+  computed: {},
 });
 </script>
 
@@ -75,25 +76,26 @@ $key: #f0b3c7;
 
 html,
 body {
-    overflow-y: hidden;
-    overflow-x: hidden;
+  overflow-y: hidden;
+  overflow-x: hidden;
 
-    width: 100vw;
+  width: 100vw;
 
-    font-family: "Roboto", sans-serif;
-    font-size: 16px;
-    background: $background;
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  background: $background;
 
-    color: #1d1d1f;
+  color: #1d1d1f;
 }
 
 @keyframes loading {
-    0% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0;
-    }
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 #loading {
@@ -103,13 +105,13 @@ body {
 }
 
 .hide {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    height: 0 !important;
-    width: 0 !important;
-    transform: scale(0) !important;
-    line-height: 0 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  transform: scale(0) !important;
+  line-height: 0 !important;
 }
 
 label {
@@ -126,5 +128,4 @@ label {
 .deck-tooltip .key {
   color: $key;
 }
-
 </style>

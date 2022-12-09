@@ -11,7 +11,7 @@
                         <span class="layer-axis">layer ↓</span>
                     </p>
                     <button id="matrix-reset" type="button" class="btn btn-dark btn-sm reset" @click="onClickReset">
-                        reset
+                        reset zoom
                     </button>
 
                     <p class="label">mode</p>
@@ -69,7 +69,7 @@ $background: #f5f5f7;
 
 #label-wrapper {
     position: absolute;
-    top: 15px; 
+    top: 15px;
     left: 10px;
     z-index: 9999;
 }
@@ -77,9 +77,11 @@ $background: #f5f5f7;
 #matrix-labels {
     transition: 0.5s;
 }
+
 .axis-label {
     transition: 0.5s;
 }
+
 .axis-label span {
     display: block;
     font-size: smaller;
@@ -97,6 +99,7 @@ p.label {
     background: #fff;
     border-color: black !important;
 }
+
 .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
     background-color: black !important;
 }

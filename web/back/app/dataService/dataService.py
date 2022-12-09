@@ -26,6 +26,7 @@ import time
 rootDir = dirname(abspath(''))
 print(rootDir)
 
+
 def read_matrix_data():
     matrix_data = []
     time_start = time.time()
@@ -36,6 +37,7 @@ def read_matrix_data():
 
     print('MatrixData Done! Time elapsed: {} seconds'.format(time.time()-time_start))
     return matrix_data
+
 
 def read_attention_data():
     time_start = time.time()
@@ -49,11 +51,13 @@ def read_attention_data():
         time.time()-time_start))
     return attention_data
 
+
 def read_token_data():
     time_start = time.time()
     d = json.load(open(join(rootDir, 'data', 'tokens.json')))
     print('TokenData Done! Time elapsed: {} seconds'.format(time.time()-time_start))
     return d
+
 
 class DataService(object):
     def __init__(self):
@@ -84,14 +88,18 @@ class DataService(object):
         head = token['head']
         index = token['index']
 
+        all_token_info = self.token_data['tokens'][index]
+        start = index - all_token_info['pos_int']
+        end = start + all_token_info['length']
+
         for plot in self.attention_data:
             if plot['layer'] == layer and plot['head'] == head:
-                attns = plot['tokens'][index]
+                attns = plot['tokens'][start:end]
                 break
-        
+
         return {
-            'attns': attns['attention'],
-            'token': self.token_data['tokens'][index]
+            'attns': [t['attention'] for t in attns],
+            'token': all_token_info
         }
 
 
