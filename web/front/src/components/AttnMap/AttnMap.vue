@@ -1,7 +1,7 @@
 <template>
     <div class="viewHead">
         <p>sentence view</p>
-        <div id="bertviz" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif">
+        <div id="bertviz">
             <div id="vis"></div>
         </div>
     </div>
@@ -30,9 +30,9 @@ type Config = {
 }
 
 const TEXT_SIZE = 12;
-const BOXWIDTH = 70;
+const BOXWIDTH = 80;
 const BOXHEIGHT = 18;
-const MATRIX_WIDTH = 120;
+const MATRIX_WIDTH = 100;
 const TEXT_TOP = 0;
 
 export default {
@@ -132,6 +132,28 @@ export default {
                     .attr("width", "100%")
                     .attr("height", height + "px");
 
+                // set up gradient
+                const defs = svg.append("defs");
+
+                const gradient = defs.append("linearGradient")
+                    .attr("id", "svgGradient")
+                    .attr("x1", "0%")
+                    .attr("x2", "100%")
+                    .attr("y1", "0%")
+                    .attr("y2", "100%");
+
+                gradient.append("stop")
+                    .attr('class', 'start')
+                    .attr("offset", "0%")
+                    .attr("stop-color", "#9dd887")
+                    .attr("stop-opacity", 1);
+
+                gradient.append("stop")
+                    .attr('class', 'end')
+                    .attr("offset", "100%")
+                    .attr("stop-color", "#ea8aaa")
+                    .attr("stop-opacity", 1);
+
                 // Display tokens on left and right side of visualization
                 renderText(svg, leftText, true, layerAttention, 0);
                 renderText(
@@ -146,6 +168,7 @@ export default {
                 const side = (token_type == 'query') ? "left" : "right";
                 let selected = document.querySelectorAll("#" + side + " text")[token_pos];
                 selected.classList.add("bold");
+                selected.classList.add(token_type);
 
                 // Render attention arcs
                 renderAttention(svg, layerAttention);
@@ -179,7 +202,7 @@ export default {
                     .attr("height", BOXHEIGHT)
                     .attr("fill", function () {
                         // return headColors(+this.parentNode.getAttribute("head-index"));
-                        return isLeft ? "rgb(172, 214, 175)" : "rgb(231, 169, 147)";
+                        return isLeft ? "rgb(157, 216, 135)" : "rgb(234, 138, 170)";
                     })
                     .style("opacity", 0.0);
 
@@ -363,7 +386,7 @@ export default {
                         // const headIndex =
                         //   +this.parentNode.parentNode.getAttribute("head-index");
                         // return headColors(headIndex);
-                        return "#ffd99c";
+                        return "url(#svgGradient)";
                     })
                     .attr("left-token-index", function (this: any) {
                         return +this.parentNode.getAttribute("left-token-index");
@@ -436,6 +459,9 @@ export default {
 </script>
   
 <style lang="scss">
+$query-darker: #67af4d;
+$key-darker: #c15b7d;
+
 .viewHead {
     margin-left: 10px;
     margin-top: 10px;
@@ -453,6 +479,14 @@ export default {
 
 text.bold {
     font-weight: bold;
+}
+
+text.bold.query {
+    fill: $query-darker;
+}
+
+text.bold.key {
+    fill: $key-darker;
 }
 
 .hide {
