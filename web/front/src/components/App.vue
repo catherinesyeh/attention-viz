@@ -72,7 +72,10 @@ $blue: #263459;
 $color1: #96351e;
 $color2: #dbb98f;
 $query: #c2e8b4;
+$query-dark: #9dd887;
 $key: #f0b3c7;
+$key-dark: #ea8aaa;
+$text: #1d1d1f;
 
 html,
 body {
@@ -85,7 +88,7 @@ body {
   font-size: 16px;
   background: $background;
 
-  color: #1d1d1f;
+  color: $text;
 }
 
 @keyframes loading {
