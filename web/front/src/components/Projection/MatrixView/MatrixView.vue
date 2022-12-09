@@ -63,7 +63,12 @@ function fitToContainer(canvas: HTMLCanvasElement | HTMLElement) {
 
 export default defineComponent({
     components: {},
-    props: {},
+    props: {
+        searchToken: {
+            type: String,
+            required: true,
+        },
+    },
     setup(props, context) {
         const store = useStore();
 
@@ -76,6 +81,8 @@ export default defineComponent({
             matrixCellWidth: 100,
             matrixCellMargin: 20,
             viewState: nullInitialView,
+            // highlightedPoints: [] as Typing.Point[],
+            highlightedTokenIndices: [] as number[],
         });
 
         var shallowData = shallowRef({
@@ -89,14 +96,77 @@ export default defineComponent({
 
         var deckgl = {} as Deck;
 
+        const toPointLayer = (points: Typing.Point[]) => {
+            console.error(state.highlightedTokenIndices);
+            return new ScatterplotLayer({
+                pickable: true,
+                data: points,
+                getOpacity: () => 0.1,
+                // getOpacity: (d : Typing.Point) => {
+                //     if (d.head === 1 && d.layer === 1){
+                //         console.log(state.highlightedTokenIndices, state.highlightedTokenIndices.includes(d.index), state.highlightedTokenIndices.includes(d.index)? 0.8 : 0.1)
+                //     }
+                //     return state.highlightedTokenIndices.includes(d.index)? 0.8 : 0.1
+                // },
+                getPosition: (d: Typing.Point) => d.coordinate,
+                getRadius: (d: Typing.Point) => {
+                    const defaultSize = 0.4,
+                        highlightedSize = 10;
+                    if (state.highlightedTokenIndices.length === 0) return defaultSize;
+                    return state.highlightedTokenIndices.includes(d.index)
+                        ? highlightedSize
+                        : defaultSize;
+                },
+                getFillColor: (d: Typing.Point) => {
+                    const defaultColor = [...d.color, 255],
+                        unactiveColor = [...d.color, 25];
+                    if (!state.highlightedTokenIndices.length) return defaultColor;
+                    return (
+                        state.highlightedTokenIndices.includes(d.index)
+                            ? defaultColor
+                            : unactiveColor
+                    ) as any;
+                },
+                onClick: (info, event) => {
+                    let pt = info.object as Typing.Point;
+                    store.dispatch("setClickedPoint", pt);
+                },
+                updateTriggers: {
+                    getFillColor: state.highlightedTokenIndices,
+                    getRadius: state.highlightedTokenIndices,
+                },
+            });
+        };
+        const toPlotHeadLayer = (headings: Typing.PlotHead[]) => {
+            return new TextLayer({
+                id: "text-layer",
+                data: headings,
+                pickable: true,
+                getPosition: (d: Typing.PlotHead) => d.coordinate,
+                getText: (d: Typing.PlotHead) => d.title,
+                getSize: 10,
+                getAngle: 0,
+                sizeUnits: "common",
+                getTextAnchor: "start",
+                getAlignmentBaseline: "center",
+                // onClick: (info, event) => console.log("Clicked:", info, event),
+            });
+        };
+        const toLayers = () => {
+            return [
+                toPointLayer(shallowData.value.points),
+                toPlotHeadLayer(shallowData.value.headings),
+            ];
+        };
+
         /**
          * The main function for drawing the scatter matrices
          */
         const drawMatrices = () => {
             store.commit("updateRenderState", true);
 
-            const {points, headings, range} = shallowData.value;
-            console.log('drawMatrices', points, headings);
+            const { points, headings, range } = shallowData.value;
+            console.log("drawMatrices", points, headings);
             if (!points || !points.length) return;
 
             // put init view state in the centre
@@ -116,33 +186,7 @@ export default defineComponent({
                     flipY: false,
                 }),
                 initialViewState: state.viewState,
-                layers: [
-                    new ScatterplotLayer({
-                        pickable: true,
-                        data: points,
-                        opacity: 0.5,
-                        getPosition: (d: Typing.Point) => d.coordinate,
-                        getRadius: (d: Typing.Point) => 0.4,
-                        getFillColor: (d: Typing.Point) => d.color,
-                        onClick: (info, event) => {
-                            let pt = info.object as Typing.Point
-                            store.dispatch('setClickedPoint', pt);
-                        },
-                    }),
-                    new TextLayer({
-                        id: "text-layer",
-                        data: headings,
-                        pickable: true,
-                        getPosition: (d: Typing.PlotHead) => d.coordinate,
-                        getText: (d: Typing.PlotHead) => d.title,
-                        getSize: 10,
-                        getAngle: 0,
-                        sizeUnits: "common",
-                        getTextAnchor: "start",
-                        getAlignmentBaseline: "center",
-                        // onClick: (info, event) => console.log("Clicked:", info, event),
-                    }),
-                ],
+                layers: toLayers(),
                 getTooltip: ({ object }) =>
                     object && {
                         html: object.msg,
@@ -174,25 +218,48 @@ export default defineComponent({
         const computedProjection = () => {
             let { matrixData, tokenData } = state;
             if (matrixData.length && tokenData.length) {
-                let projData = computeMatrixProjection(matrixData, tokenData);                
+                let projData = computeMatrixProjection(matrixData, tokenData);
                 shallowData.value = projData;
             }
         };
 
         watch([() => state.matrixData, () => state.tokenData], () => computedProjection());
 
-        watch(shallowData, () => {
-            console.log("watch", shallowData);
+        watch([shallowData], () => {
+            console.log("watch", state.highlightedTokenIndices);
             drawMatrices();
         });
+
+        watch(
+            () => state.highlightedTokenIndices,
+            () => {
+                console.log("watch highlightedTokenIndices");
+                deckgl.setProps({ layers: [...toLayers()] });
+            }
+        );
 
         onMounted(() => {
             console.log("onMounted");
             computedProjection();
         });
 
-        // expose reset functions to the parent
-        context.expose({ reset });
+        /**
+         * Search and highlight tokens
+         * @param str
+         */
+        const onSearch = (str: string) => {
+            let tokenIndices = state.tokenData
+                .map((x, idx) => (x.value === str ? idx : undefined))
+                .filter((x) => x) as number[];
+
+            // let tokenPoints = shallowData.value.points.filter((x) =>
+            //     tokenIndices.includes(x.index)
+            // );
+            state.highlightedTokenIndices = tokenIndices;
+        };
+
+        // expose functions to the parent
+        context.expose({ reset, onSearch });
 
         return {
             ...toRefs(state),

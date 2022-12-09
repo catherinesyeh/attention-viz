@@ -14,6 +14,9 @@
                         reset zoom
                     </button>
 
+                    <p class="label">Search</p>
+                    <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button @search="onSearch(searchToken)"/>
+
                     <p class="label">mode</p>
                     <a-radio-group v-model:value="mode">
                         <a-radio-button value="single">single</a-radio-button>
@@ -25,7 +28,7 @@
             <div class="gradient-edge right"></div>
             <!-- <canvas id="matrix-canvas" /> -->
 
-            <MatrixView v-show="mode == 'matrix'" ref="matrixView" />
+            <MatrixView v-show="mode == 'matrix'" ref="matrixView" :searchToken="searchToken"/>
         </div>
     </div>
 </template>
@@ -47,6 +50,7 @@ export default defineComponent({
         const state = reactive({
             mode: "matrix",
             renderState: computed(() => store.state.renderState),
+            searchToken: ""
         });
 
         const onClickReset = () => {
@@ -55,10 +59,15 @@ export default defineComponent({
             }
         }
 
+        const onSearch = (str: string) => {
+            (matrixView.value as any).onSearch(str);
+        }
+
         return {
             ...toRefs(state),
             matrixView,
-            onClickReset
+            onClickReset,
+            onSearch
         };
     },
 });

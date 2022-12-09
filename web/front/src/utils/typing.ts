@@ -31,7 +31,7 @@ export namespace Typing {
 
     export interface Point {
         coordinate: [number, number];
-        color: any;
+        color: number[];
         msg: string;
         layer: number;
         head: number;
