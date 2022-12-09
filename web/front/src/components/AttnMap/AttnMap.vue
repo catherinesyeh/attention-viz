@@ -33,7 +33,7 @@ const TEXT_SIZE = 12;
 const BOXWIDTH = 80;
 const BOXHEIGHT = 18;
 const MATRIX_WIDTH = 100;
-const TEXT_TOP = 0;
+const TEXT_TOP = 22;
 
 export default {
     components: {},
@@ -140,7 +140,8 @@ export default {
                     .attr("x1", "0%")
                     .attr("x2", "100%")
                     .attr("y1", "0%")
-                    .attr("y2", "100%");
+                    .attr("y2", "100%")
+                    .attr("gradientTransform", "rotate(-15)");
 
                 gradient.append("stop")
                     .attr('class', 'start')
@@ -166,7 +167,7 @@ export default {
 
                 // bold current selected token
                 const side = (token_type == 'query') ? "left" : "right";
-                let selected = document.querySelectorAll("#" + side + " text")[token_pos];
+                let selected = document.querySelectorAll("#" + side + " text")[token_pos + 1];
                 selected.classList.add("bold");
                 selected.classList.add(token_type);
 
@@ -178,6 +179,28 @@ export default {
                 const textContainer = svg
                     .append("svg:g")
                     .attr("id", isLeft ? "left" : "right");
+
+                // top labels
+                const topLabels = textContainer
+                    .append("text")
+                    .attr("x", leftPos)
+                    .attr("y", 0)
+                    .text(isLeft ? "query" : "key")
+                    .attr("font-size", (TEXT_SIZE + 2) + "px")
+                    .classed("bold", true)
+                    .classed(isLeft ? "query" : "key", true);
+
+                if (isLeft) {
+                    topLabels
+                        .style("text-anchor", "end")
+                        .attr("dx", BOXWIDTH - 0.5 * TEXT_SIZE)
+                        .attr("dy", TEXT_SIZE);
+                } else {
+                    topLabels
+                        .style("text-anchor", "start")
+                        .attr("dx", +0.5 * TEXT_SIZE)
+                        .attr("dy", TEXT_SIZE);
+                }
 
                 // Add attention highlights superimposed over words
                 textContainer
@@ -459,7 +482,7 @@ export default {
 </script>
   
 <style lang="scss">
-$query-darker: #67af4d;
+$query-darker: #54943d;
 $key-darker: #c15b7d;
 
 .viewHead {
@@ -476,6 +499,7 @@ $key-darker: #c15b7d;
 #vis {
     overflow-y: scroll;
     max-height: calc(100vh - 100px);
+    padding-bottom: 20px;
 }
 
 #main-svg {
