@@ -83,6 +83,7 @@ export default defineComponent({
             viewState: nullInitialView,
             // highlightedPoints: [] as Typing.Point[],
             highlightedTokenIndices: [] as number[],
+            pointScaleFactor: 1,
         });
 
         var shallowData = shallowRef({
@@ -97,21 +98,14 @@ export default defineComponent({
         var deckgl = {} as Deck;
 
         const toPointLayer = (points: Typing.Point[]) => {
-            console.error(state.highlightedTokenIndices);
             return new ScatterplotLayer({
                 pickable: true,
                 data: points,
-                getOpacity: () => 0.1,
-                // getOpacity: (d : Typing.Point) => {
-                //     if (d.head === 1 && d.layer === 1){
-                //         console.log(state.highlightedTokenIndices, state.highlightedTokenIndices.includes(d.index), state.highlightedTokenIndices.includes(d.index)? 0.8 : 0.1)
-                //     }
-                //     return state.highlightedTokenIndices.includes(d.index)? 0.8 : 0.1
-                // },
+                radiusMaxPixels: 6,
                 getPosition: (d: Typing.Point) => d.coordinate,
                 getRadius: (d: Typing.Point) => {
-                    const defaultSize = 0.4,
-                        highlightedSize = 10;
+                    const defaultSize = 0.4 * state.pointScaleFactor,
+                        highlightedSize = 10 * state.pointScaleFactor;
                     if (state.highlightedTokenIndices.length === 0) return defaultSize;
                     return state.highlightedTokenIndices.includes(d.index)
                         ? highlightedSize
@@ -133,10 +127,30 @@ export default defineComponent({
                 },
                 updateTriggers: {
                     getFillColor: state.highlightedTokenIndices,
-                    getRadius: state.highlightedTokenIndices,
+                    getRadius: [state.pointScaleFactor, state.highlightedTokenIndices],
                 },
             });
         };
+        const toPointLabelLayer = (points: Typing.Point[]) => {
+            return new TextLayer({
+                id: "point-label-layer",
+                data: points, // (state.pointScaleFactor < 0.3) ? points: [],
+                pickable: true,
+                getPosition: (d: Typing.Point) => [d.coordinate[0], d.coordinate[1] + 0.1],
+                getText: (d: Typing.Point) => d.value,
+                getColor: () =>
+                    state.pointScaleFactor <= 0.15 ? [0, 0, 0, 255] : [255, 255, 255, 0],
+                getSize: 12,
+                getAngle: 0,
+                getTextAnchor: "start",
+                getAlignmentBaseline: "center",
+                updateTriggers: {
+                    getColor: state.pointScaleFactor,
+                },
+                // onClick: (info, event) => console.log("Clicked:", info, event),
+            });
+        };
+
         const toPlotHeadLayer = (headings: Typing.PlotHead[]) => {
             return new TextLayer({
                 id: "text-layer",
@@ -153,10 +167,8 @@ export default defineComponent({
             });
         };
         const toLayers = () => {
-            return [
-                toPointLayer(shallowData.value.points),
-                toPlotHeadLayer(shallowData.value.headings),
-            ];
+            let { points, headings } = shallowData.value;
+            return [toPointLayer(points), toPlotHeadLayer(headings), toPointLabelLayer(points)];
         };
 
         /**
@@ -194,6 +206,18 @@ export default defineComponent({
                             color: "#fff",
                         },
                     },
+                onViewStateChange: (param) => {
+                    const zoom = param.viewState.zoom;
+                    if (zoom > 6) {
+                        state.pointScaleFactor = 0.15;
+                    } else if (zoom > 4.5) {
+                        state.pointScaleFactor = 0.2;
+                    } else if (zoom > 3) {
+                        state.pointScaleFactor = 0.5;
+                    } else {
+                        state.pointScaleFactor = 1;
+                    }
+                },
             });
 
             store.commit("updateRenderState", false);
@@ -213,6 +237,7 @@ export default defineComponent({
                 // this alone doesn't change anything apparently?
                 initialViewState: state.viewState,
             });
+            state.pointScaleFactor = 1;
         };
 
         const computedProjection = () => {
@@ -226,17 +251,12 @@ export default defineComponent({
         watch([() => state.matrixData, () => state.tokenData], () => computedProjection());
 
         watch([shallowData], () => {
-            console.log("watch", state.highlightedTokenIndices);
             drawMatrices();
         });
 
-        watch(
-            () => state.highlightedTokenIndices,
-            () => {
-                console.log("watch highlightedTokenIndices");
-                deckgl.setProps({ layers: [...toLayers()] });
-            }
-        );
+        watch([() => state.highlightedTokenIndices, () => state.pointScaleFactor], () => {
+            deckgl.setProps({ layers: [...toLayers()] });
+        });
 
         onMounted(() => {
             console.log("onMounted");
@@ -258,8 +278,12 @@ export default defineComponent({
             state.highlightedTokenIndices = tokenIndices;
         };
 
+        const printViewport = () => {
+            console.error("viewport", deckgl.getViewports());
+        };
+
         // expose functions to the parent
-        context.expose({ reset, onSearch });
+        context.expose({ reset, onSearch, printViewport });
 
         return {
             ...toRefs(state),

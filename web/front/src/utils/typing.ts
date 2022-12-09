@@ -36,6 +36,7 @@ export namespace Typing {
         layer: number;
         head: number;
         index: number;
+        value: string;
     }
     export interface PlotHead {
         layer: number;

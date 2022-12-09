@@ -17,11 +17,16 @@
                     <p class="label">Search</p>
                     <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button @search="onSearch(searchToken)"/>
 
-                    <p class="label">mode</p>
+                    <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
                         <a-radio-button value="single">single</a-radio-button>
                         <a-radio-button value="matrix">matrix</a-radio-button>
                     </a-radio-group>
+
+                    <p class="label">Developer tool</p>
+                    <button type="button" class="btn btn-dark btn-sm reset" @click="logViewport">
+                        Log Viewport
+                    </button>
                 </div>
             </div>
             <div class="gradient-edge"></div>
@@ -63,11 +68,18 @@ export default defineComponent({
             (matrixView.value as any).onSearch(str);
         }
 
+        const logViewport = () => {
+            setTimeout(() => {
+                (matrixView.value as any).printViewport();
+            }, 100)
+        }
+
         return {
             ...toRefs(state),
             matrixView,
             onClickReset,
-            onSearch
+            onSearch,
+            logViewport
         };
     },
 });
