@@ -141,7 +141,7 @@ export default {
                     .attr("x2", "100%")
                     .attr("y1", "0%")
                     .attr("y2", "100%")
-                    .attr("gradientTransform", "rotate(15)");
+                    .attr("gradientTransform", "rotate(-15)");
 
                 gradient.append("stop")
                     .attr('class', 'start')
