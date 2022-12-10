@@ -16,7 +16,7 @@
 
                     <p class="label">Search</p>
                     <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
-                        @search="onSearch(searchToken)" />
+                        @search="onSearch(searchToken)" spellcheck="false" />
 
                     <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
