@@ -1,6 +1,6 @@
 <template>
     <div class="viewHead" id="attn-map-view">
-        <p>sentence view</p>
+        <p>Sentence View</p>
         <div id="bertviz">
             <div id="vis"></div>
         </div>
@@ -488,18 +488,29 @@ $key-darker: #c15b7d;
 .viewHead {
     margin-left: 10px;
     margin-top: 10px;
+    background-color: transparent !important;
 }
 
 #bertviz,
 #vis {
     width: fit-content !important;
     display: inline-block;
+    background-color: transparent !important;
 }
 
 #vis {
     overflow-y: scroll;
     max-height: calc(100vh - 100px);
     padding-bottom: 20px;
+}
+
+// hide scrollbar but still allow scroll
+#vis::-webkit-scrollbar {
+    width: 0 !important;
+}
+
+#vis.element {
+    overflow: -moz-scrollbars-none;
 }
 
 #main-svg {

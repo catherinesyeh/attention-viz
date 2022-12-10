@@ -10,12 +10,13 @@
                         <span class="head-axis">head →</span>
                         <span class="layer-axis">layer ↓</span>
                     </p>
-                    <button id="matrix-reset" type="button" class="btn btn-dark btn-sm reset" @click="onClickReset">
+                    <a-button type="primary" id="matrix-reset" @click="onClickReset">
                         reset zoom
-                    </button>
+                    </a-button>
 
                     <p class="label">Search</p>
-                    <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button @search="onSearch(searchToken)"/>
+                    <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
+                        @search="onSearch(searchToken)" />
 
                     <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
@@ -23,17 +24,17 @@
                         <a-radio-button value="matrix">matrix</a-radio-button>
                     </a-radio-group>
 
-                    <p class="label">Developer tool</p>
-                    <button type="button" class="btn btn-dark btn-sm reset" @click="logViewport">
-                        Log Viewport
-                    </button>
+                    <p class="label">Developer Tool</p>
+                    <a-button type="primary" @click="logViewport">
+                        log viewport
+                    </a-button>
                 </div>
             </div>
             <div class="gradient-edge"></div>
             <div class="gradient-edge right"></div>
             <!-- <canvas id="matrix-canvas" /> -->
 
-            <MatrixView v-show="mode == 'matrix'" ref="matrixView" :searchToken="searchToken"/>
+            <MatrixView v-show="mode == 'matrix'" ref="matrixView" :searchToken="searchToken" />
         </div>
     </div>
 </template>
@@ -85,7 +86,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 $background: #f5f5f7;
 
 #label-wrapper {
@@ -113,16 +114,6 @@ p.label {
     margin-top: 15px;
     margin-bottom: 0;
     font-size: smaller;
-}
-
-.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
-    color: black !important;
-    background: #fff;
-    border-color: black !important;
-}
-
-.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
-    background-color: black !important;
 }
 
 div#matrix-wrapper {

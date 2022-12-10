@@ -4,16 +4,16 @@
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
       <div class="dropdown">
         <label for="graph-type">Graph Type:</label>
-        <select class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" name="graph-type"
-          id="graph-type">
-          <option value="tsne" selected>tsne</option>
-          <option value="umap">umap</option>
-        </select>
+        <a-select ref="select" v-model:value="graphtype" style="width: 120px"
+          @change="handleChange('graph', graphtype)">
+          <a-select-option value="tsne">tsne</a-select-option>
+          <a-select-option value="umap">umap</a-select-option>
+        </a-select>
         <label for="color-by">Color By:</label>
-        <select class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" name="color-by" id="color-by">
-          <option value="position" selected>position</option>
-          <option value="norm">norm</option>
-        </select>
+        <a-select ref="select" v-model:value="colorby" style="width: 120px" @change="handleChange('color', colorby)">
+          <a-select-option value="position">position</a-select-option>
+          <a-select-option value="norm">norm</a-select-option>
+        </a-select>
       </div>
     </div>
 
@@ -40,7 +40,9 @@ import UserPanel from "./UserPanel/UserPanel.vue";
 import Projection from "./Projection/Projection.vue";
 import AttnMap from "./AttnMap/AttnMap.vue";
 
-import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
+import { onMounted, computed, reactive, toRefs, h, watch, ref } from "vue";
+import { string } from "vue-types";
+import { SelectTypes } from 'ant-design-vue/es/select';
 
 export default defineComponent({
   name: "App",
@@ -49,6 +51,8 @@ export default defineComponent({
     const store = useStore();
 
     const state = reactive({
+      graphtype: "tsne",
+      colorby: "position"
     });
 
     // Init the store to read data from backend
@@ -56,8 +60,18 @@ export default defineComponent({
       await store.dispatch("init");
     });
 
+    // update graph settings based on dropdown option selected
+    const handleChange = function (type: string, value: string) {
+      if (type == "graph") {
+        state.graphtype = value;
+      } else {
+        state.colorby = value;
+      }
+    };
+
     return {
       ...toRefs(state),
+      handleChange
     };
   },
   computed: {},
@@ -122,8 +136,6 @@ label {
   margin-left: 10px;
 }
 
-
-
 .deck-tooltip .query {
   color: $query;
 }
@@ -131,4 +143,56 @@ label {
 .deck-tooltip .key {
   color: $key;
 }
+
+/* ant elements */
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  color: black !important;
+  background: white !important;
+  border-color: black !important;
+}
+
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
+  background-color: black !important;
+}
+
+.ant-radio-button-wrapper:hover {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.anticon {
+  vertical-align: 0 !important;
+}
+
+.ant-btn-primary {
+  background: black !important;
+  border-color: black !important;
+}
+
+.ant-input:hover {
+  border-color: #d9d9d9 !important;
+}
+
+.ant-input:focus {
+  border-color: black !important;
+}
+
+.ant-btn:not([disabled]):hover {
+  opacity: 0.8;
+}
+
+.ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+  border-color: #d9d9d9 !important;
+}
+
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  color: white !important;
+  font-weight: unset !important;
+  background-color: black !important;
+}
+
+.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  border-color: black !important;
+}
+
+/* end ant */
 </style>
