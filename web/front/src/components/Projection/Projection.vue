@@ -34,7 +34,8 @@
             <div class="gradient-edge right"></div>
             <!-- <canvas id="matrix-canvas" /> -->
 
-            <MatrixView v-show="mode == 'matrix'" ref="matrixView" :searchToken="searchToken" />
+            <MatrixView v-show="mode == 'matrix'" ref="matrixView" :searchToken="searchToken" :graphType="graphType"
+                :colorBy="colorBy" />
         </div>
     </div>
 </template>
@@ -87,11 +88,11 @@ export default defineComponent({
 
         // restyle plots
         const changeGraphType = (str: string) => {
-            console.log(str);
+            (matrixView.value as any).changeGraphType(str);
         }
 
         const changeColor = (str: string) => {
-            console.log(str);
+            (matrixView.value as any).changeColor(str);
         }
 
         return {

@@ -68,6 +68,14 @@ export default defineComponent({
             type: String,
             required: true,
         },
+        graphType: {
+            type: String,
+            required: true
+        },
+        colorBy: {
+            type: String,
+            required: true
+        },
     },
     setup(props, context) {
         const store = useStore();
@@ -282,8 +290,16 @@ export default defineComponent({
             console.error("viewport", deckgl.getViewports());
         };
 
+        const changeGraphType = (str: string) => { // todo: change coordinates here (tsne / umap)
+            console.log(str);
+        }
+
+        const changeColor = (str: string) => { // todo: change coloring scheme here (position / norm)
+            console.log(str);
+        }
+
         // expose functions to the parent
-        context.expose({ reset, onSearch, printViewport });
+        context.expose({ reset, onSearch, printViewport, changeGraphType, changeColor });
 
         return {
             ...toRefs(state),
