@@ -4,13 +4,14 @@
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
       <div class="dropdown">
         <label for="graph-type">Graph Type:</label>
-        <a-select ref="select" v-model:value="graphtype" style="width: 120px"
-          @change="handleChange('graph', graphtype)">
+        <a-select ref="select" v-model:value="graphtype" style="width: 120px" @change="handleChange('graph', graphtype)"
+          :graphType="graphtype">
           <a-select-option value="tsne">tsne</a-select-option>
           <a-select-option value="umap">umap</a-select-option>
         </a-select>
         <label for="color-by">Color By:</label>
-        <a-select ref="select" v-model:value="colorby" style="width: 120px" @change="handleChange('color', colorby)">
+        <a-select ref="select" v-model:value="colorby" style="width: 120px" @change="handleChange('color', colorby)"
+          :colorBy="colorby">
           <a-select-option value="position">position</a-select-option>
           <a-select-option value="norm">norm</a-select-option>
         </a-select>
@@ -24,7 +25,7 @@
         <AttnMap />
       </div>
       <div class="col-10">
-        <Projection />
+        <Projection ref="projection" :graphType="graphtype" :colorBy="colorby" />
       </div>
     </div>
   </div>
@@ -50,6 +51,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
+    const projection = ref(null);
+
     const state = reactive({
       graphtype: "tsne",
       colorby: "position"
@@ -64,13 +67,16 @@ export default defineComponent({
     const handleChange = function (type: string, value: string) {
       if (type == "graph") {
         state.graphtype = value;
+        (projection.value as any).changeGraphType(value);
       } else {
         state.colorby = value;
+        (projection.value as any).changeColor(value);
       }
     };
 
     return {
       ...toRefs(state),
+      projection,
       handleChange
     };
   },

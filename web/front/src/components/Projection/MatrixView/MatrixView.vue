@@ -305,9 +305,11 @@ $background: #f5f5f7;
 #matrix-labels {
     transition: 0.5s;
 }
+
 .axis-label {
     transition: 0.5s;
 }
+
 .axis-label span {
     display: block;
     font-size: smaller;

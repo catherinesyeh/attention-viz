@@ -48,6 +48,16 @@ import MatrixView from "./MatrixView/MatrixView.vue";
 
 export default defineComponent({
     components: { MatrixView },
+    props: {
+        graphType: {
+            type: String,
+            required: true
+        },
+        colorBy: {
+            type: String,
+            required: true
+        },
+    },
     setup() {
         const store = useStore();
 
@@ -75,12 +85,23 @@ export default defineComponent({
             }, 100)
         }
 
+        // restyle plots
+        const changeGraphType = (str: string) => {
+            console.log(str);
+        }
+
+        const changeColor = (str: string) => {
+            console.log(str);
+        }
+
         return {
             ...toRefs(state),
             matrixView,
             onClickReset,
             onSearch,
-            logViewport
+            logViewport,
+            changeGraphType,
+            changeColor
         };
     },
 });
