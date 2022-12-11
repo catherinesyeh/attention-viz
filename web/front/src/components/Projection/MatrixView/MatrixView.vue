@@ -218,10 +218,10 @@ export default defineComponent({
                     const zoom = param.viewState.zoom;
                     if (zoom > 6) {
                         state.pointScaleFactor = 0.15;
-                    } else if (zoom > 4.5) {
-                        state.pointScaleFactor = 0.2;
-                    } else if (zoom > 3) {
-                        state.pointScaleFactor = 0.5;
+                        // } else if (zoom > 4.5) {
+                        //     state.pointScaleFactor = 0.2;
+                        // } else if (zoom > 3) {
+                        //     state.pointScaleFactor = 0.5;
                     } else {
                         state.pointScaleFactor = 1;
                     }

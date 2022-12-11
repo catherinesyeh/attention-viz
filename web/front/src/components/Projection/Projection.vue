@@ -17,6 +17,7 @@
                     <p class="label">Search</p>
                     <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
                         @search="onSearch(searchToken)" spellcheck="false" />
+                    <a-button id="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
 
                     <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
@@ -76,6 +77,11 @@ export default defineComponent({
             }
         }
 
+        const clearSearch = () => {
+            state.searchToken = "";
+            onSearch(state.searchToken);
+        }
+
         const onSearch = (str: string) => {
             (matrixView.value as any).onSearch(str);
         }
@@ -99,6 +105,7 @@ export default defineComponent({
             ...toRefs(state),
             matrixView,
             onClickReset,
+            clearSearch,
             onSearch,
             logViewport,
             changeGraphType,
@@ -168,5 +175,15 @@ div#matrix-wrapper {
 div.matrix-cell {
     position: absolute;
     border: 1px solid #1d1d1f;
+}
+
+// search
+#clear {
+    display: block;
+    position: absolute;
+    right: 0;
+    padding: 0;
+    font-size: small;
+    color: #888;
 }
 </style>
