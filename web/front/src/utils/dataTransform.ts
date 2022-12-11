@@ -8,8 +8,12 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     console.log(matrixCellWidth, matrixCellHeight, matrixCellMargin);
 
     // compute colors for each token
-    const queryColor = d3.scaleSequential().domain([0, 1]).interpolator(d3.interpolateYlGn);
-    const keyColor = d3.scaleSequential().domain([0, 1]).interpolator(d3.interpolatePuRd);
+    const queryColor = d3.scaleSequential(function(t) {
+       return d3.interpolateYlGn(t * 0.75 + 0.25);
+    }).domain([0, 1]);
+    const keyColor = d3.scaleSequential(function(t) {
+        return d3.interpolatePuRd(t * 0.75 + 0.25);
+    }).domain([0, 1]);
     const getColor = (td: Typing.TokenData) => {
         var colorstr = "rgb()";
         if (td.type === "query") {
