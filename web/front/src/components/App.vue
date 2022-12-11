@@ -97,6 +97,10 @@ $key: #f0b3c7;
 $key-dark: #ea8aaa;
 $text: #1d1d1f;
 
+::selection {
+  background: #888 !important;
+}
+
 html,
 body {
   overflow-y: hidden;

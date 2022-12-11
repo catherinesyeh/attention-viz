@@ -146,14 +146,22 @@ export default defineComponent({
                 pickable: true,
                 getPosition: (d: Typing.Point) => [d.coordinate[0], d.coordinate[1] + 0.1],
                 getText: (d: Typing.Point) => d.value,
-                getColor: () =>
-                    state.pointScaleFactor <= 0.15 ? [0, 0, 0, 255] : [255, 255, 255, 0],
+                // getColor: () =>
+                //     state.pointScaleFactor <= 0.15 ? [0, 0, 0, 255] : [255, 255, 255, 0],
+                getColor: (d: Typing.Point) => {
+                    const defaultOpacity = 255,
+                        lightOpacity = 50;
+                    if (state.highlightedTokenIndices.length === 0) return state.pointScaleFactor <= 0.15 ? [0, 0, 0, defaultOpacity] : [255, 255, 255, 0];
+                    return state.highlightedTokenIndices.includes(d.index)
+                        ? state.pointScaleFactor <= 0.15 ? [0, 0, 0, defaultOpacity] : [255, 255, 255, 0]
+                        : state.pointScaleFactor <= 0.15 ? [0, 0, 0, lightOpacity] : [255, 255, 255, 0];
+                },
                 getSize: 12,
                 getAngle: 0,
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
-                    getColor: state.pointScaleFactor,
+                    getColor: [state.pointScaleFactor, state.highlightedTokenIndices]
                 },
                 // onClick: (info, event) => console.log("Clicked:", info, event),
             });
