@@ -83,7 +83,8 @@ export default defineComponent({
         }
 
         const onSearch = (str: string) => {
-            (matrixView.value as any).onSearch(str);
+            let num_results = (matrixView.value as any).onSearch(str);
+            state.searchToken = state.searchToken + " (" + num_results + " results)";
         }
 
         const logViewport = () => {

@@ -284,6 +284,7 @@ export default defineComponent({
             //     tokenIndices.includes(x.index)
             // );
             state.highlightedTokenIndices = tokenIndices;
+            return tokenIndices.length;
         };
 
         const printViewport = () => {
