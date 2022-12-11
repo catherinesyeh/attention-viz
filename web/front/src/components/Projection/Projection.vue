@@ -5,31 +5,36 @@
         <div id="matrix-wrapper">
             <div id="label-wrapper">
                 <span id="loading" v-show="renderState">Loading...</span>
-                <div id="matrix-labels" v-show="!renderState">
-                    <p class="axis-label">
-                        <span class="head-axis">head →</span>
-                        <span class="layer-axis">layer ↓</span>
-                    </p>
-                    <a-button type="primary" id="matrix-reset" @click="onClickReset">
-                        reset zoom
-                    </a-button>
+                <Transition>
+                    <div id="matrix-labels" v-show="!renderState">
+                        <p class="axis-label">
+                            <span class="head-axis">head →</span>
+                            <span class="layer-axis">layer ↓</span>
+                        </p>
+                        <a-button type="primary" id="matrix-reset" @click="onClickReset">
+                            reset zoom
+                        </a-button>
 
-                    <p class="label">Search</p>
-                    <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
-                        @search="onSearch(searchToken)" spellcheck="false" />
-                    <a-button class="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
+                        <p class="label">Search</p>
+                        <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
+                            @search="onSearch(searchToken)" spellcheck="false" />
+                        <Transition>
+                            <a-button class="clear" type="link" v-show="searchToken != ''"
+                                @click="clearSearch">clear</a-button>
+                        </Transition>
 
-                    <p class="label">Mode</p>
-                    <a-radio-group v-model:value="mode">
-                        <a-radio-button value="single">single</a-radio-button>
-                        <a-radio-button value="matrix">matrix</a-radio-button>
-                    </a-radio-group>
+                        <p class="label">Mode</p>
+                        <a-radio-group v-model:value="mode">
+                            <a-radio-button value="single">single</a-radio-button>
+                            <a-radio-button value="matrix">matrix</a-radio-button>
+                        </a-radio-group>
 
-                    <p class="label">Developer Tool</p>
-                    <a-button type="primary" @click="logViewport">
-                        log viewport
-                    </a-button>
-                </div>
+                        <p class="label">Developer Tool</p>
+                        <a-button type="primary" @click="logViewport">
+                            log viewport
+                        </a-button>
+                    </div>
+                </Transition>
             </div>
             <div class="gradient-edge"></div>
             <div class="gradient-edge right"></div>
@@ -187,6 +192,6 @@ div.matrix-cell {
     right: 0;
     padding: 0;
     font-size: small;
-    color: #888;
+    color: #888 !important;
 }
 </style>

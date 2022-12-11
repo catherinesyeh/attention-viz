@@ -2,11 +2,17 @@
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
             <p>Sentence View</p>
-            <a-button id="attn-clear" class="clear" type="link" @click="clearAttn" v-show="showAttn">clear</a-button>
+            <Transition>
+                <a-button id="attn-clear" class="clear" type="link" @click="clearAttn"
+                    v-show="showAttn">clear</a-button>
+            </Transition>
         </div>
-        <div id="bertviz" v-show="showAttn">
-            <div id="vis"></div>
-        </div>
+        <span class="subtitle">{{ attnMsg }}</span>
+        <Transition>
+            <div id="bertviz" v-show="showAttn">
+                <div id="vis"></div>
+            </div>
+        </Transition>
     </div>
     <!-- {{ attentionByToken }} -->
 </template>
@@ -45,7 +51,8 @@ export default {
 
         const state = reactive({
             attentionByToken: computed(() => store.state.attentionByToken),
-            showAttn: false
+            showAttn: false,
+            attnMsg: "click a point to explore its attention"
         });
 
         // start bertviz
@@ -452,14 +459,6 @@ export default {
                 }, 0);
             }
 
-            function lighten(color: any) {
-                const c = d3.hsl(color);
-                const increment = (1 - c.l) * 0.6;
-                c.l += increment;
-                c.s -= increment;
-                return c;
-            }
-
             function transpose(mat: any) {
                 return mat[0].map(function (col: any, i: number) {
                     return mat.map(function (row: any) {
@@ -472,6 +471,7 @@ export default {
 
         const clearAttn = () => {
             state.showAttn = false;
+            state.attnMsg = "click a point to explore its attention";
         }
 
         watch(
@@ -479,6 +479,7 @@ export default {
             () => {
                 // draw attention plot
                 state.showAttn = true;
+                state.attnMsg = "click a token to toggle lines off/on";
                 bertviz();
             }
         );
@@ -507,10 +508,23 @@ $key-darker: #c15b7d;
     justify-content: space-between;
 }
 
+.align-top p {
+    margin-bottom: 0 !important;
+}
+
 #attn-clear {
     position: relative;
     padding: 0;
     height: auto;
+}
+
+.subtitle {
+    font-family: monospace;
+    font-size: small;
+}
+
+#bertviz {
+    margin-top: 15px !important;
 }
 
 #bertviz,

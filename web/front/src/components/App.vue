@@ -155,6 +155,16 @@ label {
 }
 
 /* ant elements */
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+
 .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
   color: black !important;
   background: white !important;
