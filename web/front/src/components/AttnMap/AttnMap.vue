@@ -1,7 +1,10 @@
 <template>
     <div class="viewHead" id="attn-map-view">
-        <p>Sentence View</p>
-        <div id="bertviz">
+        <div class="align-top">
+            <p>Sentence View</p>
+            <a-button id="attn-clear" class="clear" type="link" @click="clearAttn" v-show="showAttn">clear</a-button>
+        </div>
+        <div id="bertviz" v-show="showAttn">
             <div id="vis"></div>
         </div>
     </div>
@@ -42,6 +45,7 @@ export default {
 
         const state = reactive({
             attentionByToken: computed(() => store.state.attentionByToken),
+            showAttn: false
         });
 
         // start bertviz
@@ -466,16 +470,22 @@ export default {
 
         }
 
+        const clearAttn = () => {
+            state.showAttn = false;
+        }
+
         watch(
             () => state.attentionByToken,
             () => {
                 // draw attention plot
+                state.showAttn = true;
                 bertviz();
             }
         );
 
         return {
             ...toRefs(state),
+            clearAttn
         };
     },
 };
@@ -489,6 +499,18 @@ $key-darker: #c15b7d;
     margin-left: 10px;
     margin-top: 10px;
     background-color: transparent !important;
+}
+
+.align-top {
+    align-items: baseline;
+    display: flex;
+    justify-content: space-between;
+}
+
+#attn-clear {
+    position: relative;
+    padding: 0;
+    height: auto;
 }
 
 #bertviz,

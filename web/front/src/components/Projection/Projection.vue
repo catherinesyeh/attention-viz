@@ -17,7 +17,7 @@
                     <p class="label">Search</p>
                     <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
                         @search="onSearch(searchToken)" spellcheck="false" />
-                    <a-button id="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
+                    <a-button class="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
 
                     <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
@@ -181,7 +181,7 @@ div.matrix-cell {
 }
 
 // search
-#clear {
+.clear {
     display: block;
     position: absolute;
     right: 0;

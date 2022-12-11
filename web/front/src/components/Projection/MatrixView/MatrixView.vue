@@ -132,6 +132,10 @@ export default defineComponent({
                 onClick: (info, event) => {
                     let pt = info.object as Typing.Point;
                     store.dispatch("setClickedPoint", pt);
+
+                    // todo: highlight selected token (below works but is pretty slow...)
+                    // let tokenIndices = [pt.index];
+                    // state.highlightedTokenIndices = tokenIndices;
                 },
                 updateTriggers: {
                     getFillColor: state.highlightedTokenIndices,
