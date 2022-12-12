@@ -240,9 +240,8 @@ export default defineComponent({
          * Reset the view state
          */
         const reset = () => {
-            let curViewState = deckgl.props.viewState;
             deckgl.setProps({
-                initialViewState: curViewState
+                initialViewState: nullInitialView
             });
 
             deckgl.setProps({
