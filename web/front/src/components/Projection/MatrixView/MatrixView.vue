@@ -241,17 +241,15 @@ export default defineComponent({
          */
         const reset = () => {
             let curViewState = deckgl.props.viewState;
-            if (curViewState != state.viewState) {
-                deckgl.setProps({
-                    initialViewState: curViewState
-                });
+            deckgl.setProps({
+                initialViewState: curViewState
+            });
 
-                deckgl.setProps({
-                    // this alone doesn't change anything apparently?
-                    initialViewState: state.viewState,
-                });
-                state.pointScaleFactor = 1;
-            }
+            deckgl.setProps({
+                // this alone doesn't change anything apparently?
+                initialViewState: state.viewState,
+            });
+            state.pointScaleFactor = 1;
         };
 
         const computedProjection = () => {
