@@ -34,13 +34,19 @@ interface ViewState {
     zoom: number;
     minZoom: number;
     maxZoom: number;
+    transitionDuration: number;
 }
 const nullInitialView: ViewState = {
     target: [0, 0, 0],
     zoom: -1,
     minZoom: -2,
     maxZoom: 40,
+    transitionDuration: 1000
 };
+
+const matrixCellHeight = 100;
+const matrixCellWidth = 100;
+const matrixCellMargin = 20;
 
 /**
  * Fit the canvas to the parent container size
@@ -63,20 +69,6 @@ function fitToContainer(canvas: HTMLCanvasElement | HTMLElement) {
 
 export default defineComponent({
     components: {},
-    props: {
-        searchToken: {
-            type: String,
-            required: true,
-        },
-        graphType: {
-            type: String,
-            required: true
-        },
-        colorBy: {
-            type: String,
-            required: true
-        },
-    },
     setup(props, context) {
         const store = useStore();
 
@@ -85,9 +77,9 @@ export default defineComponent({
             // attentionData: computed(() => store.state.attentionData),
             tokenData: computed(() => store.state.tokenData),
             // points: computed(() => store.state.points),
-            matrixCellHeight: 100,
-            matrixCellWidth: 100,
-            matrixCellMargin: 20,
+            matrixCellHeight: matrixCellHeight,
+            matrixCellWidth: matrixCellWidth,
+            matrixCellMargin: matrixCellMargin,
             viewState: nullInitialView,
             // highlightedPoints: [] as Typing.Point[],
             highlightedTokenIndices: [] as number[],
@@ -209,6 +201,7 @@ export default defineComponent({
                 zoom: -1,
                 minZoom: -2,
                 maxZoom: 40,
+                transitionDuration: 1000
             };
 
             deckgl = new Deck({
@@ -247,17 +240,18 @@ export default defineComponent({
          * Reset the view state
          */
         const reset = () => {
-            deckgl.setProps({
-                initialViewState: {
-                    target: deckgl.props.viewState,
-                },
-            });
+            let curViewState = deckgl.props.viewState;
+            if (curViewState != state.viewState) {
+                deckgl.setProps({
+                    initialViewState: curViewState
+                });
 
-            deckgl.setProps({
-                // this alone doesn't change anything apparently?
-                initialViewState: state.viewState,
-            });
-            state.pointScaleFactor = 1;
+                deckgl.setProps({
+                    // this alone doesn't change anything apparently?
+                    initialViewState: state.viewState,
+                });
+                state.pointScaleFactor = 1;
+            }
         };
 
         const computedProjection = () => {
@@ -311,12 +305,31 @@ export default defineComponent({
             console.log(str);
         }
 
+        const zoomToPlot = (layer: string, head: number) => { // zoom to plot 
+            console.log("Layer " + layer + ", Head " + head);
+            const x_center = head * (matrixCellWidth + matrixCellMargin) + 0.5 * matrixCellWidth;
+            const y_center = -layer * (matrixCellHeight + matrixCellMargin) + 0.5 * matrixCellHeight;
+            const newViewState = {
+                target: [x_center, y_center, 0],
+                zoom: 3,
+                minZoom: -2,
+                maxZoom: 40,
+                transitionDuration: 1000
+            };
+
+            deckgl.setProps({
+                initialViewState: state.viewState
+            });
+            deckgl.setProps({
+                initialViewState: newViewState
+            });
+        }
+
         // expose functions to the parent
-        context.expose({ reset, onSearch, printViewport, changeGraphType, changeColor });
+        context.expose({ reset, onSearch, printViewport, changeGraphType, changeColor, zoomToPlot });
 
         return {
-            ...toRefs(state),
-            reset,
+            ...toRefs(state)
         };
     },
 });

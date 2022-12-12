@@ -11,9 +11,6 @@
                             <span class="head-axis">head →</span>
                             <span class="layer-axis">layer ↓</span>
                         </p>
-                        <a-button type="primary" id="matrix-reset" @click="onClickReset">
-                            reset zoom
-                        </a-button>
 
                         <p class="label">Search</p>
                         <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
@@ -40,8 +37,7 @@
             <div class="gradient-edge right"></div>
             <!-- <canvas id="matrix-canvas" /> -->
 
-            <MatrixView v-show="mode == 'matrix'" ref="matrixView" :searchToken="searchToken" :graphType="graphType"
-                :colorBy="colorBy" />
+            <MatrixView v-show="mode == 'matrix'" ref="matrixView" />
         </div>
     </div>
 </template>
@@ -55,16 +51,6 @@ import MatrixView from "./MatrixView/MatrixView.vue";
 
 export default defineComponent({
     components: { MatrixView },
-    props: {
-        graphType: {
-            type: String,
-            required: true
-        },
-        colorBy: {
-            type: String,
-            required: true
-        },
-    },
     setup() {
         const store = useStore();
 
@@ -109,6 +95,11 @@ export default defineComponent({
             (matrixView.value as any).changeColor(str);
         }
 
+        // zoom to single plot
+        const zoomToPlot = (layer: number, head: number) => {
+            (matrixView.value as any).zoomToPlot(layer, head);
+        }
+
         return {
             ...toRefs(state),
             matrixView,
@@ -117,7 +108,8 @@ export default defineComponent({
             onSearch,
             logViewport,
             changeGraphType,
-            changeColor
+            changeColor,
+            zoomToPlot
         };
     },
 });

@@ -3,6 +3,24 @@
     <div class="container-fluid">
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
       <div class="dropdown">
+        <label for="layernum">Zoom to Layer:</label>
+        <a-select ref="select" v-model:value="layernum" style="width: 60px" @change="handleChange('layer', layernum)"
+          :layerNum="layernum">
+          <a-select-option v-for="i in 12" :value="(i - 1)">{{ i - 1 }}</a-select-option>
+        </a-select>
+        <label for="headnum">Head:</label>
+        <a-select ref="select" v-model:value="headnum" style="width: 60px" @change="handleChange('head', headnum)"
+          :headNum="headnum">
+          <a-select-option v-for="i in 12" :value="(i - 1)">{{ i - 1 }}</a-select-option>
+        </a-select>
+        <a-button type="primary" id="zoom-go" @click="zoomToPlot">
+          go
+        </a-button>
+        <a-button type="text" id="matrix-reset" @click="onClickReset">
+          reset zoom
+        </a-button>
+      </div>
+      <div class="dropdown">
         <label for="graph-type">Graph Type:</label>
         <a-select ref="select" v-model:value="graphtype" style="width: 120px" @change="handleChange('graph', graphtype)"
           :graphType="graphtype">
@@ -25,7 +43,7 @@
         <AttnMap />
       </div>
       <div class="col-10">
-        <Projection ref="projection" :graphType="graphtype" :colorBy="colorby" />
+        <Projection ref="projection" />
       </div>
     </div>
   </div>
@@ -54,6 +72,8 @@ export default defineComponent({
     const projection = ref(null);
 
     const state = reactive({
+      headnum: "",
+      layernum: "",
       graphtype: "tsne",
       colorby: "position"
     });
@@ -68,16 +88,33 @@ export default defineComponent({
       if (type == "graph") {
         state.graphtype = value;
         (projection.value as any).changeGraphType(value);
-      } else {
+      } else if (type == "color") {
         state.colorby = value;
         (projection.value as any).changeColor(value);
+      } else if (type == "layer") {
+        state.layernum = value;
+      } else {
+        state.headnum = value;
       }
     };
+
+    // zoom to plot based on layer and head selected
+    const zoomToPlot = () => {
+      let layer = parseInt(state.layernum);
+      let head = parseInt(state.headnum);
+      (projection.value as any).zoomToPlot(layer, head);
+    }
+
+    const onClickReset = () => {
+      (projection.value as any).onClickReset();
+    }
 
     return {
       ...toRefs(state),
       projection,
-      handleChange
+      handleChange,
+      zoomToPlot,
+      onClickReset
     };
   },
   computed: {},
@@ -165,6 +202,10 @@ label {
   opacity: 0;
 }
 
+.dropdown .ant-btn {
+  margin-left: 10px;
+}
+
 .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
   color: black !important;
   background: white !important;
@@ -186,6 +227,11 @@ label {
 .ant-btn-primary {
   background: black !important;
   border-color: black !important;
+}
+
+.ant-btn-text {
+  font-family: monospace !important;
+  font-size: small;
 }
 
 .ant-input:hover {
@@ -212,6 +258,10 @@ label {
 
 .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
   border-color: black !important;
+}
+
+.ant-select-dropdown {
+  z-index: 9999 !important;
 }
 
 /* end ant */

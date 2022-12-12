@@ -537,7 +537,7 @@ $key-darker: #c15b7d;
 #vis {
     overflow-y: scroll;
     max-height: calc(100vh - 100px);
-    padding-bottom: 20px;
+    padding-bottom: 40px;
 }
 
 // hide scrollbar but still allow scroll
