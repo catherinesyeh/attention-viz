@@ -28,6 +28,7 @@ import { ScatterplotLayer, TextLayer } from "@deck.gl/layers/typed";
 import { toTypeString } from "@vue/shared";
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
+import { StaticReadUsage } from "three";
 
 interface ViewState {
     target: number[];
@@ -84,6 +85,7 @@ export default defineComponent({
             // highlightedPoints: [] as Typing.Point[],
             highlightedTokenIndices: [] as number[],
             pointScaleFactor: 1,
+            moved: false
         });
 
         var shallowData = shallowRef({
@@ -230,6 +232,7 @@ export default defineComponent({
                     } else {
                         state.pointScaleFactor = 1;
                     }
+                    state.moved = true;
                 },
             });
 
@@ -240,14 +243,16 @@ export default defineComponent({
          * Reset the view state
          */
         const reset = () => {
-            deckgl.setProps({
-                initialViewState: nullInitialView
-            });
+            if (state.moved) {
+                deckgl.setProps({
+                    initialViewState: nullInitialView
+                });
 
-            deckgl.setProps({
-                // this alone doesn't change anything apparently?
-                initialViewState: state.viewState,
-            });
+                deckgl.setProps({
+                    // this alone doesn't change anything apparently?
+                    initialViewState: state.viewState,
+                });
+            }
             state.pointScaleFactor = 1;
         };
 
