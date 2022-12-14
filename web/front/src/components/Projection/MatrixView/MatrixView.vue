@@ -136,12 +136,14 @@ export default defineComponent({
                     ) as any;
                 },
                 onClick: (info, event) => {
-                    let pt = info.object as Typing.Point;
-                    store.dispatch("setClickedPoint", pt);
+                    console.log('onClick', info.object);
 
+                    let pt = info.object as Typing.Point;
                     // todo: highlight selected token (below works but is pretty slow...)
-                    // let tokenIndices = [pt.index];
-                    // state.highlightedTokenIndices = tokenIndices;
+                    let tokenIndices = [pt.index];
+                    state.highlightedTokenIndices = tokenIndices;
+
+                    store.dispatch("setClickedPoint", pt);
                 },
                 updateTriggers: {
                     getFillColor: state.highlightedTokenIndices,
@@ -154,7 +156,7 @@ export default defineComponent({
             return new TextLayer({
                 id: "point-label-layer",
                 data: points, // (state.pointScaleFactor < 0.3) ? points: [],
-                pickable: true,
+                pickable: false,
                 getPosition: (d: Typing.Point) => {
                     let coord = getPointCoordinate(d);
                     return [coord[0], coord[1] + 0.1];
@@ -191,7 +193,7 @@ export default defineComponent({
             return new TextLayer({
                 id: "text-layer",
                 data: headings,
-                pickable: true,
+                pickable: false,
                 getPosition: (d: Typing.PlotHead) => d.coordinate,
                 getText: (d: Typing.PlotHead) => d.title,
                 getSize: 10,
@@ -328,11 +330,6 @@ export default defineComponent({
             console.error("viewport", deckgl.getViewports());
         };
 
-        const changeGraphType = (str: string) => {
-            // todo: change coordinates here (tsne / umap)
-            console.log(str);
-        };
-
         const changeColor = (str: string) => {
             // todo: change coloring scheme here (position / norm)
             console.log(str);
@@ -365,7 +362,6 @@ export default defineComponent({
             reset,
             onSearch,
             printViewport,
-            changeGraphType,
             changeColor,
             zoomToPlot,
         });
