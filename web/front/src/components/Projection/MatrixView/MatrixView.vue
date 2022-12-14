@@ -87,6 +87,7 @@ export default defineComponent({
             pointScaleFactor: 1,
             moved: false,
             projectionMethod: computed(() => store.state.projectionMethod),
+            colorBy: computed(() => store.state.colorBy)
         });
 
         var shallowData = shallowRef({
@@ -126,8 +127,18 @@ export default defineComponent({
                         : defaultSize;
                 },
                 getFillColor: (d: Typing.Point) => {
-                    const defaultColor = [...d.color, 255],
-                        unactiveColor = [...d.color, 25];
+                    const getColor = (d: Typing.Point) => {
+                        switch (state.colorBy) {
+                            case 'position':
+                                return d.color.position
+                            case 'norm':
+                                return d.color.norm
+                            default:
+                                throw Error('invalid color channel')
+                        }
+                    }
+                    const defaultColor = [...getColor(d), 255],
+                        unactiveColor = [...getColor(d), 25];
                     if (!state.highlightedTokenIndices.length) return defaultColor;
                     return (
                         state.highlightedTokenIndices.includes(d.index)
@@ -146,7 +157,7 @@ export default defineComponent({
                     store.dispatch("setClickedPoint", pt);
                 },
                 updateTriggers: {
-                    getFillColor: state.highlightedTokenIndices,
+                    getFillColor: [state.colorBy, state.highlightedTokenIndices],
                     getRadius: [state.pointScaleFactor, state.highlightedTokenIndices],
                     getPosition: state.projectionMethod,
                 },
@@ -258,6 +269,9 @@ export default defineComponent({
                     }
                     state.moved = true;
                 },
+                parameters: {
+                    clearColor: [0, 0, 0, 1] // background color: [r, g, b, a]
+                }
             });
 
             store.commit("updateRenderState", false);
@@ -294,11 +308,13 @@ export default defineComponent({
             initMatrices();
         });
 
+        // re-render the visualization whenever any of the following changes
         watch(
             [
                 () => state.highlightedTokenIndices,
                 () => state.pointScaleFactor,
                 () => state.projectionMethod,
+                () => state.colorBy
             ],
             () => {
                 deckgl.setProps({ layers: [...toLayers()] });

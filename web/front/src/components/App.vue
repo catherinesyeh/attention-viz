@@ -41,21 +41,16 @@
                     <a-select-option value="umap">umap</a-select-option>
                 </a-select> -->
 
-                <a-select v-model:value="projectionMethod" style="width: 120px" :options="projectionMethods">
-                    <!-- <a-select-option value="tsne">tsne</a-select-option>
-                    <a-select-option value="umap">umap</a-select-option> -->
+                <a-select
+                    v-model:value="projectionMethod"
+                    style="width: 120px"
+                    :options="projectionMethods"
+                >
                 </a-select>
 
                 <label for="color-by">Color By:</label>
-                <a-select
-                    ref="select"
-                    v-model:value="colorby"
-                    style="width: 120px"
-                    @change="handleChange('color', colorby)"
-                    :colorBy="colorby"
-                >
-                    <a-select-option value="position">position</a-select-option>
-                    <a-select-option value="norm">norm</a-select-option>
+
+                <a-select v-model:value="colorBy" style="width: 120px" :options="colorByOptions">
                 </a-select>
             </div>
         </div>
@@ -99,11 +94,15 @@ export default defineComponent({
             headnum: "",
             layernum: "",
             projectionMethod: computed({
-              get: () => store.state.projectionMethod,
-              set: (v) => store.commit('setProjectionMethod', v)
+                get: () => store.state.projectionMethod,
+                set: (v) => store.commit("setProjectionMethod", v),
             }),
             projectionMethods: ["umap", "tsne"].map((x) => ({ value: x, label: x })),
-            colorby: "position",
+            colorBy: computed({
+                get: () => store.state.colorBy,
+                set: (v) => store.commit("setColorBy", v),
+            }),
+            colorByOptions: ["position", "norm"].map((x) => ({ value: x, label: x })),
         });
 
         // Init the store to read data from backend
@@ -113,10 +112,7 @@ export default defineComponent({
 
         // update graph settings based on dropdown option selected
         const handleChange = function (type: string, value: string) {
-            if (type == "color") {
-                state.colorby = value;
-                (projection.value as any).changeColor(value);
-            } else if (type == "layer") {
+            if (type == "layer") {
                 state.layernum = value;
             } else {
                 state.headnum = value;

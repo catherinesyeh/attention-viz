@@ -37,13 +37,14 @@ export namespace Typing {
         umap: [number, number];
     }
 
+    export interface PointColor {
+        position: number[];
+        norm: number[];
+    }
+
     export interface Point {
         coordinate: PointCoordinate;
-        // color: {
-        //     [p in colorBy]: number[]; // color in RBGA [r,g,b,[a]]
-        // }
-        // coordinate: [number, number];
-        color: number[];
+        color: PointColor;
         msg: string;
         layer: number;
         head: number;

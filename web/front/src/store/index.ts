@@ -19,6 +19,7 @@ export interface State {
   attentionByToken: Typing.AttnByToken;
   attentionByTokenLock: boolean; 
   projectionMethod: keyof Typing.PointCoordinate;
+  colorBy: keyof Typing.PointColor;
 }
 
 // define injection key
@@ -32,7 +33,8 @@ export const store = createStore<State>({
     renderState: true,
     attentionByToken: {attns: [], token: {} as Typing.TokenData},
     attentionByTokenLock: false,
-    projectionMethod: 'tsne'
+    projectionMethod: 'tsne',
+    colorBy: 'position'
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -61,6 +63,10 @@ export const store = createStore<State>({
     setProjectionMethod(state, projectionMethod) {
       state.projectionMethod = projectionMethod
       console.log('setProjectionMethod', projectionMethod);
+    },
+    setColorBy(state, colorBy) {
+      state.colorBy = colorBy;
+      console.log('setColorBy', colorBy);
     }
   },
   actions: { // actions commit mutations
