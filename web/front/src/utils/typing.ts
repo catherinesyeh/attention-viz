@@ -29,8 +29,20 @@ export namespace Typing {
         value: string;
     }
 
+    // export type projectionMethod = "tsne" | "umap";
+    // export type colorBy = "byPosition" | "byNorm";
+
+    export interface PointCoordinate {
+        tsne: [number, number];
+        umap: [number, number];
+    }
+
     export interface Point {
-        coordinate: [number, number];
+        coordinate: PointCoordinate;
+        // color: {
+        //     [p in colorBy]: number[]; // color in RBGA [r,g,b,[a]]
+        // }
+        // coordinate: [number, number];
         color: number[];
         msg: string;
         layer: number;
@@ -42,7 +54,7 @@ export namespace Typing {
         layer: number;
         head: number;
         title: string;
-        coordinate: Point2D;
+        coordinate: [number, number];
     }
     export interface Projection {
         points: Point[];

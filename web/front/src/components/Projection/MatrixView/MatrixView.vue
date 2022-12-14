@@ -42,7 +42,7 @@ const nullInitialView: ViewState = {
     zoom: -1,
     minZoom: -2,
     maxZoom: 40,
-    transitionDuration: 1000
+    transitionDuration: 1000,
 };
 
 const matrixCellHeight = 100;
@@ -85,7 +85,8 @@ export default defineComponent({
             // highlightedPoints: [] as Typing.Point[],
             highlightedTokenIndices: [] as number[],
             pointScaleFactor: 1,
-            moved: false
+            moved: false,
+            projectionMethod: computed(() => store.state.projectionMethod),
         });
 
         var shallowData = shallowRef({
@@ -99,12 +100,23 @@ export default defineComponent({
 
         var deckgl = {} as Deck;
 
+        const getPointCoordinate = (d: Typing.Point) => {
+            switch (state.projectionMethod) {
+                case "tsne":
+                    return d.coordinate.tsne;
+                case "umap":
+                    return d.coordinate.umap;
+                default:
+                    throw Error("Invalid projection method!");
+            }
+        };
+
         const toPointLayer = (points: Typing.Point[]) => {
             return new ScatterplotLayer({
                 pickable: true,
                 data: points,
                 radiusMaxPixels: 6,
-                getPosition: (d: Typing.Point) => d.coordinate,
+                getPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getRadius: (d: Typing.Point) => {
                     const defaultSize = 0.4 * state.pointScaleFactor,
                         highlightedSize = 10 * state.pointScaleFactor;
@@ -134,6 +146,7 @@ export default defineComponent({
                 updateTriggers: {
                     getFillColor: state.highlightedTokenIndices,
                     getRadius: [state.pointScaleFactor, state.highlightedTokenIndices],
+                    getPosition: state.projectionMethod,
                 },
             });
         };
@@ -142,24 +155,33 @@ export default defineComponent({
                 id: "point-label-layer",
                 data: points, // (state.pointScaleFactor < 0.3) ? points: [],
                 pickable: true,
-                getPosition: (d: Typing.Point) => [d.coordinate[0], d.coordinate[1] + 0.1],
+                getPosition: (d: Typing.Point) => {
+                    let coord = getPointCoordinate(d);
+                    return [coord[0], coord[1] + 0.1];
+                },
                 getText: (d: Typing.Point) => d.value,
-                // getColor: () =>
-                //     state.pointScaleFactor <= 0.15 ? [0, 0, 0, 255] : [255, 255, 255, 0],
                 getColor: (d: Typing.Point) => {
                     const defaultOpacity = 255,
                         lightOpacity = 50;
-                    if (state.highlightedTokenIndices.length === 0) return state.pointScaleFactor <= 0.15 ? [0, 0, 0, defaultOpacity] : [255, 255, 255, 0];
+                    if (state.highlightedTokenIndices.length === 0)
+                        return state.pointScaleFactor <= 0.15
+                            ? [0, 0, 0, defaultOpacity]
+                            : [255, 255, 255, 0];
                     return state.highlightedTokenIndices.includes(d.index)
-                        ? state.pointScaleFactor <= 0.15 ? [0, 0, 0, defaultOpacity] : [255, 255, 255, 0]
-                        : state.pointScaleFactor <= 0.15 ? [0, 0, 0, lightOpacity] : [255, 255, 255, 0];
+                        ? state.pointScaleFactor <= 0.15
+                            ? [0, 0, 0, defaultOpacity]
+                            : [255, 255, 255, 0]
+                        : state.pointScaleFactor <= 0.15
+                        ? [0, 0, 0, lightOpacity]
+                        : [255, 255, 255, 0];
                 },
                 getSize: 12,
                 getAngle: 0,
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
-                    getColor: [state.pointScaleFactor, state.highlightedTokenIndices]
+                    getColor: [state.pointScaleFactor, state.highlightedTokenIndices],
+                    getPosition: state.projectionMethod
                 },
                 // onClick: (info, event) => console.log("Clicked:", info, event),
             });
@@ -188,11 +210,11 @@ export default defineComponent({
         /**
          * The main function for drawing the scatter matrices
          */
-        const drawMatrices = () => {
+        const initMatrices = () => {
             store.commit("updateRenderState", true);
 
             const { points, headings, range } = shallowData.value;
-            console.log("drawMatrices", points, headings);
+            console.log("initMatrices", points, headings);
             if (!points || !points.length) return;
 
             // put init view state in the centre
@@ -203,7 +225,7 @@ export default defineComponent({
                 zoom: -1,
                 minZoom: -2,
                 maxZoom: 40,
-                transitionDuration: 1000
+                transitionDuration: 1000,
             };
 
             deckgl = new Deck({
@@ -245,7 +267,7 @@ export default defineComponent({
         const reset = () => {
             if (state.moved) {
                 deckgl.setProps({
-                    initialViewState: nullInitialView
+                    initialViewState: nullInitialView,
                 });
 
                 deckgl.setProps({
@@ -267,12 +289,19 @@ export default defineComponent({
         watch([() => state.matrixData, () => state.tokenData], () => computedProjection());
 
         watch([shallowData], () => {
-            drawMatrices();
+            initMatrices();
         });
 
-        watch([() => state.highlightedTokenIndices, () => state.pointScaleFactor], () => {
-            deckgl.setProps({ layers: [...toLayers()] });
-        });
+        watch(
+            [
+                () => state.highlightedTokenIndices,
+                () => state.pointScaleFactor,
+                () => state.projectionMethod,
+            ],
+            () => {
+                deckgl.setProps({ layers: [...toLayers()] });
+            }
+        );
 
         onMounted(() => {
             console.log("onMounted");
@@ -299,39 +328,50 @@ export default defineComponent({
             console.error("viewport", deckgl.getViewports());
         };
 
-        const changeGraphType = (str: string) => { // todo: change coordinates here (tsne / umap)
+        const changeGraphType = (str: string) => {
+            // todo: change coordinates here (tsne / umap)
             console.log(str);
-        }
+        };
 
-        const changeColor = (str: string) => { // todo: change coloring scheme here (position / norm)
+        const changeColor = (str: string) => {
+            // todo: change coloring scheme here (position / norm)
             console.log(str);
-        }
+        };
 
-        const zoomToPlot = (layer: string, head: number) => { // zoom to plot 
+        const zoomToPlot = (layer: string, head: number) => {
+            // zoom to plot
             console.log("Layer " + layer + ", Head " + head);
             const x_center = head * (matrixCellWidth + matrixCellMargin) + 0.5 * matrixCellWidth;
-            const y_center = -layer * (matrixCellHeight + matrixCellMargin) + 0.5 * matrixCellHeight;
+            const y_center =
+                -layer * (matrixCellHeight + matrixCellMargin) + 0.5 * matrixCellHeight;
             const newViewState = {
                 target: [x_center, y_center, 0],
                 zoom: 3,
                 minZoom: -2,
                 maxZoom: 40,
-                transitionDuration: 1000
+                transitionDuration: 1000,
             };
 
             deckgl.setProps({
-                initialViewState: state.viewState
+                initialViewState: state.viewState,
             });
             deckgl.setProps({
-                initialViewState: newViewState
+                initialViewState: newViewState,
             });
-        }
+        };
 
         // expose functions to the parent
-        context.expose({ reset, onSearch, printViewport, changeGraphType, changeColor, zoomToPlot });
+        context.expose({
+            reset,
+            onSearch,
+            printViewport,
+            changeGraphType,
+            changeColor,
+            zoomToPlot,
+        });
 
         return {
-            ...toRefs(state)
+            ...toRefs(state),
         };
     },
 });

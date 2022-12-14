@@ -5,13 +5,11 @@ import * as _ from "underscore";
 const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20) => {
     var results = [] as Typing.Point[];
 
-    console.log(matrixCellWidth, matrixCellHeight, matrixCellMargin);
-
     // compute colors for each token
-    const queryColor = d3.scaleSequential(function(t) {
-       return d3.interpolateYlGn(t * 0.75 + 0.25);
+    const queryColor = d3.scaleSequential(function (t) {
+        return d3.interpolateYlGn(t * 0.75 + 0.25);
     }).domain([0, 1]);
-    const keyColor = d3.scaleSequential(function(t) {
+    const keyColor = d3.scaleSequential(function (t) {
         return d3.interpolatePuRd(t * 0.75 + 0.25);
     }).domain([0, 1]);
     const getColor = (td: Typing.TokenData) => {
@@ -49,16 +47,37 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
 
         // compute coordinates for each token
         const data = md.tokens;
-        const xScale = d3
-            .scaleLinear()
-            .domain(d3.extent(data.map((x) => x.tsne_x)) as any)
-            .range([0, matrixCellWidth]);
-        const yScale = d3
-            .scaleLinear()
-            .domain(d3.extent(data.map((x) => x.tsne_y)) as any)
-            .range([0, matrixCellHeight]);
+        const computeCoordinate = (projectionMethod: keyof Typing.PointCoordinate) => {
+            const getX = (x: Typing.TokenCoordinate) => {
+                if (projectionMethod === 'tsne') return x.tsne_x
+                else if (projectionMethod === 'umap') return x.umap_x
+                else throw Error('Invalid projection method')
+            }
+            const getY = (x: Typing.TokenCoordinate) => {
+                if (projectionMethod === 'tsne') return x.tsne_y
+                else if (projectionMethod === 'umap') return x.umap_y
+                else throw Error('Invalid projection method')
+            }
+            const xScale = d3
+                .scaleLinear()
+                .domain(d3.extent(data.map((x) => getX(x))) as any)
+                .range([0, matrixCellWidth]);
+            const yScale = d3
+                .scaleLinear()
+                .domain(d3.extent(data.map((x) => getY(x))) as any)
+                .range([0, matrixCellHeight]);
+            return data.map(d => [xScale(getX(d)) + xoffset, yScale(getY(d)) + yoffset] as [number, number])
+        }
+        const pointsCoordinates = {
+            'tsne': computeCoordinate('tsne'),
+            'umap': computeCoordinate('umap')
+        }
+
         const points = data.map((d, index) => ({
-            coordinate: [xScale(d.tsne_x) + xoffset, yScale(d.tsne_y) + yoffset] as [number, number],
+            coordinate: {
+                tsne: pointsCoordinates.tsne[index],
+                umap: pointsCoordinates.umap[index]
+            },
             color: colors[index],
             msg: msgs[index],
             layer,
@@ -102,7 +121,7 @@ const computeMatrixProjectionLabel = (matrixData: Typing.MatrixData[], matrixCel
     return results;
 };
 
-const computeMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20) : Typing.Projection => {
+const computeMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20): Typing.Projection => {
     const pts = computeMatrixProjectionPoint(matrixData, tokenData, matrixCellWidth, matrixCellHeight, matrixCellMargin)
     return {
         'points': pts.points,

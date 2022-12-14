@@ -18,6 +18,7 @@ export interface State {
   renderState: boolean; // true when the canvas is being rendered; false upon finished
   attentionByToken: Typing.AttnByToken;
   attentionByTokenLock: boolean; 
+  projectionMethod: keyof Typing.PointCoordinate;
 }
 
 // define injection key
@@ -30,7 +31,8 @@ export const store = createStore<State>({
     tokenData: [],
     renderState: true,
     attentionByToken: {attns: [], token: {} as Typing.TokenData},
-    attentionByTokenLock: false
+    attentionByTokenLock: false,
+    projectionMethod: 'tsne'
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -55,6 +57,10 @@ export const store = createStore<State>({
     },
     setAttentionByTokenLock(state, attentionByTokenLock) {
       state.attentionByTokenLock = attentionByTokenLock;
+    },
+    setProjectionMethod(state, projectionMethod) {
+      state.projectionMethod = projectionMethod
+      console.log('setProjectionMethod', projectionMethod);
     }
   },
   actions: { // actions commit mutations
