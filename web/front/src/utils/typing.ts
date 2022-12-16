@@ -50,6 +50,7 @@ export namespace Typing {
         head: number;
         index: number;
         value: string;
+        type: string;
     }
     export interface PlotHead {
         layer: number;

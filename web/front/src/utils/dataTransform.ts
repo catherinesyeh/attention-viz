@@ -31,6 +31,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
     );
     const values = tokenData.map(td => td.value);
+    const types = tokenData.map(td => td.type);
 
     // for recording the x/y ranges
     let xs = [];
@@ -102,7 +103,8 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             layer,
             head,
             index,
-            value: values[index]
+            value: values[index],
+            type: types[index]
         }));
 
         xs.push(...[xoffset, matrixCellWidth + xoffset]);

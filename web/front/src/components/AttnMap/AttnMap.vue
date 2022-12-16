@@ -52,7 +52,8 @@ export default {
         const state = reactive({
             attentionByToken: computed(() => store.state.attentionByToken),
             showAttn: false,
-            attnMsg: "click a point to explore its attention"
+            attnMsg: "click a point to explore its attention",
+            highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices)
         });
 
         // start bertviz
@@ -472,6 +473,7 @@ export default {
         const clearAttn = () => {
             state.showAttn = false;
             state.attnMsg = "click a point to explore its attention";
+            store.commit("setHighlightedTokenIndices", []);
         }
 
         watch(

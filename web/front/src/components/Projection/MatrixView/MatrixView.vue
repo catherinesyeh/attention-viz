@@ -41,7 +41,7 @@ const nullInitialView: ViewState = {
     target: [0, 0, 0],
     zoom: -1,
     minZoom: -2,
-    maxZoom: 40,
+    maxZoom: 9,
     transitionDuration: 1000,
 };
 
@@ -83,7 +83,8 @@ export default defineComponent({
             matrixCellMargin: matrixCellMargin,
             viewState: nullInitialView,
             // highlightedPoints: [] as Typing.Point[],
-            highlightedTokenIndices: [] as number[],
+            highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
+            zoom: nullInitialView.zoom,
             pointScaleFactor: 1,
             moved: false,
             projectionMethod: computed(() => store.state.projectionMethod),
@@ -120,7 +121,7 @@ export default defineComponent({
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getRadius: (d: Typing.Point) => {
                     const defaultSize = 0.4 * state.pointScaleFactor,
-                        highlightedSize = 10 * state.pointScaleFactor;
+                        highlightedSize = 6 * state.pointScaleFactor;
                     if (state.highlightedTokenIndices.length === 0) return defaultSize;
                     return state.highlightedTokenIndices.includes(d.index)
                         ? highlightedSize
@@ -137,12 +138,14 @@ export default defineComponent({
                                 throw Error('invalid color channel')
                         }
                     }
-                    const defaultColor = [...getColor(d), 255],
+                    const defaultColor = [...getColor(d), 175],
+                        highlightColorQuery = [84, 148, 61, 175],
+                        highlightColorKey = [193, 91, 125, 175],
                         unactiveColor = [...getColor(d), 25];
                     if (!state.highlightedTokenIndices.length) return defaultColor;
                     return (
                         state.highlightedTokenIndices.includes(d.index)
-                            ? defaultColor
+                            ? d.type == "query" ? highlightColorQuery : highlightColorKey
                             : unactiveColor
                     ) as any;
                 },
@@ -150,11 +153,10 @@ export default defineComponent({
                     console.log('onClick', info.object);
 
                     let pt = info.object as Typing.Point;
-                    // todo: highlight selected token (below works but is pretty slow...)
-                    let tokenIndices = [pt.index];
-                    state.highlightedTokenIndices = tokenIndices;
-
                     store.dispatch("setClickedPoint", pt);
+
+                    let tokenIndices = [pt.index];
+                    store.commit("setHighlightedTokenIndices", tokenIndices);
                 },
                 updateTriggers: {
                     getFillColor: [state.colorBy, state.highlightedTokenIndices],
@@ -170,11 +172,13 @@ export default defineComponent({
                 pickable: false,
                 getPosition: (d: Typing.Point) => {
                     let coord = getPointCoordinate(d);
-                    return [coord[0], coord[1] + 0.1];
+                    if (state.zoom <= 6) return [0, 0];
+                    let offset = 1 / (state.zoom * 2);
+                    return [coord[0] + offset, coord[1]];
                 },
                 getText: (d: Typing.Point) => d.value,
                 getColor: (d: Typing.Point) => {
-                    const defaultOpacity = 255,
+                    const defaultOpacity = 225,
                         lightOpacity = 50;
                     if (state.highlightedTokenIndices.length === 0)
                         return state.pointScaleFactor <= 0.15
@@ -185,8 +189,8 @@ export default defineComponent({
                             ? [0, 0, 0, defaultOpacity]
                             : [255, 255, 255, 0]
                         : state.pointScaleFactor <= 0.15
-                        ? [0, 0, 0, lightOpacity]
-                        : [255, 255, 255, 0];
+                            ? [0, 0, 0, lightOpacity]
+                            : [255, 255, 255, 0];
                 },
                 getSize: 12,
                 getAngle: 0,
@@ -194,7 +198,7 @@ export default defineComponent({
                 getAlignmentBaseline: "center",
                 updateTriggers: {
                     getColor: [state.pointScaleFactor, state.highlightedTokenIndices],
-                    getPosition: state.projectionMethod
+                    getPosition: [state.projectionMethod, state.zoom]
                 },
                 // onClick: (info, event) => console.log("Clicked:", info, event),
             });
@@ -207,11 +211,15 @@ export default defineComponent({
                 pickable: false,
                 getPosition: (d: Typing.PlotHead) => d.coordinate,
                 getText: (d: Typing.PlotHead) => d.title,
-                getSize: 10,
+                getSize: state.zoom >= 1 ? 24 : 20,
                 getAngle: 0,
-                sizeUnits: "common",
+                sizeUnits: state.zoom >= 1 ? "pixels" : "common",
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
+                updateTriggers: {
+                    getSize: state.zoom,
+                    sizeUnits: state.zoom
+                }
                 // onClick: (info, event) => console.log("Clicked:", info, event),
             });
         };
@@ -237,7 +245,7 @@ export default defineComponent({
                 target: [canvasWidth / 2, canvasHeight / 2, 0],
                 zoom: -1,
                 minZoom: -2,
-                maxZoom: 40,
+                maxZoom: 9,
                 transitionDuration: 1000,
             };
 
@@ -258,6 +266,7 @@ export default defineComponent({
                     },
                 onViewStateChange: (param) => {
                     const zoom = param.viewState.zoom;
+                    state.zoom = zoom;
                     if (zoom > 6) {
                         state.pointScaleFactor = 0.15;
                         // } else if (zoom > 4.5) {
@@ -269,9 +278,9 @@ export default defineComponent({
                     }
                     state.moved = true;
                 },
-                parameters: {
-                    clearColor: [0, 0, 0, 1] // background color: [r, g, b, a]
-                }
+                // parameters: { // dark mode for later
+                //     clearColor: [0, 0, 0, 1] // background color: [r, g, b, a]
+                // }
             });
 
             store.commit("updateRenderState", false);
@@ -313,6 +322,7 @@ export default defineComponent({
             [
                 () => state.highlightedTokenIndices,
                 () => state.pointScaleFactor,
+                () => state.zoom,
                 () => state.projectionMethod,
                 () => state.colorBy
             ],
@@ -338,7 +348,7 @@ export default defineComponent({
             // let tokenPoints = shallowData.value.points.filter((x) =>
             //     tokenIndices.includes(x.index)
             // );
-            state.highlightedTokenIndices = tokenIndices;
+            store.commit("setHighlightedTokenIndices", tokenIndices);
             return tokenIndices.length;
         };
 
@@ -359,9 +369,9 @@ export default defineComponent({
                 -layer * (matrixCellHeight + matrixCellMargin) + 0.5 * matrixCellHeight;
             const newViewState = {
                 target: [x_center, y_center, 0],
-                zoom: 3,
+                zoom: 2.75,
                 minZoom: -2,
-                maxZoom: 40,
+                maxZoom: 9,
                 transitionDuration: 1000,
             };
 
