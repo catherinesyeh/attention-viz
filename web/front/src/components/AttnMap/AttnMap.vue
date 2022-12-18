@@ -53,7 +53,8 @@ export default {
             attentionByToken: computed(() => store.state.attentionByToken),
             showAttn: false,
             attnMsg: "click a point to explore its attention",
-            highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices)
+            highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
+            view: computed(() => store.state.view)
         });
 
         // start bertviz
@@ -485,6 +486,16 @@ export default {
                 bertviz();
             }
         );
+
+        watch(
+            () => state.view,
+            () => {
+                if (state.view != 'attn') {
+                    state.showAttn = false;
+                    state.attnMsg = "click a point to explore its attention";
+                }
+            }
+        )
 
         return {
             ...toRefs(state),

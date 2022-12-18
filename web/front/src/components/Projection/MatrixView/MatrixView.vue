@@ -88,7 +88,8 @@ export default defineComponent({
             pointScaleFactor: 1,
             moved: false,
             projectionMethod: computed(() => store.state.projectionMethod),
-            colorBy: computed(() => store.state.colorBy)
+            colorBy: computed(() => store.state.colorBy),
+            view: computed(() => store.state.view)
         });
 
         var shallowData = shallowRef({
@@ -151,6 +152,7 @@ export default defineComponent({
                 },
                 onClick: (info, event) => {
                     console.log('onClick', info.object);
+                    store.commit("setView", 'attn');
 
                     let pt = info.object as Typing.Point;
                     store.dispatch("setClickedPoint", pt);
@@ -382,6 +384,13 @@ export default defineComponent({
                 initialViewState: newViewState,
             });
         };
+
+        watch(() => state.highlightedTokenIndices,
+            () => {
+                if (state.highlightedTokenIndices.length == 0) {
+                    store.commit("setView", "none");
+                }
+            })
 
         // expose functions to the parent
         context.expose({

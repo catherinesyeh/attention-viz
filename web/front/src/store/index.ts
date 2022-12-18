@@ -21,6 +21,7 @@ export interface State {
   projectionMethod: keyof Typing.PointCoordinate;
   colorBy: keyof Typing.PointColor;
   highlightedTokenIndices: number[];
+  view: string;
 }
 
 // define injection key
@@ -36,7 +37,8 @@ export const store = createStore<State>({
     attentionByTokenLock: false,
     projectionMethod: 'tsne',
     colorBy: 'position',
-    highlightedTokenIndices: []
+    highlightedTokenIndices: [],
+    view: 'none',
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -72,6 +74,10 @@ export const store = createStore<State>({
     },
     setHighlightedTokenIndices(state, highlightedTokenIndices) {
       state.highlightedTokenIndices = highlightedTokenIndices;
+    },
+    setView(state, view) {
+      state.view = view;
+      console.log('setView', view);
     }
   },
   actions: { // actions commit mutations

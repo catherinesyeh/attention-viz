@@ -59,7 +59,8 @@ export default defineComponent({
         const state = reactive({
             mode: "matrix",
             renderState: computed(() => store.state.renderState),
-            searchToken: ""
+            searchToken: "",
+            view: computed(() => store.state.view)
         });
 
         const onClickReset = () => {
@@ -74,6 +75,7 @@ export default defineComponent({
         }
 
         const onSearch = (str: string) => {
+            store.commit("setView", "search");
             let num_results = (matrixView.value as any).onSearch(str);
             if (str != "") { // display # search results
                 state.searchToken = str + " (" + num_results + " results)";
@@ -99,6 +101,13 @@ export default defineComponent({
         const zoomToPlot = (layer: number, head: number) => {
             (matrixView.value as any).zoomToPlot(layer, head);
         }
+
+        watch(() => state.view,
+            () => {
+                if (state.view != "search") {
+                    state.searchToken = "";
+                }
+            })
 
         return {
             ...toRefs(state),
