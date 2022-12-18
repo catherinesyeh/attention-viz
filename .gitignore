@@ -8,6 +8,7 @@
 *.h5
 /checkpoint
 /web/data/attention
+/web/data/byLayerHead3D
 
 ## JS
 node_modules
