@@ -184,14 +184,14 @@ export default defineComponent({
                         lightOpacity = 50;
                     if (state.highlightedTokenIndices.length === 0)
                         return state.pointScaleFactor <= 0.15
-                            ? [0, 0, 0, defaultOpacity]
+                            ? d.type == "query" ? [43, 91, 25, defaultOpacity] : [117, 29, 58, defaultOpacity]
                             : [255, 255, 255, 0];
                     return state.highlightedTokenIndices.includes(d.index)
                         ? state.pointScaleFactor <= 0.15
-                            ? [0, 0, 0, defaultOpacity]
+                            ? d.type == "query" ? [43, 91, 25, defaultOpacity] : [117, 29, 58, defaultOpacity]
                             : [255, 255, 255, 0]
                         : state.pointScaleFactor <= 0.15
-                            ? [0, 0, 0, lightOpacity]
+                            ? d.type == "query" ? [43, 91, 25, lightOpacity] : [117, 29, 58, lightOpacity]
                             : [255, 255, 255, 0];
                 },
                 getSize: 12,
