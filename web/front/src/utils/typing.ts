@@ -68,6 +68,8 @@ export namespace Typing {
     }
 
     export interface AttnByToken {
+        layer: number;
+        head: number;
         attns: number[][];
         token: TokenData
     }

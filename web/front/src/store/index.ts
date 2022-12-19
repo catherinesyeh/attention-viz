@@ -33,7 +33,7 @@ export const store = createStore<State>({
     attentionData: [],
     tokenData: [],
     renderState: true,
-    attentionByToken: {attns: [], token: {} as Typing.TokenData},
+    attentionByToken: {layer: 0, head: 0, attns: [], token: {} as Typing.TokenData},
     attentionByTokenLock: false,
     projectionMethod: 'tsne',
     colorBy: 'position',

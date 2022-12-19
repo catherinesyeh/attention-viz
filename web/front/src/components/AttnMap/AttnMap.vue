@@ -1,7 +1,7 @@
 <template>
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
-            <p>Sentence View</p>
+            <p>Sentence View <span v-show="showAttn">({{ layerHead }})</span></p>
             <Transition>
                 <a-button id="attn-clear" class="clear" type="link" @click="clearAttn"
                     v-show="showAttn">clear</a-button>
@@ -14,7 +14,6 @@
             </div>
         </Transition>
     </div>
-    <!-- {{ attentionByToken }} -->
 </template>
   
 <script lang="ts">
@@ -54,7 +53,8 @@ export default {
             showAttn: false,
             attnMsg: "click a point to explore its attention",
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
-            view: computed(() => store.state.view)
+            view: computed(() => store.state.view),
+            layerHead: ""
         });
 
         // start bertviz
@@ -68,6 +68,10 @@ export default {
             if (token_type == "key") { // flip graph if key
                 attn_vals = transpose(attn_vals);
             }
+
+            const layer = attentionByToken.layer;
+            const head = attentionByToken.head;
+            state.layerHead = "L" + layer + " H" + head;
 
             const params = {
                 attention: [

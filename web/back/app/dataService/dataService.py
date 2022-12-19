@@ -98,6 +98,8 @@ class DataService(object):
                 break
 
         return {
+            'layer': layer,
+            'head': head,
             'attns': [t['attention'] for t in attns],
             'token': all_token_info
         }
