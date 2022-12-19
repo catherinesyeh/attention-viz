@@ -1,7 +1,11 @@
 <template>
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
-            <p>Sentence View <span v-show="showAttn">({{ layerHead }})</span></p>
+            <p>Sentence View
+                <Transition>
+                    <span v-show="showAttn">({{ layerHead }})</span>
+                </Transition>
+            </p>
             <Transition>
                 <a-button id="attn-clear" class="clear" type="link" @click="clearAttn"
                     v-show="showAttn">clear</a-button>
