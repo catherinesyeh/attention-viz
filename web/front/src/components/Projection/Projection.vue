@@ -125,7 +125,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-$background: #f5f5f7;
+// $background: #f5f5f7;
 
 #label-wrapper {
     position: absolute;
@@ -172,13 +172,13 @@ div#matrix-wrapper {
     left: 0;
     height: 100vh;
     width: calc(100px + 8vw);
-    background: linear-gradient(to right, #f5f5f7, rgba(255, 255, 255, 0));
+    background: linear-gradient(to right, var(--background), rgba(255, 255, 255, 0));
 }
 
 .gradient-edge.right {
     left: unset;
     right: 0;
-    background: linear-gradient(to left, #f5f5f7, rgba(255, 255, 255, 0));
+    background: linear-gradient(to left, var(--background), rgba(255, 255, 255, 0));
 }
 
 div.matrix-cell {

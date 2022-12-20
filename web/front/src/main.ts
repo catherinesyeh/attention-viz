@@ -8,7 +8,21 @@ import {
     Radio, Input, Button, Select
 } from "ant-design-vue";
 
+/* import the fontawesome core */
+import { library } from '@fortawesome/fontawesome-svg-core'
+
+/* import font awesome icon component */
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+/* import specific icons */
+import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons'
+
+/* add icons to the library */
+library.add(faMoon, faSun)
+
+
 createApp(App)
     .use(store, key)
     .use(Radio).use(Input).use(Button).use(Select)
+    .component('font-awesome-icon', FontAwesomeIcon)
     .mount("#app");

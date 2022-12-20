@@ -89,7 +89,8 @@ export default defineComponent({
             moved: false,
             projectionMethod: computed(() => store.state.projectionMethod),
             colorBy: computed(() => store.state.colorBy),
-            view: computed(() => store.state.view)
+            view: computed(() => store.state.view),
+            userTheme: computed(() => store.state.userTheme)
         });
 
         var shallowData = shallowRef({
@@ -215,12 +216,14 @@ export default defineComponent({
                 getText: (d: Typing.PlotHead) => d.title,
                 getSize: state.zoom >= 1 ? 24 : 20,
                 getAngle: 0,
+                getColor: state.userTheme == 'light-theme' ? [0, 0, 0] : [255, 255, 255],
                 sizeUnits: state.zoom >= 1 ? "pixels" : "common",
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
                     getSize: state.zoom,
-                    sizeUnits: state.zoom
+                    sizeUnits: state.zoom,
+                    getColor: state.userTheme
                 }
                 // onClick: (info, event) => console.log("Clicked:", info, event),
             });
@@ -326,7 +329,8 @@ export default defineComponent({
                 () => state.pointScaleFactor,
                 () => state.zoom,
                 () => state.projectionMethod,
-                () => state.colorBy
+                () => state.colorBy,
+                () => state.userTheme
             ],
             () => {
                 deckgl.setProps({ layers: [...toLayers()] });

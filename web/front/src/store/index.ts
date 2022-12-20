@@ -22,6 +22,7 @@ export interface State {
   colorBy: keyof Typing.PointColor;
   highlightedTokenIndices: number[];
   view: string;
+  userTheme: string;
 }
 
 // define injection key
@@ -39,6 +40,7 @@ export const store = createStore<State>({
     colorBy: 'position',
     highlightedTokenIndices: [],
     view: 'none',
+    userTheme: 'light-theme'
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -78,6 +80,10 @@ export const store = createStore<State>({
     setView(state, view) {
       state.view = view;
       console.log('setView', view);
+    },
+    setUserTheme(state, theme) {
+      state.userTheme = theme;
+      console.log('setUserTheme', theme);
     }
   },
   actions: { // actions commit mutations
