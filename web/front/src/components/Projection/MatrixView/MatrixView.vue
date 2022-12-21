@@ -142,12 +142,20 @@ export default defineComponent({
                     }
                     const defaultColor = [...getColor(d), 175],
                         highlightColorQuery = [84, 148, 61, 175],
+                        highlightColorQueryDark = [157, 216, 135, 175],
                         highlightColorKey = [193, 91, 125, 175],
+                        highlightColorKeyDark = [234, 138, 170, 175],
                         unactiveColor = [...getColor(d), 25];
                     if (!state.highlightedTokenIndices.length) return defaultColor;
                     return (
                         state.highlightedTokenIndices.includes(d.index)
-                            ? d.type == "query" ? highlightColorQuery : highlightColorKey
+                            ? d.type == "query"
+                                ? state.userTheme == "light-theme"
+                                    ? highlightColorQuery
+                                    : highlightColorQueryDark
+                                : state.userTheme == "light-theme"
+                                    ? highlightColorKey
+                                    : highlightColorKeyDark
                             : unactiveColor
                     ) as any;
                 },
@@ -162,7 +170,7 @@ export default defineComponent({
                     store.commit("setHighlightedTokenIndices", tokenIndices);
                 },
                 updateTriggers: {
-                    getFillColor: [state.colorBy, state.highlightedTokenIndices],
+                    getFillColor: [state.colorBy, state.highlightedTokenIndices, state.userTheme],
                     getRadius: [state.pointScaleFactor, state.highlightedTokenIndices],
                     getPosition: state.projectionMethod,
                 },
@@ -185,14 +193,32 @@ export default defineComponent({
                         lightOpacity = 50;
                     if (state.highlightedTokenIndices.length === 0)
                         return state.pointScaleFactor <= 0.15
-                            ? d.type == "query" ? [43, 91, 25, defaultOpacity] : [117, 29, 58, defaultOpacity]
+                            ? d.type == "query"
+                                ? state.userTheme == "light-theme"
+                                    ? [43, 91, 25, defaultOpacity]
+                                    : [194, 232, 180, defaultOpacity]
+                                : state.userTheme == "light-theme"
+                                    ? [117, 29, 58, defaultOpacity]
+                                    : [240, 179, 199, defaultOpacity]
                             : [255, 255, 255, 0];
                     return state.highlightedTokenIndices.includes(d.index)
                         ? state.pointScaleFactor <= 0.15
-                            ? d.type == "query" ? [43, 91, 25, defaultOpacity] : [117, 29, 58, defaultOpacity]
+                            ? d.type == "query"
+                                ? state.userTheme == "light-theme"
+                                    ? [43, 91, 25, defaultOpacity]
+                                    : [194, 232, 180, defaultOpacity]
+                                : state.userTheme == "light-theme"
+                                    ? [117, 29, 58, defaultOpacity]
+                                    : [240, 179, 199, defaultOpacity]
                             : [255, 255, 255, 0]
                         : state.pointScaleFactor <= 0.15
-                            ? d.type == "query" ? [43, 91, 25, lightOpacity] : [117, 29, 58, lightOpacity]
+                            ? d.type == "query"
+                                ? state.userTheme == "light-theme"
+                                    ? [43, 91, 25, lightOpacity]
+                                    : [194, 232, 180, lightOpacity]
+                                : state.userTheme == "light-theme"
+                                    ? [117, 29, 58, lightOpacity]
+                                    : [240, 179, 199, lightOpacity]
                             : [255, 255, 255, 0];
                 },
                 getSize: 12,
@@ -200,7 +226,7 @@ export default defineComponent({
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
-                    getColor: [state.pointScaleFactor, state.highlightedTokenIndices],
+                    getColor: [state.pointScaleFactor, state.highlightedTokenIndices, state.userTheme],
                     getPosition: [state.projectionMethod, state.zoom]
                 },
                 // onClick: (info, event) => console.log("Clicked:", info, event),
@@ -267,6 +293,7 @@ export default defineComponent({
                         html: object.msg,
                         style: {
                             color: "#fff",
+                            background: "#222"
                         },
                     },
                 onViewStateChange: (param) => {

@@ -175,14 +175,32 @@ export default defineComponent({
   --color2: #dbb98f;
   --query: #c2e8b4;
   --query-dark: #9dd887;
+  --query-label: #54943d;
   --key: #f0b3c7;
   --key-dark: #ea8aaa;
+  --key-label: #c15b7d;
   --text: #1d1d1f;
+  --navbar: #f8f9fa;
+  --button: black;
+  --radio: white;
+  --radio-invert: white;
+  --radio-border: #d9d9d9;
+  --radio-hover: rgba(0, 0, 0, 0.85);
+  --token-hover: lightgrey;
 }
 
 :root.dark-theme {
   --background: black;
   --text: white;
+  --navbar: #222;
+  --button: #222;
+  --radio: #222;
+  --radio-invert: black;
+  --radio-border: #999;
+  --radio-hover: rgba(255, 255, 255, 0.85);
+  --token-hover: #222;
+  --query-label: #c2e8b4;
+  --key-label: #f0b3c7;
 }
 
 ::selection {
@@ -229,6 +247,18 @@ body {
   line-height: 0 !important;
 }
 
+nav.navbar {
+  background: var(--navbar) !important;
+}
+
+.navbar-brand {
+  color: var(--text) !important;
+}
+
+#matrix-reset {
+  color: var(--text) !important;
+}
+
 label {
   margin-right: 5px;
   margin-left: 10px;
@@ -257,18 +287,23 @@ label {
   margin-left: 10px;
 }
 
+.ant-radio-button-wrapper {
+  background: var(--radio-invert) !important;
+  border-color: var(--radio-border) !important;
+  color: var(--text) !important;
+}
+
 .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
-  color: black !important;
-  background: white !important;
-  border-color: black !important;
+  background: var(--radio) !important;
+  border-color: var(--text) !important;
 }
 
 .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
-  background-color: black !important;
+  background-color: var(--text) !important;
 }
 
 .ant-radio-button-wrapper:hover {
-  color: rgba(0, 0, 0, 0.85) !important;
+  color: var(--radio-hover) !important;
 }
 
 .anticon {
@@ -276,6 +311,11 @@ label {
 }
 
 .ant-btn-primary {
+  background: var(--button) !important;
+  border-color: var(--button) !important;
+}
+
+#zoom-go {
   background: black !important;
   border-color: black !important;
 }
@@ -290,7 +330,7 @@ label {
 }
 
 .ant-input:focus {
-  border-color: black !important;
+  border-color: var(--button) !important;
 }
 
 .ant-btn:not([disabled]):hover {
@@ -304,11 +344,11 @@ label {
 .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
   color: white !important;
   font-weight: unset !important;
-  background-color: black !important;
+  background-color: var(--button) !important;
 }
 
 .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
-  border-color: black !important;
+  border-color: var(--button) !important;
 }
 
 .ant-select-dropdown {

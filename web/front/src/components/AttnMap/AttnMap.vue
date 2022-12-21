@@ -58,7 +58,8 @@ export default {
             attnMsg: "click a point to explore its attention",
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             view: computed(() => store.state.view),
-            layerHead: ""
+            layerHead: "",
+            userTheme: computed(() => store.state.userTheme)
         });
 
         // start bertviz
@@ -262,7 +263,7 @@ export default {
                     .append("rect")
                     .classed("background", true)
                     .style("opacity", 0.0)
-                    .attr("fill", "lightgray")
+                    // .attr("fill", "lightgray")
                     .attr("x", leftPos)
                     .attr("y", (d: any, i: number) => TEXT_TOP + i * BOXHEIGHT)
                     .attr("width", BOXWIDTH)
@@ -275,6 +276,7 @@ export default {
                     .attr("font-size", TEXT_SIZE + "px")
                     .style("cursor", "default")
                     .style("-webkit-user-select", "none")
+                    .classed("token-text", true)
                     .attr("x", leftPos)
                     .attr("y", (d: any, i: number) => TEXT_TOP + i * BOXHEIGHT);
 
@@ -514,9 +516,6 @@ export default {
 </script>
   
 <style lang="scss">
-$query-darker: #54943d;
-$key-darker: #c15b7d;
-
 .viewHead {
     margin-left: 10px;
     margin-top: 10px;
@@ -579,11 +578,19 @@ text.bold {
 }
 
 text.bold.query {
-    fill: $query-darker;
+    fill: var(--query-label);
 }
 
 text.bold.key {
-    fill: $key-darker;
+    fill: var(--key-label);
+}
+
+.token-text {
+    fill: var(--text);
+}
+
+.background {
+    fill: var(--token-hover);
 }
 
 .hide {
