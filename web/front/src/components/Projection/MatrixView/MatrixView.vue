@@ -136,6 +136,8 @@ export default defineComponent({
                                 return d.color.type
                             case 'position':
                                 return d.color.position
+                            case 'categorical':
+                                return d.color.categorical
                             case 'norm':
                                 return d.color.norm
                             default:

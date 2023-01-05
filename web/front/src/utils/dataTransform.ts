@@ -25,6 +25,20 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     };
     const colorsByPosition = tokenData.map((td) => getColor(td));
 
+    const discreteColors =  ["#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#b2df8a","#33a02c","#a6cee3","#1f78b4","#cab2d6","#6a3d9a"];    ;
+    const getDiscreteColor = (td: Typing.TokenData) => {
+        var colorstr = "rgb()";
+        if (td.type === "query") {
+            colorstr = discreteColors[2 * (td.pos_int % 5) + 1];
+        } else if (td.type === "key") {
+            colorstr = discreteColors[2 * (td.pos_int % 5)];
+        }
+        const color = d3.color(colorstr)?.rgb();
+        if (!color) return [0, 0, 0];
+        return [color.r, color.g, color.b];
+    };
+    const colorsByDiscretePosition = tokenData.map((td) => getDiscreteColor(td));
+
     // compute msgs for each token
     const msgs = tokenData.map(
         (td) =>
@@ -111,6 +125,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             color: {
                 type: colorsByType[index],
                 position: colorsByPosition[index],
+                categorical: colorsByDiscretePosition[index],
                 norm: colorsByNorm[index]
             },
             msg: msgs[index],
