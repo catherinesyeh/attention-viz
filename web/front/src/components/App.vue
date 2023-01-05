@@ -79,7 +79,7 @@ export default defineComponent({
         get: () => store.state.colorBy,
         set: (v) => store.commit("setColorBy", v),
       }),
-      colorByOptions: ["position", "norm"].map((x) => ({ value: x, label: x })),
+      colorByOptions: ["type", "position", "norm"].map((x) => ({ value: x, label: x })),
       userTheme: computed(() => store.state.userTheme)
     });
 

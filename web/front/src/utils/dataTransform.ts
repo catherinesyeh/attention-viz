@@ -77,7 +77,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         // compute colors based on norms
         queryColor.domain(d3.extent(data.map(x => x.norm)) as [number, number]);
         keyColor.domain(d3.extent(data.map(x => x.norm)) as [number, number]);
-        const colorByNorm = data.map((x, index) => {
+        const colorsByNorm = data.map((x, index) => {
             const tokenType = tokenData[index].type
             let colorstr = "rgb()";
             if (tokenType === 'query') {
@@ -90,14 +90,28 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             return [color.r, color.g, color.b];
         })
 
+        const colorsByType = data.map((x, index) => {
+            const tokenType = tokenData[index].type
+            let colorstr = "rgb()";
+            if (tokenType === "query") {
+                colorstr = "rgb(95, 185, 108)";
+            } else if (tokenType === "key") {
+                colorstr = "rgb(227, 55, 143)";
+            }
+            const color = d3.color(colorstr)?.rgb();
+            if (!color) return [0, 0, 0];
+            return [color.r, color.g, color.b];
+        })
+
         const points = data.map((d, index) => ({
             coordinate: {
                 tsne: pointsCoordinates.tsne[index],
                 umap: pointsCoordinates.umap[index]
             },
             color: {
+                type: colorsByType[index],
                 position: colorsByPosition[index],
-                norm: colorByNorm[index]
+                norm: colorsByNorm[index]
             },
             msg: msgs[index],
             layer,

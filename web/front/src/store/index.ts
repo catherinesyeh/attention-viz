@@ -37,7 +37,7 @@ export const store = createStore<State>({
     attentionByToken: {layer: 0, head: 0, attns: [], token: {} as Typing.TokenData},
     attentionByTokenLock: false,
     projectionMethod: 'tsne',
-    colorBy: 'position',
+    colorBy: 'type',
     highlightedTokenIndices: [],
     view: 'none',
     userTheme: 'light-theme'

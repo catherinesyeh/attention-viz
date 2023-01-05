@@ -132,6 +132,8 @@ export default defineComponent({
                 getFillColor: (d: Typing.Point) => {
                     const getColor = (d: Typing.Point) => {
                         switch (state.colorBy) {
+                            case 'type':
+                                return d.color.type
                             case 'position':
                                 return d.color.position
                             case 'norm':

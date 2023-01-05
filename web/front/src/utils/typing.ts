@@ -38,6 +38,7 @@ export namespace Typing {
     }
 
     export interface PointColor {
+        type: number[];
         position: number[];
         norm: number[];
     }
