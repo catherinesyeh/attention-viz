@@ -23,6 +23,8 @@ export interface State {
   highlightedTokenIndices: number[];
   view: string;
   userTheme: string;
+  showAll: boolean;
+  disableLabel: boolean;
 }
 
 // define injection key
@@ -40,7 +42,9 @@ export const store = createStore<State>({
     colorBy: 'type',
     highlightedTokenIndices: [],
     view: 'none',
-    userTheme: 'light-theme'
+    userTheme: 'light-theme',
+    showAll: false,
+    disableLabel: true
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -84,6 +88,14 @@ export const store = createStore<State>({
     setUserTheme(state, theme) {
       state.userTheme = theme;
       console.log('setUserTheme', theme);
+    },
+    setShowAll(state, showAll) {
+      state.showAll = showAll;
+      console.log('setShowAll', showAll);
+    },
+    setDisableLabel(state, disableLabel) {
+      state.disableLabel = disableLabel;
+      console.log('setDisableLabel', disableLabel);
     }
   },
   actions: { // actions commit mutations

@@ -20,6 +20,10 @@
                                 @click="clearSearch">clear</a-button>
                         </Transition>
 
+                        <p class="label">Labels</p>
+                        <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
+                            :class="{ disabled: disableLabel }">show all</a-checkbox>
+
                         <p class="label">Mode</p>
                         <a-radio-group v-model:value="mode">
                             <a-radio-button value="single">single</a-radio-button>
@@ -60,7 +64,9 @@ export default defineComponent({
             mode: "matrix",
             renderState: computed(() => store.state.renderState),
             searchToken: "",
-            view: computed(() => store.state.view)
+            view: computed(() => store.state.view),
+            showAll: computed(() => store.state.showAll),
+            disableLabel: computed(() => store.state.disableLabel)
         });
 
         const onClickReset = () => {
@@ -86,6 +92,10 @@ export default defineComponent({
             setTimeout(() => {
                 (matrixView.value as any).printViewport();
             }, 100)
+        }
+
+        const toggleCheckbox = () => {
+            store.commit('setShowAll', !state.showAll);
         }
 
         // restyle plots
@@ -118,7 +128,8 @@ export default defineComponent({
             logViewport,
             changeGraphType,
             changeColor,
-            zoomToPlot
+            zoomToPlot,
+            toggleCheckbox
         };
     },
 });

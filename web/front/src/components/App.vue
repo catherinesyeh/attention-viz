@@ -355,6 +355,31 @@ label {
   z-index: 9999 !important;
 }
 
+.ant-checkbox-wrapper {
+  font-size: smaller !important;
+  color: var(--text);
+  transition: 0.5s;
+}
+
+.ant-checkbox-wrapper.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ant-checkbox-wrapper:hover .ant-checkbox-inner {
+  border-color: #d9d9d9 !important;
+}
+
+.ant-checkbox-input:focus+.ant-checkbox-inner,
+.ant-checkbox-checked::after {
+  border-color: var(--button) !important;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--button) !important;
+  border-color: var(--button) !important;
+}
+
 /* icons */
 .dropdown .svg-inline--fa {
   margin-left: 10px;

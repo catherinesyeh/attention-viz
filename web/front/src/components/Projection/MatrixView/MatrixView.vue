@@ -90,7 +90,9 @@ export default defineComponent({
             projectionMethod: computed(() => store.state.projectionMethod),
             colorBy: computed(() => store.state.colorBy),
             view: computed(() => store.state.view),
-            userTheme: computed(() => store.state.userTheme)
+            userTheme: computed(() => store.state.userTheme),
+            showAll: computed(() => store.state.showAll),
+            disableLabel: computed(() => store.state.disableLabel)
         });
 
         var shallowData = shallowRef({
@@ -187,7 +189,7 @@ export default defineComponent({
                 pickable: false,
                 getPosition: (d: Typing.Point) => {
                     let coord = getPointCoordinate(d);
-                    if (state.zoom <= 6) return [0, 0];
+                    if (state.zoom <= 3) return [0, 0];
                     let offset = 1 / (state.zoom * 2);
                     return [coord[0] + offset, coord[1]];
                 },
@@ -195,8 +197,12 @@ export default defineComponent({
                 getColor: (d: Typing.Point) => {
                     const defaultOpacity = 225,
                         lightOpacity = 50;
+                    var threshold = state.zoom; // control how many labels show up
+                    if (state.zoom > 5) {
+                        threshold *= (state.zoom - 3);
+                    }
                     if (state.highlightedTokenIndices.length === 0)
-                        return state.pointScaleFactor <= 0.15
+                        return state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, defaultOpacity]
@@ -206,7 +212,7 @@ export default defineComponent({
                                     : [240, 179, 199, defaultOpacity]
                             : [255, 255, 255, 0];
                     return state.highlightedTokenIndices.includes(d.index)
-                        ? state.pointScaleFactor <= 0.15
+                        ? state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, defaultOpacity]
@@ -215,7 +221,7 @@ export default defineComponent({
                                     ? [117, 29, 58, defaultOpacity]
                                     : [240, 179, 199, defaultOpacity]
                             : [255, 255, 255, 0]
-                        : state.pointScaleFactor <= 0.15
+                        : state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, lightOpacity]
@@ -230,7 +236,7 @@ export default defineComponent({
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
-                    getColor: [state.pointScaleFactor, state.highlightedTokenIndices, state.userTheme],
+                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
                     getPosition: [state.projectionMethod, state.zoom]
                 },
                 // onClick: (info, event) => console.log("Clicked:", info, event),
@@ -328,6 +334,13 @@ export default defineComponent({
                         state.pointScaleFactor = 1;
                     }
                     state.moved = true;
+
+                    if (zoom <= 3) { // remove extra 
+                        store.commit("setShowAll", false);
+                        store.commit("setDisableLabel", true);
+                    } else {
+                        store.commit("setDisableLabel", false);
+                    }
                 },
                 // parameters: { // dark mode for later
                 //     clearColor: [0, 0, 0, 1] // background color: [r, g, b, a]
@@ -376,7 +389,8 @@ export default defineComponent({
                 () => state.zoom,
                 () => state.projectionMethod,
                 () => state.colorBy,
-                () => state.userTheme
+                () => state.userTheme,
+                () => state.showAll
             ],
             () => {
                 deckgl.setProps({ layers: [...toLayers()] });
@@ -406,11 +420,6 @@ export default defineComponent({
 
         const printViewport = () => {
             console.error("viewport", deckgl.getViewports());
-        };
-
-        const changeColor = (str: string) => {
-            // todo: change coloring scheme here (position / norm)
-            console.log(str);
         };
 
         const zoomToPlot = (layer: string, head: number) => {
@@ -447,7 +456,6 @@ export default defineComponent({
             reset,
             onSearch,
             printViewport,
-            changeColor,
             zoomToPlot,
         });
 
