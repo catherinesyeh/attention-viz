@@ -292,14 +292,29 @@ export default defineComponent({
                 }),
                 initialViewState: state.viewState,
                 layers: toLayers(),
-                getTooltip: ({ object }) =>
-                    object && {
-                        html: object.msg,
+                getTooltip: ({ object }) => {
+                    const getMsg = (d: Typing.Point) => {
+                        switch (state.colorBy) {
+                            case 'type':
+                                return d.msg.type
+                            case 'position':
+                                return d.msg.position
+                            case 'categorical':
+                                return d.msg.categorical
+                            case 'norm':
+                                return d.msg.norm
+                            default:
+                                throw Error('invalid msg channel')
+                        }
+                    }
+                    return object && {
+                        html: getMsg(object),
                         style: {
                             color: "#fff",
                             background: "#222"
                         },
-                    },
+                    }
+                },
                 onViewStateChange: (param) => {
                     const zoom = param.viewState.zoom;
                     state.zoom = zoom;

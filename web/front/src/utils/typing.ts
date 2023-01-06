@@ -44,10 +44,17 @@ export namespace Typing {
         norm: number[];
     }
 
+    export interface PointMsg {
+        type: string;
+        position: string;
+        categorical: string;
+        norm: string;
+    }
+
     export interface Point {
         coordinate: PointCoordinate;
         color: PointColor;
-        msg: string;
+        msg: PointMsg;
         layer: number;
         head: number;
         index: number;
