@@ -38,7 +38,22 @@
                 </Transition>
             </div>
             <div class="gradient-edge"></div>
-            <div class="gradient-edge right"></div>
+            <div class="gradient-edge right">
+                <div id="legend">
+                    <div class="bar-contain" :class="{
+                        pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical'
+                    }">
+                        <span>q</span>
+                        <div class="bar"></div>
+                    </div>
+                    <div class="bar-contain k" :class="{
+                        pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical'
+                    }">
+                        <span>k</span>
+                        <div class="bar"></div>
+                    </div>
+                </div>
+            </div>
             <!-- <canvas id="matrix-canvas" /> -->
 
             <MatrixView v-show="mode == 'matrix'" ref="matrixView" />
@@ -66,7 +81,8 @@ export default defineComponent({
             searchToken: "",
             view: computed(() => store.state.view),
             showAll: computed(() => store.state.showAll),
-            disableLabel: computed(() => store.state.disableLabel)
+            disableLabel: computed(() => store.state.disableLabel),
+            colorBy: computed(() => store.state.colorBy)
         });
 
         const onClickReset = () => {
@@ -190,6 +206,57 @@ div#matrix-wrapper {
     left: unset;
     right: 0;
     background: linear-gradient(to left, var(--background), rgba(255, 255, 255, 0));
+}
+
+#legend {
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 10px;
+    transition: 0.5s;
+}
+
+.bar-contain {
+    text-align: center;
+    margin: 10px;
+}
+
+/* default: type */
+.bar {
+    height: calc(100vh - 120px);
+    width: calc(20px + 0.2vw);
+    background: rgb(95, 185, 108);
+    margin-top: 10px;
+    transition: 0.5s;
+}
+
+.bar-contain.k .bar {
+    background: rgb(227, 55, 143);
+}
+
+/* position */
+.bar-contain.pos .bar {
+    background: linear-gradient(45deg, #D3EDA1, #82CA7C, #00482A);
+}
+
+.bar-contain.k.pos .bar {
+    background: linear-gradient(45deg, #CEA1CE, #E33F97, #5E021B);
+}
+
+/* categorical */
+.bar-contain.cat .bar {
+    background: linear-gradient(#e31a1c 20%,
+            #ff7f00 20% 40%,
+            #33a02c 40% 60%,
+            #1f78b4 60% 80%,
+            #6a3d9a 80%);
+}
+
+.bar-contain.k.cat .bar {
+    background: linear-gradient(#fb9a99 20%,
+            #fdbf6f 20% 40%,
+            #b2df8a 40% 60%,
+            #a6cee3 60% 80%,
+            #cab2d6 80%);
 }
 
 div.matrix-cell {

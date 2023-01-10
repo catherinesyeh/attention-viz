@@ -91,8 +91,7 @@ export default defineComponent({
             colorBy: computed(() => store.state.colorBy),
             view: computed(() => store.state.view),
             userTheme: computed(() => store.state.userTheme),
-            showAll: computed(() => store.state.showAll),
-            disableLabel: computed(() => store.state.disableLabel)
+            showAll: computed(() => store.state.showAll)
         });
 
         var shallowData = shallowRef({
@@ -323,28 +322,31 @@ export default defineComponent({
                 },
                 onViewStateChange: (param) => {
                     const zoom = param.viewState.zoom;
+                    const old_zoom = state.zoom;
                     state.zoom = zoom;
-                    if (zoom > 6) {
+
+                    if (!state.moved) { // adjust after first user movement
+                        state.moved = true;
+                    }
+
+                    if ((old_zoom < 6 && zoom < 6) || (old_zoom >= 6 && zoom >= 6)) {
+                        // only run rest of code zoom crossed threshold
+                        return;
+                    }
+
+                    if (zoom >= 6) {
                         state.pointScaleFactor = 0.15;
+                        store.commit("setDisableLabel", false);
                         // } else if (zoom > 4.5) {
                         //     state.pointScaleFactor = 0.2;
                         // } else if (zoom > 3) {
                         //     state.pointScaleFactor = 0.5;
                     } else {
                         state.pointScaleFactor = 1;
-                    }
-                    state.moved = true;
-
-                    if (zoom <= 3) { // remove extra 
                         store.commit("setShowAll", false);
                         store.commit("setDisableLabel", true);
-                    } else {
-                        store.commit("setDisableLabel", false);
                     }
                 },
-                // parameters: { // dark mode for later
-                //     clearColor: [0, 0, 0, 1] // background color: [r, g, b, a]
-                // }
             });
 
             store.commit("updateRenderState", false);
