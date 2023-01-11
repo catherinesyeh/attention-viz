@@ -44,13 +44,19 @@
                         pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical'
                     }">
                         <span>q</span>
-                        <div class="bar"></div>
+                        <div class="bar" :class="{ smaller: colorBy == 'norm' }">
+                            <span class="low">{{ lowLabel(colorBy) }}</span>
+                            <span class="high">{{ highLabel(colorBy) }}</span>
+                        </div>
                     </div>
                     <div class="bar-contain k" :class="{
                         pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical'
                     }">
                         <span>k</span>
-                        <div class="bar"></div>
+                        <div class="bar" :class="{ smaller: colorBy == 'norm' }">
+                            <span class="low">{{ lowLabel(colorBy) }}</span>
+                            <span class="high">{{ highLabel(colorBy) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -82,7 +88,7 @@ export default defineComponent({
             view: computed(() => store.state.view),
             showAll: computed(() => store.state.showAll),
             disableLabel: computed(() => store.state.disableLabel),
-            colorBy: computed(() => store.state.colorBy)
+            colorBy: computed(() => store.state.colorBy),
         });
 
         const onClickReset = () => {
@@ -114,15 +120,6 @@ export default defineComponent({
             store.commit('setShowAll', !state.showAll);
         }
 
-        // restyle plots
-        const changeGraphType = (str: string) => {
-            (matrixView.value as any).changeGraphType(str);
-        }
-
-        const changeColor = (str: string) => {
-            (matrixView.value as any).changeColor(str);
-        }
-
         // zoom to single plot
         const zoomToPlot = (layer: number, head: number) => {
             (matrixView.value as any).zoomToPlot(layer, head);
@@ -142,11 +139,35 @@ export default defineComponent({
             clearSearch,
             onSearch,
             logViewport,
-            changeGraphType,
-            changeColor,
             zoomToPlot,
             toggleCheckbox
         };
+    },
+    methods: {
+        lowLabel(colorBy: string) {
+            switch (colorBy) {
+                case 'position':
+                    return "0"
+                case 'categorical':
+                    return "0"
+                case 'norm':
+                    return "low"
+                default:
+                    ""
+            }
+        },
+        highLabel(colorBy: string) {
+            switch (colorBy) {
+                case 'position':
+                    return "1"
+                case 'categorical':
+                    return "4"
+                case 'norm':
+                    return "high"
+                default:
+                    ""
+            }
+        }
     },
 });
 </script>
@@ -227,13 +248,14 @@ div#matrix-wrapper {
     background: rgb(95, 185, 108);
     margin-top: 10px;
     transition: 0.5s;
+    position: relative;
 }
 
 .bar-contain.k .bar {
     background: rgb(227, 55, 143);
 }
 
-/* position */
+/* position or norm */
 .bar-contain.pos .bar {
     background: linear-gradient(45deg, #D3EDA1, #82CA7C, #00482A);
 }
@@ -257,6 +279,29 @@ div#matrix-wrapper {
             #b2df8a 40% 60%,
             #a6cee3 60% 80%,
             #cab2d6 80%);
+}
+
+/* bar labels */
+.bar span {
+    display: block;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: small;
+    transition: 0.5s;
+    color: white;
+}
+
+.bar.smaller span {
+    font-size: x-small;
+}
+
+.bar .high {
+    top: 5px;
+}
+
+.bar .low {
+    bottom: 5px;
 }
 
 div.matrix-cell {
