@@ -353,7 +353,6 @@ export default defineComponent({
                     const getMsg = (d: Typing.Point) => {
                         switch (state.colorBy) {
                             case 'type':
-                                return d.msg.type
                             case 'position':
                                 return d.msg.position
                             case 'categorical':

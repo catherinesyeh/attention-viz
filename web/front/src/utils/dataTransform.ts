@@ -40,17 +40,13 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     const colorsByDiscretePosition = tokenData.map((td) => getDiscreteColor(td));
 
     // compute msgs for each token
-    const type_msgs = tokenData.map(
-        (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>)`
-    );
     const pos_msgs = tokenData.map(
         (td) =>
             `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
     );
     const cat_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos % 5: ${td.pos_int % 5})`
+            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length}, pos % 5: ${td.pos_int % 5})`
     );
 
     const values = tokenData.map(td => td.value);
@@ -115,7 +111,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
 
         const norm_msgs = data.map(
             (x, index) =>
-                `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, norm: ${Math.round(x.norm * 100) / 100})`
+                `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, pos: ${tokenData[index].pos_int} of ${tokenData[index].length}, norm: ${Math.round(x.norm * 100) / 100})`
         );
 
         const colorsByType = data.map((x, index) => {
@@ -143,7 +139,6 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 norm: colorsByNorm[index]
             },
             msg: {
-                type: type_msgs[index],
                 position: pos_msgs[index],
                 categorical: cat_msgs[index],
                 norm: norm_msgs[index]

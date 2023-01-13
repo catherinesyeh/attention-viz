@@ -45,7 +45,6 @@ export namespace Typing {
     }
 
     export interface PointMsg {
-        type: string;
         position: string;
         categorical: string;
         norm: string;
