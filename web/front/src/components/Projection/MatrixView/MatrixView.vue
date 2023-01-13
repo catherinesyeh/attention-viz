@@ -120,7 +120,7 @@ export default defineComponent({
             return new ScatterplotLayer({
                 pickable: true,
                 data: points,
-                radiusMaxPixels: 6,
+                radiusMaxPixels: 5,
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getRadius: (d: Typing.Point) => {
                     const defaultSize = 0.4 * state.pointScaleFactor,
@@ -179,6 +179,58 @@ export default defineComponent({
                     getRadius: [state.pointScaleFactor, state.highlightedTokenIndices],
                     getPosition: state.projectionMethod,
                 },
+            });
+        };
+        const toLabelOutlineLayer = (points: Typing.Point[]) => {
+            return new TextLayer({
+                id: "label-outline-layer",
+                data: points,
+                pickable: false,
+                getPosition: (d: Typing.Point) => {
+                    let coord = getPointCoordinate(d);
+                    if (state.zoom <= 3) return [0, 0];
+                    let whiteOffset = state.zoom <= 5
+                        ? 0.05
+                        : state.zoom <= 8
+                            ? 0.05 / state.zoom
+                            : 0.05 / (1.5 * state.zoom);
+                    let offset = (1 / (state.zoom * 2)) + whiteOffset;
+                    return [coord[0] + offset, coord[1] + whiteOffset];
+                },
+                getText: (d: Typing.Point) => d.value,
+                getColor: (d: Typing.Point) => {
+                    const defaultOpacity = 225;
+                    var threshold = state.zoom; // control how many labels show up
+                    if (state.zoom > 5) {
+                        threshold *= (state.zoom - 3);
+                    }
+                    if (state.highlightedTokenIndices.length === 0)
+                        return state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
+                            ? state.userTheme == "light-theme"
+                                ? [255, 255, 255, defaultOpacity]
+                                : [0, 0, 0, defaultOpacity]
+                            : [255, 255, 255, 0];
+                    return state.highlightedTokenIndices.includes(d.index)
+                        ? state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
+                            ? state.userTheme == "light-theme"
+                                ? [255, 255, 255, defaultOpacity]
+                                : [0, 0, 0, defaultOpacity]
+                            : [255, 255, 255, 0]
+                        : state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
+                            ? state.userTheme == "light-theme"
+                                ? [255, 255, 255, defaultOpacity]
+                                : [0, 0, 0, defaultOpacity]
+                            : [255, 255, 255, 0];
+                },
+                getSize: 12,
+                getAngle: 0,
+                getTextAnchor: "start",
+                getAlignmentBaseline: "center",
+                updateTriggers: {
+                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
+                    getPosition: [state.projectionMethod, state.zoom]
+                },
+                // onClick: (info, event) => console.log("Clicked:", info, event),
             });
         };
         const toPointLabelLayer = (points: Typing.Point[]) => {
@@ -265,7 +317,7 @@ export default defineComponent({
         };
         const toLayers = () => {
             let { points, headings } = shallowData.value;
-            return [toPointLayer(points), toPlotHeadLayer(headings), toPointLabelLayer(points)];
+            return [toPointLayer(points), toPlotHeadLayer(headings), toLabelOutlineLayer(points), toPointLabelLayer(points)];
         };
 
         /**
@@ -321,35 +373,45 @@ export default defineComponent({
                     }
                 },
                 onViewStateChange: (param) => {
-                    const zoom = param.viewState.zoom;
-                    const old_zoom = state.zoom;
-                    state.zoom = zoom;
-
-                    if (!state.moved) { // adjust after first user movement
-                        state.moved = true;
-                    }
-
-                    if ((old_zoom < 6 && zoom < 6) || (old_zoom >= 6 && zoom >= 6)) {
-                        // only run rest of code zoom crossed threshold
-                        return;
-                    }
-
-                    if (zoom >= 6) {
-                        state.pointScaleFactor = 0.15;
-                        store.commit("setDisableLabel", false);
-                        // } else if (zoom > 4.5) {
-                        //     state.pointScaleFactor = 0.2;
-                        // } else if (zoom > 3) {
-                        //     state.pointScaleFactor = 0.5;
-                    } else {
-                        state.pointScaleFactor = 1;
-                        store.commit("setShowAll", false);
-                        store.commit("setDisableLabel", true);
+                    let timeout: any;
+                    if (param.interactionState.inTransition) {
+                        clearInterval(timeout);
+                        timeout = setTimeout(function () {
+                            handleRequest(param);
+                        }, 100);
                     }
                 },
             });
 
             store.commit("updateRenderState", false);
+        };
+
+        const handleRequest = (param: any) => {
+            const zoom = param.viewState.zoom;
+            const old_zoom = state.zoom;
+            state.zoom = zoom;
+
+            if (!state.moved) { // adjust after first user movement
+                state.moved = true;
+            }
+
+            // if ((old_zoom < 6 && zoom < 6) || (old_zoom >= 6 && zoom >= 6)) {
+            //     // only run rest of code zoom crossed threshold
+            //     return;
+            // }
+
+            if (old_zoom < 6 && zoom >= 6) {
+                state.pointScaleFactor = 0.15;
+                store.commit("setDisableLabel", false);
+                // } else if (zoom > 4.5) {
+                //     state.pointScaleFactor = 0.2;
+                // } else if (zoom > 3) {
+                //     state.pointScaleFactor = 0.5;
+            } else if (old_zoom >= 6 && zoom < 6) {
+                state.pointScaleFactor = 1;
+                store.commit("setShowAll", false);
+                store.commit("setDisableLabel", true);
+            }
         };
 
         /**
@@ -439,7 +501,7 @@ export default defineComponent({
             };
 
             deckgl.setProps({
-                initialViewState: state.viewState,
+                initialViewState: state.viewState
             });
             deckgl.setProps({
                 initialViewState: newViewState,
