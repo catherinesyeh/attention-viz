@@ -25,13 +25,14 @@ import time
 # Alter: abspath('') is called from back/run.py
 rootDir = dirname(abspath(''))
 print(rootDir)
+model = "gpt"
 
 
 def read_matrix_data():
     matrix_data = []
     time_start = time.time()
 
-    for f in sorted(glob(join(rootDir, 'data', 'byLayerHead', '*.json'))):
+    for f in sorted(glob(join(rootDir, 'data', model, 'byLayerHead', '*.json'))):
         d = json.load(open(f, 'r'))
         matrix_data.append(d)
 
@@ -43,7 +44,7 @@ def read_attention_data():
     time_start = time.time()
     attention_data = []
 
-    for f in sorted(glob(join(rootDir, 'data', 'attention', '*.json'))):
+    for f in sorted(glob(join(rootDir, 'data', model, 'attention', '*.json'))):
         d = json.load(open(f, 'r'))
         attention_data.append(d)
 
@@ -54,7 +55,7 @@ def read_attention_data():
 
 def read_token_data():
     time_start = time.time()
-    d = json.load(open(join(rootDir, 'data', 'tokens.json')))
+    d = json.load(open(join(rootDir, 'data', model, 'tokens.json')))
     print('TokenData Done! Time elapsed: {} seconds'.format(time.time()-time_start))
     return d
 

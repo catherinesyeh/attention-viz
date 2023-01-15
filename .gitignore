@@ -7,8 +7,7 @@
 *.npy
 *.h5
 /checkpoint
-/web/data/attention
-/web/data/byLayerHead3D
+/web/data
 
 ## JS
 node_modules
