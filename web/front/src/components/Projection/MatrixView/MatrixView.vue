@@ -324,8 +324,6 @@ export default defineComponent({
          * The main function for drawing the scatter matrices
          */
         const initMatrices = () => {
-            store.commit("updateRenderState", true);
-
             const { points, headings, range } = shallowData.value;
             console.log("initMatrices", points, headings);
             if (!points || !points.length) return;
@@ -382,6 +380,7 @@ export default defineComponent({
                 },
             });
 
+            // setTimeout needed here?
             store.commit("updateRenderState", false);
         };
 
@@ -531,6 +530,10 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 $background: #f5f5f7;
+
+#matrix-canvas {
+    transition: 0.5s;
+}
 
 #label-wrapper {
     position: absolute;

@@ -109,7 +109,8 @@ export const store = createStore<State>({
       dispatch('computeData');
     },
     async computeData({state, commit}) {
-      console.log("computing data!");
+      commit("updateRenderState", true);
+      // console.log("computing data!");
       const matrixData = (await dataService.getMatrixData(state.modelType)).data;
       commit('setMatrixData', Object.freeze(matrixData));
       // console.log('setMatrixData', Object.freeze(matrixData));

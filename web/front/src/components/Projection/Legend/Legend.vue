@@ -1,5 +1,5 @@
 <template>
-    <div id="legend">
+    <div id="legend" v-show="!renderState">
         <div class="bar-contain" :class="{
             pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical'
         }">
@@ -31,6 +31,7 @@ export default defineComponent({
 
         const state = reactive({
             colorBy: computed(() => store.state.colorBy),
+            renderState: computed(() => store.state.renderState)
         });
 
         return {

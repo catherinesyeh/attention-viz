@@ -5,37 +5,35 @@
         <div id="matrix-wrapper">
             <div id="label-wrapper">
                 <span id="loading" v-show="renderState">Loading...</span>
-                <Transition>
-                    <div id="matrix-labels" v-show="!renderState">
-                        <p class="axis-label">
-                            <span class="head-axis">head →</span>
-                            <span class="layer-axis">layer ↓</span>
-                        </p>
+                <div id="matrix-labels" v-show="!renderState">
+                    <p class="axis-label">
+                        <span class="head-axis">head →</span>
+                        <span class="layer-axis">layer ↓</span>
+                    </p>
 
-                        <p class="label">Search</p>
-                        <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
-                            @search="onSearch(searchToken)" spellcheck="false" />
-                        <Transition>
-                            <a-button class="clear" type="link" v-show="searchToken != ''"
-                                @click="clearSearch">clear</a-button>
-                        </Transition>
+                    <p class="label">Search</p>
+                    <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
+                        @search="onSearch(searchToken)" spellcheck="false" />
+                    <Transition>
+                        <a-button class="clear" type="link" v-show="searchToken != ''"
+                            @click="clearSearch">clear</a-button>
+                    </Transition>
 
-                        <p class="label">Labels</p>
-                        <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
-                            :class="{ disabled: disableLabel }">show all</a-checkbox>
+                    <p class="label">Labels</p>
+                    <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
+                        :class="{ disabled: disableLabel }">show all</a-checkbox>
 
-                        <p class="label">Mode</p>
-                        <a-radio-group v-model:value="mode">
-                            <a-radio-button value="single">single</a-radio-button>
-                            <a-radio-button value="matrix">matrix</a-radio-button>
-                        </a-radio-group>
+                    <p class="label">Mode</p>
+                    <a-radio-group v-model:value="mode">
+                        <a-radio-button value="single">single</a-radio-button>
+                        <a-radio-button value="matrix">matrix</a-radio-button>
+                    </a-radio-group>
 
-                        <p class="label">Developer Tool</p>
-                        <a-button type="primary" @click="logViewport">
-                            log viewport
-                        </a-button>
-                    </div>
-                </Transition>
+                    <p class="label">Developer Tool</p>
+                    <a-button type="primary" @click="logViewport">
+                        log viewport
+                    </a-button>
+                </div>
             </div>
             <div class="gradient-edge"></div>
             <div class="gradient-edge right">
@@ -43,7 +41,7 @@
             </div>
             <!-- <canvas id="matrix-canvas" /> -->
 
-            <MatrixView v-show="mode == 'matrix'" ref="matrixView" />
+            <MatrixView v-show="mode == 'matrix' && !renderState" ref="matrixView" />
         </div>
     </div>
 </template>
