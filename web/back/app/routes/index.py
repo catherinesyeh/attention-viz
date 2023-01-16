@@ -28,33 +28,36 @@ def _index():
     return json.dumps("back end")
 
 
-@app.route("/get_raw_data", methods=['GET'])
-def test():
-    data = dataService.get_raw_data()
-    return data
+# @app.route("/get_raw_data", methods=['GET'])
+# def test():
+#     data = dataService.get_raw_data()
+#     return data
 
 
-@app.route("/getMatrixData", methods=['GET'])
+@app.route("/getMatrixData", methods=['POST'])
 def _get_matrix_data():
-    data = dataService.get_matrix_data()  # return a list
+    post_data = json.loads(request.data.decode())
+    data = dataService.get_matrix_data(post_data["model"])  # return a list
     return {'data': data}  # a response cannot be a list
 
 
-@app.route("/getAttentionData", methods=['GET'])
-def _get_attention_data():
-    data = dataService.get_attention_data()  # return a list
-    return {'data': data}  # a response cannot be a list
+# @app.route("/getAttentionData", methods=['GET'])
+# def _get_attention_data():
+#     data = dataService.get_attention_data()  # return a list
+#     return {'data': data}  # a response cannot be a list
 
 
-@app.route("/getTokenData", methods=['GET'])
+@app.route("/getTokenData", methods=['POST'])
 def _get_token_data():
-    data = dataService.get_token_data()
+    post_data = json.loads(request.data.decode())
+    data = dataService.get_token_data(post_data["model"])
     return data
+
 
 @app.route('/getAttentionByToken', methods=['POST'])
 def _get_attention_by_token():
     post_data = json.loads(request.data.decode())
-    return dataService.get_attention_by_token(post_data)
+    return dataService.get_attention_by_token(post_data["token"], post_data["model"])
 
 # @app.route("/test", methods=['GET'])
 # def test():

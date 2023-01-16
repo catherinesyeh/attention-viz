@@ -17,7 +17,8 @@ export interface State {
   tokenData: Typing.TokenData[];
   renderState: boolean; // true when the canvas is being rendered; false upon finished
   attentionByToken: Typing.AttnByToken;
-  attentionByTokenLock: boolean; 
+  // attentionByTokenLock: boolean; 
+  modelType: string;
   projectionMethod: keyof Typing.PointCoordinate;
   colorBy: keyof Typing.PointColor;
   highlightedTokenIndices: number[];
@@ -37,7 +38,8 @@ export const store = createStore<State>({
     tokenData: [],
     renderState: true,
     attentionByToken: {layer: 0, head: 0, attns: [], token: {} as Typing.TokenData},
-    attentionByTokenLock: false,
+    // attentionByTokenLock: false,
+    modelType: 'bert',
     projectionMethod: 'tsne',
     colorBy: 'type',
     highlightedTokenIndices: [],
@@ -54,21 +56,25 @@ export const store = createStore<State>({
     setMatrixData(state, matrixData) {
       state.matrixData = matrixData
     },
-    setAttentionData(state, attentionData) {
-      state.attentionData = attentionData
-    },
+    // setAttentionData(state, attentionData) {
+    //   state.attentionData = attentionData
+    // },
     setTokenData(state, tokenData) {
       state.tokenData = tokenData
     },
     updateRenderState(state, renderState) {
       state.renderState = renderState;
       console.log('state: renderState', renderState);
-    },
+    }, 
     setAttentionByToken(state, attentionByToken) {
       state.attentionByToken = attentionByToken
     },
-    setAttentionByTokenLock(state, attentionByTokenLock) {
-      state.attentionByTokenLock = attentionByTokenLock;
+    // setAttentionByTokenLock(state, attentionByTokenLock) {
+    //   state.attentionByTokenLock = attentionByTokenLock;
+    // },
+    setModelType(state, modelType) {
+      state.modelType = modelType
+      console.log('setModelType', modelType);
     },
     setProjectionMethod(state, projectionMethod) {
       state.projectionMethod = projectionMethod
@@ -99,14 +105,22 @@ export const store = createStore<State>({
     }
   },
   actions: { // actions commit mutations
-    async init({ state, commit }) {
-      const matrixData = (await dataService.getMatrixData()).data;
+    async init({ state, dispatch }) {
+      dispatch('computeData');
+    },
+    async computeData({state, commit}) {
+      console.log("computing data!");
+      const matrixData = (await dataService.getMatrixData(state.modelType)).data;
       commit('setMatrixData', Object.freeze(matrixData));
       // console.log('setMatrixData', Object.freeze(matrixData));
 
-      const tokenData = (await dataService.getTokenData()).tokens;
+      const tokenData = (await dataService.getTokenData(state.modelType)).tokens;
       commit('setTokenData', Object.freeze(tokenData));
       // console.log('setTokenData', Object.freeze(tokenData));
+    },
+    async switchModel({state, commit, dispatch}, model: string) {
+      commit('setModelType', model);
+      dispatch('computeData');
     },
     async setClickedPoint({state, commit}, pt: Typing.Point) {
       // if (state.attentionByTokenLock) {
@@ -115,7 +129,7 @@ export const store = createStore<State>({
       // } 
       // commit('setAttentionByTokenLock', true); 
       console.log('setClickedPoint', pt);
-      const attentionByToken = (await dataService.getAttentionByToken(pt));
+      const attentionByToken = (await dataService.getAttentionByToken(pt, state.modelType));
       console.log('attentionDataByToken', attentionByToken);
       commit('setAttentionByToken', attentionByToken);
       // commit('setAttentionByTokenLock', false)

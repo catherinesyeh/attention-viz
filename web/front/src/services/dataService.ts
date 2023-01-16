@@ -41,24 +41,24 @@ function post(field: string, payload: any): Promise<any> {
   });
 }
 
-export async function getRawData() {
-    return get(`get_raw_data`);
+// export async function getRawData() {
+//     return get(`get_raw_data`);
+// }
+
+export async function getMatrixData(model: string) {
+  return post(`getMatrixData`, {"model": model});
 }
 
-export async function getMatrixData() {
-  return get(`getMatrixData`);
+// export async function getAttentionData() {
+//   return get(`getAttentionData`);
+// }
+
+export async function getTokenData(model: string) {
+  return post(`getTokenData`, {"model": model});
 }
 
-export async function getAttentionData() {
-  return get(`getAttentionData`);
-}
-
-export async function getTokenData() {
-  return get(`getTokenData`);
-}
-
-export async function getAttentionByToken(token: Typing.Point) : Promise<Typing.AttentionData> {
-  return post("getAttentionByToken", token) 
+export async function getAttentionByToken(token: Typing.Point, model: string) : Promise<Typing.AttentionData> {
+  return post("getAttentionByToken", {"token": token, "model": model}) 
 }
 // export async function getPitfallById(id: string) {
 //   return get(`getPitfallById/${id}`);

@@ -19,8 +19,12 @@
         </a-button>
       </div>
       <div class="dropdown">
+        <label for="model">Model:</label>
+        <a-select v-model:value="modelType" style="width: 80px" :options="modelOptions">
+        </a-select>
+
         <label for="graph-type">Graph Type:</label>
-        <a-select v-model:value="projectionMethod" style="width: 120px" :options="projectionMethods">
+        <a-select v-model:value="projectionMethod" style="width: 80px" :options="projectionMethods">
         </a-select>
 
         <label for="color-by">Color By:</label>
@@ -58,6 +62,7 @@ import { onMounted, computed, reactive, toRefs, h, watch, ref } from "vue";
 import { string } from "vue-types";
 import { SelectTypes } from "ant-design-vue/es/select";
 import { Typing } from "@/utils/typing";
+import { storeKey } from "vuex";
 
 export default defineComponent({
   name: "App",
@@ -70,6 +75,11 @@ export default defineComponent({
     const state = reactive({
       headnum: "",
       layernum: "",
+      modelType: computed({
+        get: () => store.state.modelType,
+        set: (v) => store.dispatch("switchModel", v)
+      }),
+      modelOptions: ["bert", "gpt"].map((x) => ({ value: x, label: x })),
       projectionMethod: computed({
         get: () => store.state.projectionMethod,
         set: (v) => store.commit("setProjectionMethod", v),

@@ -165,7 +165,7 @@ export default defineComponent({
                     ) as any;
                 },
                 onClick: (info, event) => {
-                    console.log('onClick', info.object);
+                    // console.log('onClick', info.object);
                     store.commit("setView", 'attn');
 
                     let pt = info.object as Typing.Point;

@@ -26,12 +26,15 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     const colorsByPosition = tokenData.map((td) => getColor(td));
 
     const discreteColors =  ["#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#b2df8a","#33a02c","#a6cee3","#1f78b4","#cab2d6","#6a3d9a"];
+    // const discreteColors =  ["#ED82B9","#9BD3A3","#E3378F","#5FB96C","#AA296B","#3B7444"];
+    const numDiscrete = discreteColors.length / 2;
+
     const getDiscreteColor = (td: Typing.TokenData) => {
         var colorstr = "rgb()";
         if (td.type === "query") {
-            colorstr = discreteColors[2 * (td.pos_int % 5) + 1];
+            colorstr = discreteColors[2 * (td.pos_int % numDiscrete) + 1];
         } else if (td.type === "key") {
-            colorstr = discreteColors[2 * (td.pos_int % 5)];
+            colorstr = discreteColors[2 * (td.pos_int % numDiscrete)];
         }
         const color = d3.color(colorstr)?.rgb();
         if (!color) return [0, 0, 0];
