@@ -85,6 +85,7 @@ export default defineComponent({
         const onSearch = (str: string) => {
             store.commit("setView", "search");
             let num_results = (matrixView.value as any).onSearch(str);
+            // console.log(num_results);
             if (str != "") { // display # search results
                 state.searchToken = str + " (" + num_results + " results)";
             }
@@ -107,7 +108,7 @@ export default defineComponent({
 
         watch(() => state.view,
             () => {
-                if (state.view != "search") {
+                if (state.view == "attn") {
                     state.searchToken = "";
                 }
             })

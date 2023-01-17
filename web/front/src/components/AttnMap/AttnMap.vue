@@ -19,7 +19,7 @@
         </Transition>
     </div>
 </template>
-  
+
 <script lang="ts">
 import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
 import * as _ from "underscore";
@@ -163,7 +163,8 @@ export default {
                     .attr("x2", "100%")
                     .attr("y1", "0%")
                     .attr("y2", "100%")
-                    .attr("gradientTransform", "rotate(-15)");
+                    // .attr("gradientTransform", "rotate(-15)")
+                    .attr("gradientUnits", "userSpaceOnUse");
 
                 gradient.append("stop")
                     .attr('class', 'start')
@@ -514,7 +515,7 @@ export default {
     },
 };
 </script>
-  
+
 <style lang="scss">
 .viewHead {
     margin-left: 10px;
@@ -599,4 +600,3 @@ text.bold.key {
     pointer-events: none !important;
 }
 </style>
-  

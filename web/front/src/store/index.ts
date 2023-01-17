@@ -39,7 +39,7 @@ export const store = createStore<State>({
     renderState: true,
     attentionByToken: {layer: 0, head: 0, attns: [], token: {} as Typing.TokenData},
     // attentionByTokenLock: false,
-    modelType: 'bert',
+    modelType: 'gpt',
     projectionMethod: 'tsne',
     colorBy: 'type',
     highlightedTokenIndices: [],
