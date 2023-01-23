@@ -21,13 +21,13 @@
 
                     <p class="label">Labels</p>
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
-                        :class="{ disabled: disableLabel }">show all</a-checkbox>
+                        :class="{ disabled: mode == 'matrix' || disableLabel }">show</a-checkbox>
 
-                    <p class="label">Mode</p>
+                    <!-- <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
                         <a-radio-button value="single">single</a-radio-button>
                         <a-radio-button value="matrix">matrix</a-radio-button>
-                    </a-radio-group>
+                    </a-radio-group> -->
 
                     <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
@@ -41,7 +41,7 @@
             </div>
             <!-- <canvas id="matrix-canvas" /> -->
 
-            <MatrixView v-show="mode == 'matrix' && !renderState" ref="matrixView" />
+            <MatrixView v-show="!renderState" ref="matrixView" />
         </div>
     </div>
 </template>
@@ -62,7 +62,7 @@ export default defineComponent({
         const matrixView = ref(null);
 
         const state = reactive({
-            mode: "matrix",
+            mode: computed(() => store.state.mode),
             renderState: computed(() => store.state.renderState),
             searchToken: "",
             view: computed(() => store.state.view),
@@ -72,9 +72,11 @@ export default defineComponent({
         });
 
         const onClickReset = () => {
-            if (state.mode === 'matrix') {
-                (matrixView.value as any).reset();
-            }
+            (matrixView.value as any).resetZoom();
+        }
+
+        const resetToMatrix = () => {
+            (matrixView.value as any).reset();
         }
 
         const clearSearch = () => {
@@ -117,6 +119,7 @@ export default defineComponent({
             ...toRefs(state),
             matrixView,
             onClickReset,
+            resetToMatrix,
             clearSearch,
             onSearch,
             logViewport,

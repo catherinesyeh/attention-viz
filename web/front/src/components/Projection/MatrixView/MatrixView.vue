@@ -22,13 +22,14 @@ import { ScatterGL, Point2D } from "scatter-gl";
 
 import { Typing } from "@/utils/typing";
 
-import { Deck, OrthographicView } from "@deck.gl/core/typed";
+import { Deck, OrthographicView, View } from "@deck.gl/core/typed";
 // import interface {Deck} from "@deck.gl/core/typed";
-import { ScatterplotLayer, TextLayer } from "@deck.gl/layers/typed";
+import { PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers/typed";
 import { toTypeString } from "@vue/shared";
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
 import { StaticReadUsage } from "three";
+import { head, initial } from "underscore";
 
 interface ViewState {
     target: number[];
@@ -40,7 +41,15 @@ interface ViewState {
 const nullInitialView: ViewState = {
     target: [0, 0, 0],
     zoom: -1,
-    minZoom: -2,
+    minZoom: -1.5,
+    maxZoom: 0,
+    transitionDuration: 1000,
+};
+
+const nullInitialViewZoom: ViewState = {
+    target: [0, 0, 0],
+    zoom: 2.75,
+    minZoom: 2,
     maxZoom: 9,
     transitionDuration: 1000,
 };
@@ -49,24 +58,9 @@ const matrixCellHeight = 100;
 const matrixCellWidth = 100;
 const matrixCellMargin = 20;
 
-/**
- * Fit the canvas to the parent container size
- */
-function fitToContainer(canvas: HTMLCanvasElement | HTMLElement) {
-    if (canvas instanceof HTMLCanvasElement) {
-        // Make it visually fill the positioned parent
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        // ...then set the internal size to match
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-    } else if (canvas instanceof HTMLElement) {
-        let parent = canvas.parentElement;
-        if (parent == null) return;
-
-        d3.select(canvas).attr("width", parent.clientWidth).attr("height", parent.clientHeight);
-    }
-}
+let canvasWidth: number, canvasHeight: number;
+let initialState = nullInitialView;
+let initialStateZoom = nullInitialViewZoom;
 
 export default defineComponent({
     components: {},
@@ -78,20 +72,22 @@ export default defineComponent({
             // attentionData: computed(() => store.state.attentionData),
             tokenData: computed(() => store.state.tokenData),
             // points: computed(() => store.state.points),
-            matrixCellHeight: matrixCellHeight,
-            matrixCellWidth: matrixCellWidth,
-            matrixCellMargin: matrixCellMargin,
             viewState: nullInitialView,
             // highlightedPoints: [] as Typing.Point[],
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
-            zoom: nullInitialView.zoom,
-            pointScaleFactor: 1,
-            moved: false,
+            // moved: false,
             projectionMethod: computed(() => store.state.projectionMethod),
             colorBy: computed(() => store.state.colorBy),
             view: computed(() => store.state.view),
+            mode: computed(() => store.state.mode),
             userTheme: computed(() => store.state.userTheme),
-            showAll: computed(() => store.state.showAll)
+            curLayer: computed(() => store.state.layer),
+            curHead: computed(() => store.state.head),
+            doneLoading: computed(() => store.state.doneLoading),
+            showAll: computed(() => store.state.showAll),
+            disableLabel: computed(() => store.state.disableLabel),
+            zoom: nullInitialView.zoom,
+            activePoints: [] as Typing.Point[],
         });
 
         var shallowData = shallowRef({
@@ -118,17 +114,35 @@ export default defineComponent({
 
         const toPointLayer = (points: Typing.Point[]) => {
             return new ScatterplotLayer({
-                pickable: true,
+                pickable: state.mode == 'single',
                 data: points,
                 radiusMaxPixels: 5,
+                stroked: state.mode == 'single',
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getRadius: (d: Typing.Point) => {
-                    const defaultSize = 0.4 * state.pointScaleFactor,
-                        highlightedSize = 6 * state.pointScaleFactor;
+                    const defaultSize = 0.4,
+                        highlightedSize = 6;
                     if (state.highlightedTokenIndices.length === 0) return defaultSize;
                     return state.highlightedTokenIndices.includes(d.index)
                         ? highlightedSize
                         : defaultSize;
+                },
+                getLineWidth: (d: Typing.Point) => {
+                    return (
+                        state.highlightedTokenIndices.includes(d.index)
+                            ? 1 / state.zoom
+                            : 0
+                    ) as any;
+                },
+                lineWidthMaxPixels: 1,
+                getLineColor: (d: Typing.Point) => {
+                    const activeColor = state.userTheme != "light-theme" ? [255, 255, 255, 255] : [0, 0, 0, 255],
+                        unactiveColor = [255, 255, 255, 0];
+                    return (
+                        state.highlightedTokenIndices.includes(d.index)
+                            ? activeColor
+                            : unactiveColor
+                    ) as any;
                 },
                 getFillColor: (d: Typing.Point) => {
                     const getColor = (d: Typing.Point) => {
@@ -165,7 +179,10 @@ export default defineComponent({
                     ) as any;
                 },
                 onClick: (info, event) => {
-                    // console.log('onClick', info.object);
+                    if (state.mode === 'matrix') {
+                        return;
+                    }
+                    console.log('onClick', info.object);
                     store.commit("setView", 'attn');
 
                     let pt = info.object as Typing.Point;
@@ -176,63 +193,12 @@ export default defineComponent({
                 },
                 updateTriggers: {
                     getFillColor: [state.colorBy, state.highlightedTokenIndices, state.userTheme],
-                    getRadius: [state.pointScaleFactor, state.highlightedTokenIndices],
+                    getRadius: state.highlightedTokenIndices,
                     getPosition: state.projectionMethod,
                 },
             });
         };
-        const toLabelOutlineLayer = (points: Typing.Point[]) => {
-            return new TextLayer({
-                id: "label-outline-layer",
-                data: points,
-                pickable: false,
-                getPosition: (d: Typing.Point) => {
-                    let coord = getPointCoordinate(d);
-                    if (state.zoom <= 3) return [0, 0];
-                    let whiteOffset = state.zoom <= 5
-                        ? 0.05
-                        : state.zoom <= 8
-                            ? 0.05 / state.zoom
-                            : 0.05 / (1.5 * state.zoom);
-                    let offset = (1 / (state.zoom * 2)) + whiteOffset;
-                    return [coord[0] + offset, coord[1] + whiteOffset];
-                },
-                getText: (d: Typing.Point) => d.value,
-                getColor: (d: Typing.Point) => {
-                    const defaultOpacity = 225;
-                    var threshold = state.zoom; // control how many labels show up
-                    if (state.zoom > 5) {
-                        threshold *= (state.zoom - 3);
-                    }
-                    if (state.highlightedTokenIndices.length === 0)
-                        return state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
-                            ? state.userTheme == "light-theme"
-                                ? [255, 255, 255, defaultOpacity]
-                                : [0, 0, 0, defaultOpacity]
-                            : [255, 255, 255, 0];
-                    return state.highlightedTokenIndices.includes(d.index)
-                        ? state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
-                            ? state.userTheme == "light-theme"
-                                ? [255, 255, 255, defaultOpacity]
-                                : [0, 0, 0, defaultOpacity]
-                            : [255, 255, 255, 0]
-                        : state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
-                            ? state.userTheme == "light-theme"
-                                ? [255, 255, 255, defaultOpacity]
-                                : [0, 0, 0, defaultOpacity]
-                            : [255, 255, 255, 0];
-                },
-                getSize: 12,
-                getAngle: 0,
-                getTextAnchor: "start",
-                getAlignmentBaseline: "center",
-                updateTriggers: {
-                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
-                    getPosition: [state.projectionMethod, state.zoom]
-                },
-                // onClick: (info, event) => console.log("Clicked:", info, event),
-            });
-        };
+
         const toPointLabelLayer = (points: Typing.Point[]) => {
             return new TextLayer({
                 id: "point-label-layer",
@@ -240,7 +206,6 @@ export default defineComponent({
                 pickable: false,
                 getPosition: (d: Typing.Point) => {
                     let coord = getPointCoordinate(d);
-                    if (state.zoom <= 3) return [0, 0];
                     let offset = 1 / (state.zoom * 2);
                     return [coord[0] + offset, coord[1]];
                 },
@@ -248,12 +213,12 @@ export default defineComponent({
                 getColor: (d: Typing.Point) => {
                     const defaultOpacity = 225,
                         lightOpacity = 50;
-                    var threshold = state.zoom; // control how many labels show up
-                    if (state.zoom > 5) {
-                        threshold *= (state.zoom - 3);
-                    }
+                    // var threshold = state.zoom; // control how many labels show up
+                    // if (state.zoom > 5) {
+                    //     threshold *= (state.zoom - 3);
+                    // }
                     if (state.highlightedTokenIndices.length === 0)
-                        return state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
+                        return (state.showAll && !state.disableLabel)
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, defaultOpacity]
@@ -263,7 +228,7 @@ export default defineComponent({
                                     : [240, 179, 199, defaultOpacity]
                             : [255, 255, 255, 0];
                     return state.highlightedTokenIndices.includes(d.index)
-                        ? state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
+                        ? (state.showAll && !state.disableLabel)
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, defaultOpacity]
@@ -272,7 +237,7 @@ export default defineComponent({
                                     ? [117, 29, 58, defaultOpacity]
                                     : [240, 179, 199, defaultOpacity]
                             : [255, 255, 255, 0]
-                        : state.zoom > 3 && (state.showAll || (d.index % Math.floor(150 / threshold) == 0))
+                        : (state.showAll && !state.disableLabel)
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, lightOpacity]
@@ -301,23 +266,56 @@ export default defineComponent({
                 pickable: false,
                 getPosition: (d: Typing.PlotHead) => d.coordinate,
                 getText: (d: Typing.PlotHead) => d.title,
-                getSize: state.zoom >= 1 ? 24 : 20,
+                getSize: state.mode == 'single' ? 24 : 20,
                 getAngle: 0,
                 getColor: state.userTheme == 'light-theme' ? [0, 0, 0] : [255, 255, 255],
-                sizeUnits: state.zoom >= 1 ? "pixels" : "common",
+                sizeUnits: state.mode == 'single' ? "pixels" : "common",
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
-                    getSize: state.zoom,
-                    sizeUnits: state.zoom,
                     getColor: state.userTheme
                 }
                 // onClick: (info, event) => console.log("Clicked:", info, event),
             });
         };
+
+        const toOverlayLayer = (headings: Typing.PlotHead[]) => {
+            return new PolygonLayer({
+                id: "overlay-layer",
+                data: headings,
+                pickable: true,
+                strokable: false,
+                filled: true,
+                getPolygon: d => [
+                    d.coordinate,
+                    [d.coordinate[0], d.coordinate[1] + matrixCellHeight],
+                    [d.coordinate[0] + matrixCellWidth, d.coordinate[1] + matrixCellHeight],
+                    [d.coordinate[0] + matrixCellWidth, d.coordinate[1]],
+                ],
+                getFillColor: [255, 255, 255, 0],
+                getLineWidth: 0,
+                onClick: (info, event) => {
+                    let obj = info.object as Typing.PlotHead;
+                    zoomToPlot(obj.layer, obj.head);
+                },
+            });
+        };
         const toLayers = () => {
             let { points, headings } = shallowData.value;
-            return [toPointLayer(points), toPlotHeadLayer(headings), toLabelOutlineLayer(points), toPointLabelLayer(points)];
+            if (state.curHead !== "" && state.curLayer !== "") { // single mode
+                // filter only points in this layer
+                const pointsPerHead = points.length / headings.length; // number points per attention head
+                let headIndex = headings.findIndex((d) => d.layer == state.curLayer && d.head == state.curHead);
+                let startInd = pointsPerHead * headIndex;
+                let endInd = startInd + pointsPerHead;
+
+                const layer_points = points.slice(startInd, endInd);
+                state.activePoints = layer_points;
+                const layer_headings = headings[headIndex];
+                return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toPointLabelLayer(layer_points)];
+            }
+            // else: return matrix
+            return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
         };
 
         /**
@@ -329,15 +327,16 @@ export default defineComponent({
             if (!points || !points.length) return;
 
             // put init view state in the centre
-            const canvasWidth = range.x[0] + range.x[1];
-            const canvasHeight = range.y[0] + range.y[1];
-            state.viewState = {
+            canvasWidth = range.x[0] + range.x[1];
+            canvasHeight = range.y[0] + range.y[1];
+            initialState = {
                 target: [canvasWidth / 2, canvasHeight / 2, 0],
                 zoom: -1,
-                minZoom: -2,
-                maxZoom: 9,
+                minZoom: -1.5,
+                maxZoom: 0,
                 transitionDuration: 1000,
             };
+            state.viewState = state.mode === 'matrix' ? initialState : initialStateZoom;
 
             deckgl = new Deck({
                 canvas: "matrix-canvas",
@@ -348,6 +347,9 @@ export default defineComponent({
                 initialViewState: state.viewState,
                 layers: toLayers(),
                 getTooltip: ({ object }) => {
+                    if (state.mode == 'matrix') {
+                        return null;
+                    }
                     const getMsg = (d: Typing.Point) => {
                         switch (state.colorBy) {
                             case 'type':
@@ -370,6 +372,9 @@ export default defineComponent({
                     }
                 },
                 onViewStateChange: (param) => {
+                    if (state.mode == 'matrix') {
+                        return;
+                    }
                     let timeout: any;
                     if (param.interactionState.inTransition) {
                         clearInterval(timeout);
@@ -386,48 +391,59 @@ export default defineComponent({
 
         const handleRequest = (param: any) => {
             const zoom = param.viewState.zoom;
-            const old_zoom = state.zoom;
             state.zoom = zoom;
 
-            if (!state.moved) { // adjust after first user movement
-                state.moved = true;
-            }
-
-            // if ((old_zoom < 6 && zoom < 6) || (old_zoom >= 6 && zoom >= 6)) {
-            //     // only run rest of code zoom crossed threshold
-            //     return;
-            // }
-
-            if (old_zoom < 6 && zoom >= 6) {
-                state.pointScaleFactor = 0.15;
+            if (zoom >= 5 && state.disableLabel) {
                 store.commit("setDisableLabel", false);
-                // } else if (zoom > 4.5) {
-                //     state.pointScaleFactor = 0.2;
-                // } else if (zoom > 3) {
-                //     state.pointScaleFactor = 0.5;
-            } else if (old_zoom >= 6 && zoom < 6) {
-                state.pointScaleFactor = 1;
-                store.commit("setShowAll", false);
+            } else if (zoom < 5 && !state.disableLabel) {
                 store.commit("setDisableLabel", true);
+                // store.commit("setShowAll", false);
             }
         };
 
         /**
-         * Reset the view state
+         * Reset the view state to matrix mode
          */
         const reset = () => {
-            if (state.moved) {
+            store.commit("setLayer", "");
+            store.commit("setHead", "");
+            store.commit("setMode", "matrix");
+            state.activePoints = [];
+
+            if (state.view == 'attn') {
+                store.commit("setHighlightedTokenIndices", []);
+            }
+
+            // if (!state.moved) {
+            //     deckgl.setProps({
+            //         initialViewState: nullInitialView,
+            //     });
+            // }
+            state.viewState = initialState;
+            deckgl.setProps({
+                // this alone doesn't change anything apparently?
+                initialViewState: state.viewState,
+            });
+            // state.moved = false;
+        };
+
+        /* 
+         * Reset zoom only
+         */
+        const resetZoom = () => {
+            if (state.mode == "matrix") {
                 deckgl.setProps({
                     initialViewState: nullInitialView,
                 });
-
+            } else {
                 deckgl.setProps({
-                    // this alone doesn't change anything apparently?
-                    initialViewState: state.viewState,
+                    initialViewState: nullInitialViewZoom,
                 });
             }
-            state.pointScaleFactor = 1;
-        };
+            deckgl.setProps({
+                initialViewState: state.viewState,
+            });
+        }
 
         const computedProjection = () => {
             let { matrixData, tokenData } = state;
@@ -437,7 +453,13 @@ export default defineComponent({
             }
         };
 
-        watch([() => state.matrixData, () => state.tokenData], () => computedProjection());
+        watch([() => state.matrixData, () => state.tokenData],
+            () => {
+                if (state.doneLoading) {
+                    computedProjection();
+                }
+            }
+        );
 
         watch([shallowData], () => {
             initMatrices();
@@ -447,17 +469,29 @@ export default defineComponent({
         watch(
             [
                 () => state.highlightedTokenIndices,
-                () => state.pointScaleFactor,
-                () => state.zoom,
                 () => state.projectionMethod,
                 () => state.colorBy,
                 () => state.userTheme,
+                () => state.curHead,
+                () => state.curLayer,
+                () => state.zoom,
                 () => state.showAll
             ],
             () => {
                 deckgl.setProps({ layers: [...toLayers()] });
             }
         );
+
+        watch([() => state.doneLoading, () => state.curLayer, () => state.curHead],
+            () => {
+                if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn") {
+                    // fix attention view
+                    let ind = state.highlightedTokenIndices[0];
+                    let pt = state.activePoints[ind];
+                    store.dispatch("setClickedPoint", pt);
+                }
+            }
+        )
 
         onMounted(() => {
             console.log("onMounted");
@@ -484,26 +518,33 @@ export default defineComponent({
             console.error("viewport", deckgl.getViewports());
         };
 
-        const zoomToPlot = (layer: string, head: number) => {
+        const zoomToPlot = (layer: number, head: number) => {
             // zoom to plot
-            console.log("Layer " + layer + ", Head " + head);
+            if (state.mode !== "single") {
+                store.commit("setMode", "single");
+            }
+
             const x_center = head * (matrixCellWidth + matrixCellMargin) + 0.5 * matrixCellWidth;
             const y_center =
                 -layer * (matrixCellHeight + matrixCellMargin) + 0.5 * matrixCellHeight;
-            const newViewState = {
+            initialStateZoom = {
                 target: [x_center, y_center, 0],
                 zoom: 2.75,
-                minZoom: -2,
+                minZoom: 2,
                 maxZoom: 9,
                 transitionDuration: 1000,
             };
+            state.viewState = initialStateZoom;
+            deckgl.setProps({
+                initialViewState: nullInitialViewZoom,
+            });
+            deckgl.setProps({
+                initialViewState: state.viewState,
+            });
 
-            deckgl.setProps({
-                initialViewState: state.viewState
-            });
-            deckgl.setProps({
-                initialViewState: newViewState,
-            });
+            console.log("Layer " + layer + ", Head " + head);
+            store.commit("setLayer", layer);
+            store.commit("setHead", head);
         };
 
         watch(() => state.highlightedTokenIndices,
@@ -516,6 +557,7 @@ export default defineComponent({
         // expose functions to the parent
         context.expose({
             reset,
+            resetZoom,
             onSearch,
             printViewport,
             zoomToPlot,

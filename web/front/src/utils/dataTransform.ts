@@ -100,7 +100,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         queryColor.domain(d3.extent(data.map(x => x.norm)) as [number, number]);
         keyColor.domain(d3.extent(data.map(x => x.norm)) as [number, number]);
         const colorsByNorm = data.map((x, index) => {
-            const tokenType = tokenData[index].type
+            const tokenType = tokenData[index].type;
             let colorstr = "rgb()";
             if (tokenType === 'query') {
                 colorstr = queryColor(x.norm);

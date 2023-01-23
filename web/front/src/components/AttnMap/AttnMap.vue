@@ -55,11 +55,12 @@ export default {
         const state = reactive({
             attentionByToken: computed(() => store.state.attentionByToken),
             showAttn: false,
-            attnMsg: "click a point to explore its attention",
+            attnMsg: "click a plot to zoom in",
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             view: computed(() => store.state.view),
             layerHead: "",
-            userTheme: computed(() => store.state.userTheme)
+            userTheme: computed(() => store.state.userTheme),
+            mode: computed(() => store.state.mode),
         });
 
         // start bertviz
@@ -96,7 +97,7 @@ export default {
                 include_layers: [0],
             };
 
-            let headColors = d3.scaleOrdinal(d3.schemePastel1);
+            // let headColors = d3.scaleOrdinal(d3.schemePastel1);
             let config: Config = initialize();
             renderVis();
 
@@ -484,7 +485,9 @@ export default {
 
         const clearAttn = () => {
             state.showAttn = false;
-            state.attnMsg = "click a point to explore its attention";
+            state.attnMsg = state.mode == "single"
+                ? "click a point to explore its attention"
+                : "click a plot to zoom in";
             store.commit("setHighlightedTokenIndices", []);
         }
 
@@ -503,7 +506,9 @@ export default {
             () => {
                 if (state.view != 'attn') {
                     state.showAttn = false;
-                    state.attnMsg = "click a point to explore its attention";
+                    state.attnMsg = state.mode == "single"
+                        ? "click a point to explore its attention"
+                        : "click a plot to zoom in";
                 }
             }
         )

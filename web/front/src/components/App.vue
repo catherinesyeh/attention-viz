@@ -4,18 +4,23 @@
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
       <div class="dropdown">
         <label for="layernum">Zoom to Layer:</label>
-        <a-select ref="select" v-model:value="layernum" style="width: 60px" @change="handleChange('layer', layernum)"
-          :layerNum="layernum">
+        <a-select ref="layer-select" v-model:value="layernum" style="width: 60px" :layerNum="layernum"
+          @change="handleChange('layer', layernum)">
           <a-select-option v-for="i in 12" :value="i - 1">{{ i - 1 }}</a-select-option>
         </a-select>
         <label for="headnum">Head:</label>
-        <a-select ref="select" v-model:value="headnum" style="width: 60px" @change="handleChange('head', headnum)"
-          :headNum="headnum">
+        <a-select ref="head-select" v-model:value="headnum" style="width: 60px" :headNum="headnum"
+          @change="handleChange('head', headnum)">
           <a-select-option v-for="i in 12" :value="i - 1">{{ i - 1 }}</a-select-option>
         </a-select>
         <a-button type="primary" id="zoom-go" @click="zoomToPlot"> go </a-button>
-        <a-button type="text" id="matrix-reset" @click="onClickReset">
+        <a-button type="text" class="matrix-reset" @click="onClickReset">
           reset zoom
+        </a-button>
+        <a-button type="text" class="matrix-reset" @click="resetToMatrix" :class="{
+          disabled: mode == 'matrix'
+        }">
+          view all
         </a-button>
       </div>
       <div class="dropdown">
@@ -73,8 +78,12 @@ export default defineComponent({
     const projection = ref(null);
 
     const state = reactive({
-      headnum: "",
-      layernum: "",
+      storeLayer: computed(() => store.state.layer),
+      storeHead: computed(() => store.state.head),
+      layernum: "" as string | number,
+      headnum: "" as string | number,
+      mode: computed(() => store.state.mode),
+
       modelType: computed({
         get: () => store.state.modelType,
         set: (v) => store.dispatch("switchModel", v)
@@ -101,7 +110,7 @@ export default defineComponent({
     });
 
     // update graph settings based on dropdown option selected
-    const handleChange = function (type: string, value: string) {
+    const handleChange = function (type: string, value: any) {
       if (type == "layer") {
         state.layernum = value;
       } else {
@@ -111,13 +120,17 @@ export default defineComponent({
 
     // zoom to plot based on layer and head selected
     const zoomToPlot = () => {
-      let layer = parseInt(state.layernum);
-      let head = parseInt(state.headnum);
+      let layer = state.layernum;
+      let head = state.headnum;
       (projection.value as any).zoomToPlot(layer, head);
     };
 
     const onClickReset = () => {
       (projection.value as any).onClickReset();
+    };
+
+    const resetToMatrix = () => {
+      (projection.value as any).resetToMatrix();
     };
 
     // switch between light and dark mode
@@ -151,12 +164,21 @@ export default defineComponent({
       }
     };
 
+    watch([() => state.storeHead, () => state.storeLayer],
+      () => {
+        state.layernum = state.storeLayer;
+        state.headnum = state.storeHead;
+      }
+
+    );
+
     return {
       ...toRefs(state),
       projection,
       handleChange,
       zoomToPlot,
       onClickReset,
+      resetToMatrix,
       toggleTheme,
       getTheme,
       setTheme,
@@ -265,7 +287,7 @@ nav.navbar {
   color: var(--text) !important;
 }
 
-#matrix-reset {
+.matrix-reset {
   color: var(--text) !important;
 }
 
@@ -371,7 +393,8 @@ label {
   transition: 0.5s;
 }
 
-.ant-checkbox-wrapper.disabled {
+.ant-checkbox-wrapper.disabled,
+.ant-btn.disabled {
   opacity: 0.5;
   pointer-events: none;
 }

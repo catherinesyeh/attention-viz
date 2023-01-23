@@ -13,17 +13,29 @@ import { ConsoleSqlOutlined } from '@ant-design/icons-vue';
 
 export interface State {
   matrixData: Typing.MatrixData[];
-  attentionData: Typing.AttentionData[];
+  // attentionData: Typing.AttentionData[];
   tokenData: Typing.TokenData[];
+
+  // current layer and head
+  layer: number | string;
+  head: number | string;
+
   renderState: boolean; // true when the canvas is being rendered; false upon finished
+  doneLoading: boolean;
+  userTheme: string; // dark or light
+  view: string; // none, search, or attention
+  mode: string; // single or matrix
+
+  // attention
   attentionByToken: Typing.AttnByToken;
+  highlightedTokenIndices: number[]; 
   // attentionByTokenLock: boolean; 
-  modelType: string;
-  projectionMethod: keyof Typing.PointCoordinate;
-  colorBy: keyof Typing.PointColor;
-  highlightedTokenIndices: number[];
-  view: string;
-  userTheme: string;
+
+  modelType: string; // bert or gpt
+  projectionMethod: keyof Typing.PointCoordinate; // tsne or umap
+  colorBy: keyof Typing.PointColor; // different colorings (e.g., type, position, norm, etc.)
+
+  // labels
   showAll: boolean;
   disableLabel: boolean;
 }
@@ -34,8 +46,11 @@ export const key: InjectionKey<Store<State>> = Symbol()
 export const store = createStore<State>({
   state: {
     matrixData: [],
-    attentionData: [],
+    // attentionData: [],
     tokenData: [],
+    layer: "",
+    head: "",
+    doneLoading: false,
     renderState: true,
     attentionByToken: {layer: 0, head: 0, attns: [], token: {} as Typing.TokenData},
     // attentionByTokenLock: false,
@@ -43,6 +58,7 @@ export const store = createStore<State>({
     projectionMethod: 'tsne',
     colorBy: 'type',
     highlightedTokenIndices: [],
+    mode: 'matrix',
     view: 'none',
     userTheme: 'light-theme',
     showAll: false,
@@ -61,6 +77,16 @@ export const store = createStore<State>({
     // },
     setTokenData(state, tokenData) {
       state.tokenData = tokenData
+    },
+    setLayer(state, layer) {
+      state.layer = layer;
+    },
+    setHead(state, head) {
+      state.head = head;
+    },
+    updateDoneLoading(state, doneLoading) {
+      state.doneLoading = doneLoading;
+      console.log('state: doneLoading', doneLoading);
     },
     updateRenderState(state, renderState) {
       state.renderState = renderState;
@@ -91,6 +117,10 @@ export const store = createStore<State>({
       state.view = view;
       console.log('setView', view);
     },
+    setMode(state, mode) {
+      state.mode = mode;
+      console.log('setMode', mode);
+    },
     setUserTheme(state, theme) {
       state.userTheme = theme;
       console.log('setUserTheme', theme);
@@ -118,9 +148,12 @@ export const store = createStore<State>({
       const tokenData = (await dataService.getTokenData(state.modelType)).tokens;
       commit('setTokenData', Object.freeze(tokenData));
       // console.log('setTokenData', Object.freeze(tokenData));
+
+      commit('updateDoneLoading', true);
     },
     async switchModel({state, commit, dispatch}, model: string) {
       commit('setModelType', model);
+      commit('updateDoneLoading', false);
       dispatch('computeData');
     },
     async setClickedPoint({state, commit}, pt: Typing.Point) {
