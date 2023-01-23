@@ -413,6 +413,17 @@ label {
   border-color: var(--button) !important;
 }
 
+.ant-btn-default:hover {
+  color: var(--button) !important;
+  border-color: var(--button) !important;
+}
+
+.ant-btn-default:active,
+.ant-btn-default:focus {
+  color: initial !important;
+  border-color: initial !important;
+}
+
 /* icons */
 .dropdown .svg-inline--fa {
   margin-left: 10px;

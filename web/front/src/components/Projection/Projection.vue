@@ -33,9 +33,44 @@
                     <a-button type="primary" @click="logViewport">
                         log viewport
                     </a-button>
+
+                    <Transition>
+                        <div v-show="mode === 'single'">
+                            <p class="label">Controls</p>
+                            <div id="control-buttons">
+                                <a-button class="center" type="default" size="small" :class="{ disabled: layer < 1 }"
+                                    @click="moveToPlot('up')">
+                                    <template #icon>
+                                        <ArrowUpOutlined />
+                                    </template>
+                                </a-button>
+                                <div class="arrow-group center">
+                                    <a-button type="default" size="small" :class="{ disabled: head < 1 }"
+                                        @click="moveToPlot('left')">
+                                        <template #icon>
+                                            <ArrowLeftOutlined />
+                                        </template>
+                                    </a-button>
+                                    <a-button type="default" size="small" :class="{ disabled: head > 10 }"
+                                        @click="moveToPlot('right')">
+                                        <template #icon>
+                                            <ArrowRightOutlined />
+                                        </template>
+                                    </a-button>
+                                </div>
+                                <a-button class="center" type="default" size="small" :class="{ disabled: layer > 10 }"
+                                    @click="moveToPlot('down')">
+                                    <template #icon>
+                                        <ArrowDownOutlined />
+                                    </template>
+                                </a-button>
+                            </div>
+                        </div>
+                    </Transition>
                 </div>
             </div>
-            <div class="gradient-edge"></div>
+            <div class="gradient-edge">
+            </div>
             <div class="gradient-edge right">
                 <Legend />
             </div>
@@ -53,9 +88,10 @@ import { useStore } from "@/store/index";
 import { Typing } from "@/utils/typing";
 import MatrixView from "./MatrixView/MatrixView.vue";
 import Legend from "./Legend/Legend.vue";
+import { ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons-vue";
 
 export default defineComponent({
-    components: { MatrixView, Legend },
+    components: { MatrixView, Legend, ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined },
     setup() {
         const store = useStore();
 
@@ -69,6 +105,8 @@ export default defineComponent({
             showAll: computed(() => store.state.showAll),
             disableLabel: computed(() => store.state.disableLabel),
             colorBy: computed(() => store.state.colorBy),
+            layer: computed(() => store.state.layer),
+            head: computed(() => store.state.head)
         });
 
         const onClickReset = () => {
@@ -108,6 +146,26 @@ export default defineComponent({
             (matrixView.value as any).zoomToPlot(layer, head);
         }
 
+        // move 1 plot up/left/right/down
+        const moveToPlot = (direction: string) => {
+            switch (direction) {
+                case "up":
+                    zoomToPlot((state.layer as number) - 1, (state.head as number));
+                    break;
+                case "left":
+                    zoomToPlot((state.layer as number), (state.head as number) - 1);
+                    break;
+                case "right":
+                    zoomToPlot((state.layer as number), (state.head as number) + 1);
+                    break;
+                case "down":
+                    zoomToPlot((state.layer as number) + 1, (state.head as number));
+                    break;
+                default:
+                    throw Error("Invalid direction!");
+            }
+        }
+
         watch(() => state.view,
             () => {
                 if (state.view == "attn") {
@@ -124,6 +182,7 @@ export default defineComponent({
             onSearch,
             logViewport,
             zoomToPlot,
+            moveToPlot,
             toggleCheckbox
         };
     }
@@ -158,6 +217,19 @@ p.label {
     margin-top: 15px;
     margin-bottom: 0;
     font-size: smaller;
+}
+
+#control-buttons {
+    width: fit-content;
+}
+
+#control-buttons .center {
+    display: block;
+    margin: auto;
+}
+
+.arrow-group button:first-child {
+    margin-right: 25px;
 }
 
 div#matrix-wrapper {

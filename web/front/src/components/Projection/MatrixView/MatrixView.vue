@@ -464,17 +464,14 @@ export default defineComponent({
                 store.commit("setHighlightedTokenIndices", []);
             }
 
-            // if (!state.moved) {
-            //     deckgl.setProps({
-            //         initialViewState: nullInitialView,
-            //     });
-            // }
             state.viewState = initialState;
+            // deckgl.setProps({
+            //     initialViewState: nullInitialView,
+            // });
             deckgl.setProps({
                 // this alone doesn't change anything apparently?
                 initialViewState: state.viewState,
             });
-            // state.moved = false;
         };
 
         /* 
@@ -585,9 +582,9 @@ export default defineComponent({
                 transitionDuration: 1000,
             };
             state.viewState = initialStateZoom;
-            deckgl.setProps({
-                initialViewState: nullInitialViewZoom,
-            });
+            // deckgl.setProps({
+            //     initialViewState: nullInitialViewZoom,
+            // });
             deckgl.setProps({
                 initialViewState: state.viewState,
             });
