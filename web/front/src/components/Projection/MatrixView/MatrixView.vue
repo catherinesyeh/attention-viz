@@ -198,7 +198,57 @@ export default defineComponent({
                 },
             });
         };
-
+        const toLabelOutlineLayer = (points: Typing.Point[]) => {
+            return new TextLayer({
+                id: "label-outline-layer",
+                data: points,
+                pickable: false,
+                getPosition: (d: Typing.Point) => {
+                    let coord = getPointCoordinate(d);
+                    let whiteOffset = state.zoom <= 5
+                        ? 0.1
+                        : state.zoom <= 8
+                            ? 0.075 / state.zoom
+                            : 0.05 / (1.5 * state.zoom);
+                    let offset = (1 / (state.zoom * 2)) + whiteOffset;
+                    return [coord[0] + offset, coord[1] + whiteOffset];
+                },
+                getText: (d: Typing.Point) => d.value,
+                getColor: (d: Typing.Point) => {
+                    const defaultOpacity = 225;
+                    // var threshold = state.zoom; // control how many labels show up
+                    // if (state.zoom > 5) {
+                    //     threshold *= (state.zoom - 3);
+                    // }
+                    if (state.highlightedTokenIndices.length === 0)
+                        return (state.showAll && !state.disableLabel)
+                            ? state.userTheme == "light-theme"
+                                ? [255, 255, 255, defaultOpacity]
+                                : [0, 0, 0, defaultOpacity]
+                            : [255, 255, 255, 0];
+                    return state.highlightedTokenIndices.includes(d.index)
+                        ? (state.showAll && !state.disableLabel)
+                            ? state.userTheme == "light-theme"
+                                ? [255, 255, 255, defaultOpacity]
+                                : [0, 0, 0, defaultOpacity]
+                            : [255, 255, 255, 0]
+                        : (state.showAll && !state.disableLabel)
+                            ? state.userTheme == "light-theme"
+                                ? [255, 255, 255, defaultOpacity]
+                                : [0, 0, 0, defaultOpacity]
+                            : [255, 255, 255, 0];
+                },
+                getSize: 12,
+                getAngle: 0,
+                getTextAnchor: "start",
+                getAlignmentBaseline: "center",
+                updateTriggers: {
+                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
+                    getPosition: [state.projectionMethod, state.zoom]
+                },
+                // onClick: (info, event) => console.log("Clicked:", info, event),
+            });
+        };
         const toPointLabelLayer = (points: Typing.Point[]) => {
             return new TextLayer({
                 id: "point-label-layer",
@@ -312,7 +362,7 @@ export default defineComponent({
                 const layer_points = points.slice(startInd, endInd);
                 state.activePoints = layer_points;
                 const layer_headings = headings[headIndex];
-                return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toPointLabelLayer(layer_points)];
+                return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toLabelOutlineLayer(layer_points), toPointLabelLayer(layer_points)];
             }
             // else: return matrix
             return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
