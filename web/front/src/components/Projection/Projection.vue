@@ -106,7 +106,8 @@ export default defineComponent({
             disableLabel: computed(() => store.state.disableLabel),
             colorBy: computed(() => store.state.colorBy),
             layer: computed(() => store.state.layer),
-            head: computed(() => store.state.head)
+            head: computed(() => store.state.head),
+            modelType: computed(() => store.state.modelType)
         });
 
         const onClickReset = () => {
@@ -169,6 +170,14 @@ export default defineComponent({
         watch(() => state.view,
             () => {
                 if (state.view == "attn") {
+                    state.searchToken = "";
+                }
+            })
+
+        watch(() => state.modelType,
+            () => { // clear highlighted tokens for simplicity
+                store.commit("setHighlightedTokenIndices", []);
+                if (state.searchToken.length > 0) {
                     state.searchToken = "";
                 }
             })

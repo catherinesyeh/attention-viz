@@ -500,51 +500,6 @@ export default defineComponent({
             }
         };
 
-        watch([() => state.matrixData, () => state.tokenData],
-            () => {
-                if (state.doneLoading) {
-                    computedProjection();
-                }
-            }
-        );
-
-        watch([shallowData], () => {
-            initMatrices();
-        });
-
-        // re-render the visualization whenever any of the following changes
-        watch(
-            [
-                () => state.highlightedTokenIndices,
-                () => state.projectionMethod,
-                () => state.colorBy,
-                () => state.userTheme,
-                () => state.curHead,
-                () => state.curLayer,
-                () => state.zoom,
-                () => state.showAll
-            ],
-            () => {
-                deckgl.setProps({ layers: [...toLayers()] });
-            }
-        );
-
-        watch([() => state.doneLoading, () => state.curLayer, () => state.curHead],
-            () => {
-                if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn") {
-                    // fix attention view
-                    let ind = state.highlightedTokenIndices[0];
-                    let pt = state.activePoints[ind];
-                    store.dispatch("setClickedPoint", pt);
-                }
-            }
-        )
-
-        onMounted(() => {
-            console.log("onMounted");
-            computedProjection();
-        });
-
         /**
          * Search and highlight tokens
          * @param str
@@ -593,6 +548,51 @@ export default defineComponent({
             store.commit("setLayer", layer);
             store.commit("setHead", head);
         };
+
+        onMounted(() => {
+            console.log("onMounted");
+            computedProjection();
+        });
+
+        watch([() => state.matrixData, () => state.tokenData],
+            () => {
+                if (state.doneLoading) {
+                    computedProjection();
+                }
+            }
+        );
+
+        watch([shallowData], () => {
+            initMatrices();
+        });
+
+        // re-render the visualization whenever any of the following changes
+        watch(
+            [
+                () => state.highlightedTokenIndices,
+                () => state.projectionMethod,
+                () => state.colorBy,
+                () => state.userTheme,
+                () => state.curHead,
+                () => state.curLayer,
+                () => state.zoom,
+                () => state.showAll
+            ],
+            () => {
+                deckgl.setProps({ layers: [...toLayers()] });
+            }
+        );
+
+        watch([() => state.doneLoading, () => state.curLayer, () => state.curHead],
+            () => {
+                if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn") {
+                    // fix attention view
+                    let ind = state.highlightedTokenIndices[0];
+                    let pt = state.activePoints[ind];
+                    store.dispatch("setClickedPoint", pt);
+                }
+            }
+        )
 
         watch(() => state.highlightedTokenIndices,
             () => {
