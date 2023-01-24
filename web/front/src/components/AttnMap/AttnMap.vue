@@ -502,7 +502,7 @@ export default {
         );
 
         watch(
-            () => state.view,
+            () => [state.view, state.mode],
             () => {
                 if (state.view != 'attn') {
                     state.showAttn = false;

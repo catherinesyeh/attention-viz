@@ -106,19 +106,19 @@ export default defineComponent({
 
 /* categorical */
 .bar-contain.cat .bar {
-    background: linear-gradient(#6a3d9a 20%,
-            #1f78b4 20% 40%,
-            #33a02c 40% 60%,
-            #ff7f00 60% 80%,
-            #e31a1c 80%);
+    background: linear-gradient(#7F5BDB 20%,
+            #2E93D9 20% 40%,
+            #5FB96C 40% 60%,
+            #F39226 60% 80%,
+            #E3378F 80%);
 }
 
 .bar-contain.k.cat .bar {
-    background: linear-gradient(#cab2d6 20%,
-            #a6cee3 20% 40%,
-            #b2df8a 40% 60%,
-            #fdbf6f 60% 80%,
-            #fb9a99 80%);
+    background: linear-gradient(#CFB0EF 20%,
+            #9fd2ea 20% 40%,
+            #addfa2 40% 60%,
+            #f5ca86 60% 80%,
+            #FFB5CF 80%);
 }
 
 /* bar labels */
