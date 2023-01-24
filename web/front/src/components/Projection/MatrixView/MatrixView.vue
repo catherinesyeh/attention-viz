@@ -216,23 +216,25 @@ export default defineComponent({
                 getText: (d: Typing.Point) => d.value,
                 getColor: (d: Typing.Point) => {
                     const defaultOpacity = 225;
-                    // var threshold = state.zoom; // control how many labels show up
-                    // if (state.zoom > 5) {
-                    //     threshold *= (state.zoom - 3);
-                    // }
+                    // control how many labels show up
+                    var threshold = state.zoom > 8
+                        ? 1
+                        : state.zoom > 7
+                            ? 2
+                            : 10 - Math.floor(state.zoom);
                     if (state.highlightedTokenIndices.length === 0)
-                        return (state.showAll && !state.disableLabel)
+                        return (state.showAll && !state.disableLabel && (d.index % threshold == 0))
                             ? state.userTheme == "light-theme"
                                 ? [255, 255, 255, defaultOpacity]
                                 : [0, 0, 0, defaultOpacity]
                             : [255, 255, 255, 0];
                     return state.highlightedTokenIndices.includes(d.index)
-                        ? (state.showAll && !state.disableLabel)
+                        ? (state.showAll && !state.disableLabel && (d.index % threshold == 0))
                             ? state.userTheme == "light-theme"
                                 ? [255, 255, 255, defaultOpacity]
                                 : [0, 0, 0, defaultOpacity]
                             : [255, 255, 255, 0]
-                        : (state.showAll && !state.disableLabel)
+                        : (state.showAll && !state.disableLabel && (d.index % threshold == 0))
                             ? state.userTheme == "light-theme"
                                 ? [255, 255, 255, defaultOpacity]
                                 : [0, 0, 0, defaultOpacity]
@@ -249,6 +251,36 @@ export default defineComponent({
                 // onClick: (info, event) => console.log("Clicked:", info, event),
             });
         };
+
+        let coveredPixels: number[][] = [];
+        const noOverlap = (d: Typing.Point) => {
+            let coord = getPointCoordinate(d);
+            let numLetters = d.value.length;
+            let offset = Math.ceil(1 / (state.zoom * 2));
+            if (state.zoom <= 7) {
+                offset *= 2;
+            }
+            let leftX = coord[0] - offset;
+            let rightX = coord[0] + offset + numLetters * offset;
+            let bottomY = coord[1] - offset;
+            let topY = coord[1] + offset;
+            // let boundBox = [[leftX, bottomY],
+            //         [leftX, topY],
+            //         [rightX, topY],
+            //         [rightX, bottomY],
+            //         ];
+            let coordsToAdd = [];
+            for (let x = leftX; x <= rightX; x++) {
+                for (let y = bottomY; y <= topY; y++) {
+                    if (coveredPixels.includes([x, y])) {
+                        return false;
+                    }
+                    coordsToAdd.push([x, y]);
+                }
+            }
+            coveredPixels = [...coveredPixels, ...coordsToAdd];
+            return true;
+        }
         const toPointLabelLayer = (points: Typing.Point[]) => {
             return new TextLayer({
                 id: "point-label-layer",
@@ -263,12 +295,14 @@ export default defineComponent({
                 getColor: (d: Typing.Point) => {
                     const defaultOpacity = 225,
                         lightOpacity = 50;
-                    // var threshold = state.zoom; // control how many labels show up
-                    // if (state.zoom > 5) {
-                    //     threshold *= (state.zoom - 3);
-                    // }
+                    // control how many labels show up
+                    var threshold = state.zoom > 8
+                        ? 1
+                        : state.zoom > 7
+                            ? 2
+                            : 10 - Math.floor(state.zoom);
                     if (state.highlightedTokenIndices.length === 0)
-                        return (state.showAll && !state.disableLabel)
+                        return (state.showAll && !state.disableLabel && (d.index % threshold == 0))
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, defaultOpacity]
@@ -278,7 +312,7 @@ export default defineComponent({
                                     : [240, 179, 199, defaultOpacity]
                             : [255, 255, 255, 0];
                     return state.highlightedTokenIndices.includes(d.index)
-                        ? (state.showAll && !state.disableLabel)
+                        ? (state.showAll && !state.disableLabel && (d.index % threshold == 0))
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, defaultOpacity]
@@ -287,7 +321,7 @@ export default defineComponent({
                                     ? [117, 29, 58, defaultOpacity]
                                     : [240, 179, 199, defaultOpacity]
                             : [255, 255, 255, 0]
-                        : (state.showAll && !state.disableLabel)
+                        : (state.showAll && !state.disableLabel && (d.index % threshold == 0))
                             ? d.type == "query"
                                 ? state.userTheme == "light-theme"
                                     ? [43, 91, 25, lightOpacity]
@@ -348,6 +382,35 @@ export default defineComponent({
                     let obj = info.object as Typing.PlotHead;
                     zoomToPlot(obj.layer, obj.head);
                 },
+                updateTriggers: {
+                    getPosition: [state.projectionMethod, state.zoom]
+                },
+            });
+        };
+
+        const toTextBlockLayer = (points: Typing.Point[]) => {
+            return new PolygonLayer({
+                id: "text-block-layer",
+                data: points,
+                pickable: false,
+                strokable: true,
+                filled: true,
+                getPolygon: d => {
+                    let coord = getPointCoordinate(d);
+                    let numLetters = d.value.length;
+                    let offset = (1 / (state.zoom * 2));
+                    if (state.zoom <= 7) {
+                        offset *= 2;
+                    }
+                    return [[coord[0] - offset, coord[1] - offset],
+                    [coord[0] - offset, coord[1] + offset],
+                    [coord[0] + offset + numLetters * offset, coord[1] + offset],
+                    [coord[0] + offset + numLetters * offset, coord[1] - offset],
+                    ]
+                },
+                getFillColor: [0, 0, 0, 255],
+                getLineWidth: 0.01,
+                getLineColor: [255, 255, 255, 255]
             });
         };
         const toLayers = () => {
@@ -362,6 +425,9 @@ export default defineComponent({
                 const layer_points = points.slice(startInd, endInd);
                 state.activePoints = layer_points;
                 const layer_headings = headings[headIndex];
+                // coveredPixels = [];
+                // let results = points.map(x => noOverlap(x));
+                // console.log(results);
                 return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toLabelOutlineLayer(layer_points), toPointLabelLayer(layer_points)];
             }
             // else: return matrix
@@ -436,6 +502,7 @@ export default defineComponent({
             });
 
             // setTimeout needed here?
+            // console.log(coveredPixels);
             store.commit("updateRenderState", false);
         };
 
