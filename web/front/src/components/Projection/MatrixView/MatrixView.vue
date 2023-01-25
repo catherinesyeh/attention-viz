@@ -466,9 +466,12 @@ export default defineComponent({
             deckgl = new Deck({
                 canvas: "matrix-canvas",
                 controller: true,
-                views: new OrthographicView({
-                    flipY: false,
-                }),
+                views: state.dimension == "3D" ?
+                    new OrbitView({
+                    })
+                    : new OrthographicView({
+                        flipY: false,
+                    }),
                 initialViewState: state.viewState,
                 layers: toLayers(),
                 getTooltip: ({ object }) => {
