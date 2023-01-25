@@ -38,7 +38,7 @@ def _index():
 def _get_matrix_data():
     post_data = json.loads(request.data.decode())
     data = dataService.get_matrix_data(post_data["model"])  # return a list
-    return {'data': data}  # a response cannot be a list
+    return json.dumps({'data': data})  # a response cannot be a list
 
 
 # @app.route("/getAttentionData", methods=['GET'])

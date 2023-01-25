@@ -396,7 +396,7 @@ label {
 .ant-checkbox-wrapper.disabled,
 .ant-btn.disabled {
   opacity: 0.5;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
 .ant-checkbox-wrapper:hover .ant-checkbox-inner {

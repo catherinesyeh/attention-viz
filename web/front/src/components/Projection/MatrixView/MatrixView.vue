@@ -22,7 +22,7 @@ import { ScatterGL, Point2D } from "scatter-gl";
 
 import { Typing } from "@/utils/typing";
 
-import { Deck, OrthographicView, View } from "@deck.gl/core/typed";
+import { Deck, OrbitView, OrthographicView, View } from "@deck.gl/core/typed";
 // import interface {Deck} from "@deck.gl/core/typed";
 import { PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers/typed";
 import { toTypeString } from "@vue/shared";
@@ -88,6 +88,7 @@ export default defineComponent({
             disableLabel: computed(() => store.state.disableLabel),
             zoom: nullInitialView.zoom,
             activePoints: [] as Typing.Point[],
+            dimension: computed(() => store.state.dimension)
         });
 
         var shallowData = shallowRef({
@@ -104,9 +105,9 @@ export default defineComponent({
         const getPointCoordinate = (d: Typing.Point) => {
             switch (state.projectionMethod) {
                 case "tsne":
-                    return d.coordinate.tsne;
+                    return state.dimension === "2D" ? d.coordinate.tsne : d.coordinate.tsne_3d;
                 case "umap":
-                    return d.coordinate.umap;
+                    return state.dimension === "2D" ? d.coordinate.umap : d.coordinate.umap_3d;
                 default:
                     throw Error("Invalid projection method!");
             }
@@ -194,7 +195,7 @@ export default defineComponent({
                 updateTriggers: {
                     getFillColor: [state.colorBy, state.highlightedTokenIndices, state.userTheme],
                     getRadius: state.highlightedTokenIndices,
-                    getPosition: state.projectionMethod,
+                    getPosition: [state.projectionMethod, state.dimension]
                 },
             });
         };
@@ -289,14 +290,16 @@ export default defineComponent({
                 getPosition: (d: Typing.Point) => {
                     let coord = getPointCoordinate(d);
                     let offset = 1 / (state.zoom * 2);
-                    return [coord[0] + offset, coord[1]];
+                    return coord.length == 2
+                        ? [coord[0] + offset, coord[1]]
+                        : [coord[0] + offset, coord[1], coord[2] + offset];
                 },
                 getText: (d: Typing.Point) => d.value,
                 getColor: (d: Typing.Point) => {
                     const defaultOpacity = 225,
                         lightOpacity = 50;
                     // control how many labels show up
-                    var threshold = state.zoom > 8
+                    var threshold = state.zoom > 8 || (state.zoom > 5 && state.dimension == "3D")
                         ? 1
                         : state.zoom > 7
                             ? 2
@@ -370,6 +373,7 @@ export default defineComponent({
                 pickable: true,
                 strokable: false,
                 filled: true,
+                extruded: state.dimension == "3D",
                 getPolygon: d => [
                     d.coordinate,
                     [d.coordinate[0], d.coordinate[1] + matrixCellHeight],
@@ -377,6 +381,7 @@ export default defineComponent({
                     [d.coordinate[0] + matrixCellWidth, d.coordinate[1]],
                 ],
                 getFillColor: [255, 255, 255, 0],
+                getElevation: 100,
                 getLineWidth: 0,
                 onClick: (info, event) => {
                     let obj = info.object as Typing.PlotHead;
@@ -428,7 +433,11 @@ export default defineComponent({
                 // coveredPixels = [];
                 // let results = points.map(x => noOverlap(x));
                 // console.log(results);
-                return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toLabelOutlineLayer(layer_points), toPointLabelLayer(layer_points)];
+                if (state.dimension == "2D") {
+                    return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toLabelOutlineLayer(layer_points), toPointLabelLayer(layer_points)];
+                }
+                // no white outline around labels in 3d view
+                return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toPointLabelLayer(layer_points)];
             }
             // else: return matrix
             return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
@@ -510,11 +519,20 @@ export default defineComponent({
             const zoom = param.viewState.zoom;
             state.zoom = zoom;
 
-            if (zoom >= 5 && state.disableLabel) {
-                store.commit("setDisableLabel", false);
-            } else if (zoom < 5 && !state.disableLabel) {
-                store.commit("setDisableLabel", true);
-                // store.commit("setShowAll", false);
+            if (state.dimension == "2D") {
+                if (zoom >= 5 && state.disableLabel) {
+                    store.commit("setDisableLabel", false);
+                } else if (zoom < 5 && !state.disableLabel) {
+                    store.commit("setDisableLabel", true);
+                    // store.commit("setShowAll", false);
+                }
+            } else {
+                if (zoom >= 3 && state.disableLabel) {
+                    store.commit("setDisableLabel", false);
+                } else if (zoom < 3 && !state.disableLabel) {
+                    store.commit("setDisableLabel", true);
+                    // store.commit("setShowAll", false);
+                }
             }
         };
 
@@ -632,6 +650,19 @@ export default defineComponent({
         watch([shallowData], () => {
             initMatrices();
         });
+
+        watch(() => state.dimension, () => {
+            deckgl.setProps({
+                views: state.dimension == "3D" ?
+                    new OrbitView({
+                    })
+                    : new OrthographicView({
+                        flipY: false,
+                    }),
+                layers: [...toLayers()]
+            });
+
+        })
 
         // re-render the visualization whenever any of the following changes
         watch(

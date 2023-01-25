@@ -25,6 +25,7 @@ export interface State {
   userTheme: string; // dark or light
   view: string; // none, search, or attention
   mode: string; // single or matrix
+  dimension: string; // 2D or 3D
 
   // attention
   attentionByToken: Typing.AttnByToken;
@@ -60,6 +61,7 @@ export const store = createStore<State>({
     highlightedTokenIndices: [],
     mode: 'matrix',
     view: 'none',
+    dimension: '2D',
     userTheme: 'light-theme',
     showAll: false,
     disableLabel: true
@@ -120,6 +122,10 @@ export const store = createStore<State>({
     setMode(state, mode) {
       state.mode = mode;
       console.log('setMode', mode);
+    },
+    setDimension(state, dim) {
+      state.dimension = dim;
+      console.log('setDimension', dim);
     },
     setUserTheme(state, theme) {
       state.userTheme = theme;

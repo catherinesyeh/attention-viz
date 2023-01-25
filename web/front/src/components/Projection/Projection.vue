@@ -34,32 +34,40 @@
                         log viewport
                     </a-button>
 
+                    <div>
+                        <p class="label">Mode</p>
+                        <a-radio-group v-model:value="dimension">
+                            <a-radio-button value="2D">2D</a-radio-button>
+                            <a-radio-button value="3D">3D</a-radio-button>
+                        </a-radio-group>
+                    </div>
+
                     <Transition>
                         <div v-show="mode === 'single'">
                             <p class="label">Controls</p>
                             <div id="control-buttons">
                                 <a-button class="center" type="default" size="small" :class="{ disabled: layer < 1 }"
-                                    @click="moveToPlot('up')">
+                                    @click="moveToPlot('up')" :disabled="layer < 1">
                                     <template #icon>
                                         <ArrowUpOutlined />
                                     </template>
                                 </a-button>
                                 <div class="arrow-group center">
                                     <a-button type="default" size="small" :class="{ disabled: head < 1 }"
-                                        @click="moveToPlot('left')">
+                                        @click="moveToPlot('left')" :disabled="head < 1">
                                         <template #icon>
                                             <ArrowLeftOutlined />
                                         </template>
                                     </a-button>
                                     <a-button type="default" size="small" :class="{ disabled: head > 10 }"
-                                        @click="moveToPlot('right')">
+                                        @click="moveToPlot('right')" :disabled="head > 10">
                                         <template #icon>
                                             <ArrowRightOutlined />
                                         </template>
                                     </a-button>
                                 </div>
                                 <a-button class="center" type="default" size="small" :class="{ disabled: layer > 10 }"
-                                    @click="moveToPlot('down')">
+                                    @click="moveToPlot('down')" :disabled="layer > 10">
                                     <template #icon>
                                         <ArrowDownOutlined />
                                     </template>
@@ -107,7 +115,11 @@ export default defineComponent({
             colorBy: computed(() => store.state.colorBy),
             layer: computed(() => store.state.layer),
             head: computed(() => store.state.head),
-            modelType: computed(() => store.state.modelType)
+            modelType: computed(() => store.state.modelType),
+            dimension: computed({
+                get: () => store.state.dimension,
+                set: (v) => store.commit("setDimension", v)
+            }),
         });
 
         const onClickReset = () => {

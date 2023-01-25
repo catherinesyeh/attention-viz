@@ -75,11 +75,20 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             const getX = (x: Typing.TokenCoordinate) => {
                 if (projectionMethod === 'tsne') return x.tsne_x
                 else if (projectionMethod === 'umap') return x.umap_x
+                else if (projectionMethod === 'tsne_3d') return x.tsne_x_3d
+                else if (projectionMethod === 'umap_3d') return x.umap_x_3d
                 else throw Error('Invalid projection method')
             }
             const getY = (x: Typing.TokenCoordinate) => {
                 if (projectionMethod === 'tsne') return x.tsne_y
                 else if (projectionMethod === 'umap') return x.umap_y
+                else if (projectionMethod === 'tsne_3d') return x.tsne_y_3d
+                else if (projectionMethod === 'umap_3d') return x.umap_y_3d
+                else throw Error('Invalid projection method')
+            }
+            const getZ = (x: Typing.TokenCoordinate) => {
+                if (projectionMethod === 'tsne_3d') return x.tsne_z_3d
+                else if (projectionMethod === 'umap_3d') return x.umap_z_3d
                 else throw Error('Invalid projection method')
             }
             const xScale = d3
@@ -90,11 +99,22 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 .scaleLinear()
                 .domain(d3.extent(data.map((x) => getY(x))) as any)
                 .range([0, matrixCellHeight]);
-            return data.map(d => [xScale(getX(d)) + xoffset, yScale(getY(d)) + yoffset] as [number, number])
+
+            if (projectionMethod === "tsne" || projectionMethod === "umap") { // 2d case
+                return data.map(d => [xScale(getX(d)) + xoffset, yScale(getY(d)) + yoffset] as [number, number]);
+            }
+            // 3d case
+            const zScale = d3
+                .scaleLinear()
+                .domain(d3.extent(data.map((x) => getZ(x))) as any)
+                .range([0, matrixCellHeight]);
+            return data.map(d => [xScale(getX(d)) + xoffset, yScale(getY(d)) + yoffset, zScale(getZ(d))] as [number, number, number]);
         }
         const pointsCoordinates = {
             'tsne': computeCoordinate('tsne'),
-            'umap': computeCoordinate('umap')
+            'umap': computeCoordinate('umap'),
+            'tsne_3d': computeCoordinate('tsne_3d'),
+            'umap_3d': computeCoordinate('umap_3d')
         }
 
         // compute colors based on norms
@@ -133,8 +153,10 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
 
         const points = data.map((d, index) => ({
             coordinate: {
-                tsne: pointsCoordinates.tsne[index],
-                umap: pointsCoordinates.umap[index]
+                tsne: pointsCoordinates.tsne[index] as [number, number],
+                umap: pointsCoordinates.umap[index] as [number, number],
+                tsne_3d: pointsCoordinates.tsne_3d[index] as [number, number, number],
+                umap_3d: pointsCoordinates.umap_3d[index] as [number, number, number],
             },
             color: {
                 type: colorsByType[index],
@@ -155,7 +177,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         }));
 
         xs.push(...[xoffset, matrixCellWidth + xoffset]);
-        ys.push(...[yoffset, matrixCellHeight + yoffset])
+        ys.push(...[yoffset, matrixCellHeight + yoffset]);
 
         results.push(...points);
     }
