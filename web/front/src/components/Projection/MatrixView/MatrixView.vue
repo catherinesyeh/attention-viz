@@ -339,7 +339,7 @@ export default defineComponent({
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
-                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
+                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll, state.dimension],
                     getPosition: [state.projectionMethod, state.zoom]
                 },
                 // onClick: (info, event) => console.log("Clicked:", info, event),
@@ -518,10 +518,7 @@ export default defineComponent({
             store.commit("updateRenderState", false);
         };
 
-        const handleRequest = (param: any) => {
-            const zoom = param.viewState.zoom;
-            state.zoom = zoom;
-
+        const toggleDisableLabel = (zoom: number) => {
             if (state.dimension == "2D") {
                 if (zoom >= 5 && state.disableLabel) {
                     store.commit("setDisableLabel", false);
@@ -537,6 +534,13 @@ export default defineComponent({
                     // store.commit("setShowAll", false);
                 }
             }
+        }
+
+        const handleRequest = (param: any) => {
+            const zoom = param.viewState.zoom;
+            state.zoom = zoom;
+
+            toggleDisableLabel(zoom);
         };
 
         /**
@@ -662,9 +666,14 @@ export default defineComponent({
                     : new OrthographicView({
                         flipY: false,
                     }),
-                layers: [...toLayers()]
             });
 
+            if (state.mode == "single") {
+                state.zoom = deckgl.getViewports()[0].zoom;
+                toggleDisableLabel(state.zoom);
+            }
+
+            deckgl.setProps({ layers: [...toLayers()] });
         })
 
         // re-render the visualization whenever any of the following changes
