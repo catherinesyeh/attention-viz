@@ -468,6 +468,7 @@ export default defineComponent({
                 controller: true,
                 views: state.dimension == "3D" ?
                     new OrbitView({
+                        orbitAxis: 'Y'
                     })
                     : new OrthographicView({
                         flipY: false,
@@ -662,6 +663,7 @@ export default defineComponent({
             deckgl.setProps({
                 views: state.dimension == "3D" ?
                     new OrbitView({
+                        orbitAxis: 'Y'
                     })
                     : new OrthographicView({
                         flipY: false,
