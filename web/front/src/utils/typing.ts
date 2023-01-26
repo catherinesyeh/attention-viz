@@ -51,12 +51,14 @@ export namespace Typing {
         categorical: number[];
         punctuation: number[];
         norm: number[];
+        length: number[];
     }
 
     export interface PointMsg {
         position: string;
         categorical: string;
         norm: string;
+        length: string;
     }
 
     export interface Point {

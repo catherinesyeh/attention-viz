@@ -4,6 +4,17 @@ import * as _ from "underscore";
 
 const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20) => {
     var results = [] as Typing.Point[];
+    const values = tokenData.map(td => td.value);
+    const types = tokenData.map(td => td.type);
+
+    const longestString = (arr: string[]) => { 
+        // find longest string for later
+        return arr.reduce((max,name) => {
+             return name.length > max.length? name: max
+         }, arr[0])
+     }
+    const maxStringLength = longestString(values).length;
+    console.log(maxStringLength);
 
     // compute colors for each token
     const queryColor = d3.scaleSequential(function (t) {
@@ -24,6 +35,19 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         return [color.r, color.g, color.b];
     };
     const colorsByPosition = tokenData.map((td) => getColor(td));
+
+    const getLengthColor = (td: Typing.TokenData) => {
+        var colorstr = "rgb()";
+        if (td.type === "query") {
+            colorstr = queryColor(td.value.length / maxStringLength);
+        } else if (td.type === "key") {
+            colorstr = keyColor(td.value.length / maxStringLength);
+        }
+        const color = d3.color(colorstr)?.rgb();
+        if (!color) return [0, 0, 0];
+        return [color.r, color.g, color.b];
+    };
+    const colorsByLength = tokenData.map((td) => getLengthColor(td));
 
     // const discreteColors =  ["#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#b2df8a","#33a02c","#a6cee3","#1f78b4","#cab2d6","#6a3d9a"];
     const discreteColors =  ["#FFB5CF","#E3378F","#f5ca86","#F39226","#addfa2","#5FB96C","#9fd2ea","#2E93D9","#CFB0EF","#7F5BDB"];
@@ -72,9 +96,10 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         (td) =>
             `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length}, pos % 5: ${td.pos_int % 5})`
     );
-
-    const values = tokenData.map(td => td.value);
-    const types = tokenData.map(td => td.type);
+    const length_msgs = tokenData.map(
+        (td) =>
+            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length}, length: ${td.value.length})`
+    );
 
     // for recording the x/y ranges
     let xs = [];
@@ -183,12 +208,14 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 position: colorsByPosition[index],
                 categorical: colorsByDiscretePosition[index],
                 punctuation: colorsByPunctuation[index],
-                norm: colorsByNorm[index]
+                norm: colorsByNorm[index],
+                length: colorsByLength[index]
             },
             msg: {
                 position: pos_msgs[index],
                 categorical: cat_msgs[index],
-                norm: norm_msgs[index]
+                norm: norm_msgs[index],
+                length: length_msgs[index]
             },
             layer,
             head,

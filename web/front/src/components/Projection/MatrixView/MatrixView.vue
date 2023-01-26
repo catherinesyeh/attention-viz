@@ -158,6 +158,8 @@ export default defineComponent({
                                 return d.color.norm
                             case 'punctuation':
                                 return d.color.punctuation
+                            case 'length':
+                                return d.color.length
                             default:
                                 throw Error('invalid color channel')
                         }
@@ -488,6 +490,8 @@ export default defineComponent({
                                 return d.msg.categorical
                             case 'norm':
                                 return d.msg.norm
+                            case 'length':
+                                return d.msg.length
                             default:
                                 throw Error('invalid msg channel')
                         }

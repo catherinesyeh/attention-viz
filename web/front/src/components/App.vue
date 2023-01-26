@@ -98,7 +98,7 @@ export default defineComponent({
         get: () => store.state.colorBy,
         set: (v) => store.commit("setColorBy", v),
       }),
-      colorByOptions: ["type", "position", "categorical", "punctuation", "norm"].map((x) => ({ value: x, label: x })),
+      colorByOptions: ["type", "position", "categorical", "punctuation", "norm", "length"].map((x) => ({ value: x, label: x })),
       userTheme: computed(() => store.state.userTheme)
     });
 

@@ -1,7 +1,7 @@
 <template>
     <div id="legend" v-show="!renderState">
         <div class="bar-contain" :class="{
-            pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
+            pos: colorBy == 'position' || colorBy == 'norm' || colorBy == 'length', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
         }">
             <span>q</span>
             <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="bar-contain k" :class="{
-            pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
+            pos: colorBy == 'position' || colorBy == 'norm' || colorBy == 'length', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
         }">
             <span>k</span>
             <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
@@ -42,8 +42,8 @@ export default defineComponent({
         lowLabel(colorBy: string) {
             switch (colorBy) {
                 case 'position':
-                    return "0"
                 case 'categorical':
+                case 'length':
                     return "0"
                 case 'norm':
                     return "low"
@@ -56,6 +56,7 @@ export default defineComponent({
         highLabel(colorBy: string) {
             switch (colorBy) {
                 case 'position':
+                case 'length':
                     return "1"
                 case 'categorical':
                     return "4"
