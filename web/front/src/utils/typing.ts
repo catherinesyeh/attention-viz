@@ -49,6 +49,7 @@ export namespace Typing {
         type: number[];
         position: number[];
         categorical: number[];
+        punctuation: number[];
         norm: number[];
     }
 

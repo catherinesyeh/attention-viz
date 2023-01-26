@@ -1,19 +1,19 @@
 <template>
     <div id="legend" v-show="!renderState">
         <div class="bar-contain" :class="{
-            pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical'
+            pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
         }">
             <span>q</span>
-            <div class="bar" :class="{ smaller: colorBy == 'norm' }">
+            <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
                 <span class="low">{{ lowLabel(colorBy) }}</span>
                 <span class="high">{{ highLabel(colorBy) }}</span>
             </div>
         </div>
         <div class="bar-contain k" :class="{
-            pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical'
+            pos: colorBy == 'position' || colorBy == 'norm', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
         }">
             <span>k</span>
-            <div class="bar" :class="{ smaller: colorBy == 'norm' }">
+            <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
                 <span class="low">{{ lowLabel(colorBy) }}</span>
                 <span class="high">{{ highLabel(colorBy) }}</span>
             </div>
@@ -47,6 +47,8 @@ export default defineComponent({
                     return "0"
                 case 'norm':
                     return "low"
+                case 'punctuation':
+                    return ".?!"
                 default:
                     ""
             }
@@ -59,6 +61,8 @@ export default defineComponent({
                     return "4"
                 case 'norm':
                     return "high"
+                case 'punctuation':
+                    return "abc"
                 default:
                     ""
             }
@@ -119,6 +123,17 @@ export default defineComponent({
             #addfa2 40% 60%,
             #f5ca86 60% 80%,
             #FFB5CF 80%);
+}
+
+/* categorical */
+.bar-contain.pun .bar {
+    background: linear-gradient(#5FB96C 50%,
+            #addfa2 50%);
+}
+
+.bar-contain.k.pun .bar {
+    background: linear-gradient(#E3378F 50%,
+            #FFB5CF 50%);
 }
 
 /* bar labels */

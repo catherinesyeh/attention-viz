@@ -156,6 +156,8 @@ export default defineComponent({
                                 return d.color.categorical
                             case 'norm':
                                 return d.color.norm
+                            case 'punctuation':
+                                return d.color.punctuation
                             default:
                                 throw Error('invalid color channel')
                         }
@@ -476,13 +478,11 @@ export default defineComponent({
                 initialViewState: state.viewState,
                 layers: toLayers(),
                 getTooltip: ({ object }) => {
-                    if (state.mode == 'matrix') {
-                        return null;
-                    }
                     const getMsg = (d: Typing.Point) => {
                         switch (state.colorBy) {
                             case 'type':
                             case 'position':
+                            case 'punctuation':
                                 return d.msg.position
                             case 'categorical':
                                 return d.msg.categorical
@@ -493,7 +493,7 @@ export default defineComponent({
                         }
                     }
                     return object && {
-                        html: getMsg(object),
+                        html: state.mode === 'matrix' ? object.title : getMsg(object),
                         style: {
                             color: "#fff",
                             background: "#222"

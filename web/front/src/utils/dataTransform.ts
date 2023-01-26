@@ -43,6 +43,26 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     };
     const colorsByDiscretePosition = tokenData.map((td) => getDiscreteColor(td));
 
+    const punctColors =  ["#FFB5CF","#E3378F","#addfa2","#5FB96C"];
+    const getPunctColor = (td: Typing.TokenData) => {
+        var colorstr = "rgb()";
+        var punctuationless = td.value.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+
+        if (punctuationless.length == 0) {
+            // token is only punctuation characters
+            colorstr = td.type === "query" ? punctColors[0] : punctColors[2]
+        } else {
+            // token has alphanumeric characters
+            colorstr = td.type === "query" ? punctColors[1] : punctColors[3]
+        }
+
+        const color = d3.color(colorstr)?.rgb();
+        if (!color) return [0, 0, 0];
+        return [color.r, color.g, color.b];
+    }
+
+    const colorsByPunctuation = tokenData.map((td) => getPunctColor(td));
+
     // compute msgs for each token
     const pos_msgs = tokenData.map(
         (td) =>
@@ -162,6 +182,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 type: colorsByType[index],
                 position: colorsByPosition[index],
                 categorical: colorsByDiscretePosition[index],
+                punctuation: colorsByPunctuation[index],
                 norm: colorsByNorm[index]
             },
             msg: {
