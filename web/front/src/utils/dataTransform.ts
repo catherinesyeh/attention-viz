@@ -67,7 +67,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     };
     const colorsByDiscretePosition = tokenData.map((td) => getDiscreteColor(td));
 
-    const punctColors =  ["#FFB5CF","#E3378F","#addfa2","#5FB96C"];
+    const punctColors =  ["#F39226","#E3378F","#2E93D9","#5FB96C"];
     const getPunctColor = (td: Typing.TokenData) => {
         var colorstr = "rgb()";
         var punctuationless = td.value.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");

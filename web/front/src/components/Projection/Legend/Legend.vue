@@ -129,12 +129,12 @@ export default defineComponent({
 /* categorical */
 .bar-contain.pun .bar {
     background: linear-gradient(#5FB96C 50%,
-            #addfa2 50%);
+            #2E93D9 50%);
 }
 
 .bar-contain.k.pun .bar {
     background: linear-gradient(#E3378F 50%,
-            #FFB5CF 50%);
+            #F39226 50%);
 }
 
 /* bar labels */
