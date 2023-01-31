@@ -563,10 +563,12 @@ export default defineComponent({
          * Reset the view state to matrix mode
          */
         const reset = (clicked: boolean) => {
-            store.commit("setMode", "matrix");
-            store.commit("setLayer", "");
-            store.commit("setHead", "");
-            state.activePoints = [];
+            if (state.mode !== "matrix") {
+                store.commit("setMode", "matrix");
+                store.commit("setLayer", "");
+                store.commit("setHead", "");
+                state.activePoints = [];
+            }
 
             if (state.view == 'attn') {
                 store.commit("setHighlightedTokenIndices", []);
@@ -585,6 +587,12 @@ export default defineComponent({
          * Reset zoom only
          */
         const resetZoom = () => {
+            const curTarget = state.viewState.target;
+            const center = deckgl.getViewports()[0].center;
+            const zoom = deckgl.getViewports()[0].zoom;
+            if (curTarget[0] == center[0] && curTarget[1] == center[1] && state.zoom == zoom && state.dimension === "2D") {
+                return; // no reset needed
+            }
             if (state.mode == "matrix") {
                 deckgl.setProps({
                     initialViewState: nullInitialView,
@@ -681,9 +689,11 @@ export default defineComponent({
             });
 
             if (state.mode == "single") {
+                if (state.dimension === "3D") {
+                    resetZoom();
+                }
                 const curZoom = deckgl.getViewports()[0].zoom;
-                const switchThreshold = state.dimension === "3D" ? 1.5 : zoomThreshold;
-                state.zoom = curZoom < switchThreshold ? switchThreshold : curZoom;
+                state.zoom = curZoom < zoomThreshold ? zoomThreshold : curZoom;
             }
 
             deckgl.setProps({ layers: [...toLayers()] });
