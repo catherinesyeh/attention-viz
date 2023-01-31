@@ -76,13 +76,9 @@ export default defineComponent({
 
         const state = reactive({
             matrixData: computed(() => store.state.matrixData),
-            // attentionData: computed(() => store.state.attentionData),
             tokenData: computed(() => store.state.tokenData),
-            // points: computed(() => store.state.points),
             viewState: nullInitialView,
-            // highlightedPoints: [] as Typing.Point[],
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
-            // moved: false,
             projectionMethod: computed(() => store.state.projectionMethod),
             colorBy: computed(() => store.state.colorBy),
             view: computed(() => store.state.view),
@@ -92,7 +88,6 @@ export default defineComponent({
             curHead: computed(() => store.state.head),
             doneLoading: computed(() => store.state.doneLoading),
             showAll: computed(() => store.state.showAll),
-            // disableLabel: computed(() => store.state.disableLabel),
             zoom: nullInitialView.zoom,
             activePoints: [] as Typing.Point[],
             dimension: computed(() => store.state.dimension),
@@ -498,7 +493,6 @@ export default defineComponent({
             });
 
             // setTimeout needed here?
-            // console.log(coveredPixels);
             store.commit("updateRenderState", false);
         };
 
@@ -520,7 +514,7 @@ export default defineComponent({
         //     }
         // }
 
-        onwheel = (event: WheelEvent) => {
+        onwheel = (event: WheelEvent) => { // track cursor position on zoom
             if (state.transitionInProgress) {
                 event.preventDefault;
             }
@@ -533,6 +527,7 @@ export default defineComponent({
         }
 
         const handleRequest = (param: any) => {
+            // deal with transition b/t single & matrix mode and updating zoom
             const zoom = param.viewState.zoom;
             const old_zoom = state.zoom;
             state.zoom = zoom;
@@ -578,13 +573,9 @@ export default defineComponent({
             }
 
             state.viewState = initialState;
-            // deckgl.setProps({
-            //     initialViewState: nullInitialView,
-            // });
 
             if (clicked) {
                 deckgl.setProps({
-                    // this alone doesn't change anything apparently?
                     initialViewState: state.viewState,
                 });
             }
@@ -594,12 +585,6 @@ export default defineComponent({
          * Reset zoom only
          */
         const resetZoom = () => {
-            const curTarget = state.viewState.target;
-            const center = deckgl.getViewports()[0].center;
-            const zoom = deckgl.getViewports()[0].zoom;
-            if (curTarget[0] == center[0] && curTarget[1] == center[1] && state.zoom == zoom && state.dimension === "2D") {
-                return; // no reset needed
-            }
             if (state.mode == "matrix") {
                 deckgl.setProps({
                     initialViewState: nullInitialView,
@@ -630,10 +615,6 @@ export default defineComponent({
             let tokenIndices = state.tokenData
                 .map((x, idx) => (x.value === str ? idx : undefined))
                 .filter((x) => x) as number[];
-
-            // let tokenPoints = shallowData.value.points.filter((x) =>
-            //     tokenIndices.includes(x.index)
-            // );
             store.commit("setHighlightedTokenIndices", tokenIndices);
             return tokenIndices.length;
         };
@@ -659,9 +640,6 @@ export default defineComponent({
                 transitionDuration: 1000,
             };
             state.viewState = initialStateZoom;
-            // deckgl.setProps({
-            //     initialViewState: nullInitialViewZoom,
-            // });
 
             if (clicked) {
                 deckgl.setProps({
@@ -692,8 +670,6 @@ export default defineComponent({
         });
 
         watch(() => state.dimension, () => {
-            resetZoom();
-
             deckgl.setProps({
                 views: state.dimension == "3D" ?
                     new OrbitView({
@@ -704,10 +680,11 @@ export default defineComponent({
                     }),
             });
 
-            // if (state.mode == "single") {
-            //     state.zoom = deckgl.getViewports()[0].zoom;
-            //     // toggleDisableLabel(state.zoom);
-            // }
+            if (state.mode == "single") {
+                const curZoom = deckgl.getViewports()[0].zoom;
+                const switchThreshold = state.dimension === "3D" ? 1.5 : zoomThreshold;
+                state.zoom = curZoom < switchThreshold ? switchThreshold : curZoom;
+            }
 
             deckgl.setProps({ layers: [...toLayers()] });
         })
