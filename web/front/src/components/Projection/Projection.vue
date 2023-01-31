@@ -127,7 +127,7 @@ export default defineComponent({
         }
 
         const resetToMatrix = () => {
-            (matrixView.value as any).reset();
+            (matrixView.value as any).reset(true);
         }
 
         const clearSearch = () => {
@@ -156,7 +156,7 @@ export default defineComponent({
 
         // zoom to single plot
         const zoomToPlot = (layer: number, head: number) => {
-            (matrixView.value as any).zoomToPlot(layer, head);
+            (matrixView.value as any).zoomToPlot(layer, head, true);
         }
 
         // move 1 plot up/left/right/down

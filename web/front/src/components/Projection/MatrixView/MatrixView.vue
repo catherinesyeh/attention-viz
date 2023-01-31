@@ -34,6 +34,15 @@ import { validate } from "@babel/types";
 import RBush from 'rbush';
 import { dragDisable } from "d3";
 
+// constants
+const matrixCellHeight = 100;
+const matrixCellWidth = 100;
+const matrixCellMargin = 20;
+
+let canvasWidth: number, canvasHeight: number;
+let timeout: any;
+let zoomThreshold = 2.5;
+
 interface ViewState {
     target: number[];
     zoom: number;
@@ -45,23 +54,18 @@ const nullInitialView: ViewState = {
     target: [0, 0, 0],
     zoom: -1,
     minZoom: -1.5,
-    maxZoom: 0,
+    maxZoom: 9,
     transitionDuration: 1000,
 };
 
 const nullInitialViewZoom: ViewState = {
     target: [0, 0, 0],
-    zoom: 2.75,
-    minZoom: 2,
+    zoom: zoomThreshold,
+    minZoom: -1.5,
     maxZoom: 9,
     transitionDuration: 1000,
 };
 
-const matrixCellHeight = 100;
-const matrixCellWidth = 100;
-const matrixCellMargin = 20;
-
-let canvasWidth: number, canvasHeight: number;
 let initialState = nullInitialView;
 let initialStateZoom = nullInitialViewZoom;
 
@@ -91,7 +95,10 @@ export default defineComponent({
             // disableLabel: computed(() => store.state.disableLabel),
             zoom: nullInitialView.zoom,
             activePoints: [] as Typing.Point[],
-            dimension: computed(() => store.state.dimension)
+            dimension: computed(() => store.state.dimension),
+            cursorX: 0,
+            cursorY: 0,
+            transitionInProgress: false
         });
 
         var shallowData = shallowRef({
@@ -105,6 +112,7 @@ export default defineComponent({
 
         var deckgl = {} as Deck;
 
+        // helper functions for layers
         const getPointCoordinate = (d: Typing.Point) => {
             switch (state.projectionMethod) {
                 case "tsne":
@@ -116,6 +124,27 @@ export default defineComponent({
             }
         };
 
+        const tree = new RBush(); // fast label overlap detection
+        const sizeMeasurer = (label: string, fontSize: number) => {
+            let threshold =
+                state.zoom <= 5
+                    ? 2
+                    : state.zoom <= 7
+                        ? 2.25
+                        : state.zoom <= 8.5
+                            ? 2.5
+                            : 4;
+            if (state.zoom > 3.5 && state.zoom <= 8.5 && state.dimension === "3D") {
+                threshold *= 1.5;
+            }
+            const size = {
+                width: fontSize * (1 / Math.pow(threshold, state.zoom)) * label.length,
+                height: fontSize
+            };
+            return size;
+        }
+
+        // LAYERS
         const toPointLayer = (points: Typing.Point[]) => {
             return new ScatterplotLayer({
                 pickable: state.mode == 'single',
@@ -248,26 +277,6 @@ export default defineComponent({
             });
         };
 
-        const tree = new RBush();
-        const sizeMeasurer = (label: string, fontSize: number) => {
-            let threshold =
-                state.zoom <= 5
-                    ? 2
-                    : state.zoom <= 7
-                        ? 2.25
-                        : state.zoom <= 8.5
-                            ? 2.5
-                            : 4;
-            if (state.zoom > 3.5 && state.zoom <= 8.5 && state.dimension === "3D") {
-                threshold *= 1.5;
-            }
-            const size = {
-                width: fontSize * (1 / Math.pow(threshold, state.zoom)) * label.length,
-                height: fontSize
-            };
-            return size;
-        }
-
         const toPointLabelLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
             return new TextLayer({
                 id: "point-label-layer",
@@ -334,6 +343,7 @@ export default defineComponent({
                 getPosition: (d: Typing.PlotHead) => d.coordinate,
                 getText: (d: Typing.PlotHead) => d.title,
                 getSize: state.mode == 'single' ? 24 : 20,
+                sizeMaxPixels: 24,
                 getAngle: 0,
                 getColor: state.userTheme == 'light-theme' ? [0, 0, 0] : [255, 255, 255],
                 sizeUnits: state.mode == 'single' ? "pixels" : "common",
@@ -364,7 +374,7 @@ export default defineComponent({
                 getLineWidth: 0,
                 onClick: (info, event) => {
                     let obj = info.object as Typing.PlotHead;
-                    zoomToPlot(obj.layer, obj.head);
+                    zoomToPlot(obj.layer, obj.head, true);
                 },
                 updateTriggers: {
                     getPosition: [state.projectionMethod, state.zoom]
@@ -432,7 +442,7 @@ export default defineComponent({
                 target: [canvasWidth / 2, canvasHeight / 2, 0],
                 zoom: -1,
                 minZoom: -1.5,
-                maxZoom: 0,
+                maxZoom: 9,
                 transitionDuration: 1000,
             };
             state.viewState = state.mode === 'matrix' ? initialState : initialStateZoom;
@@ -475,12 +485,11 @@ export default defineComponent({
                     }
                 },
                 onViewStateChange: (param) => {
-                    if (state.mode == 'matrix') {
-                        return;
-                    }
-                    let timeout: any;
+                    // if (state.mode == 'matrix') {
+                    //     return;
+                    // }
                     if (param.interactionState.inTransition) {
-                        clearInterval(timeout);
+                        clearTimeout(timeout);
                         timeout = setTimeout(function () {
                             handleRequest(param);
                         }, 100);
@@ -511,20 +520,57 @@ export default defineComponent({
         //     }
         // }
 
+        onwheel = (event: WheelEvent) => {
+            if (state.transitionInProgress) {
+                event.preventDefault;
+            }
+
+            if (state.mode === "matrix") {
+                // only run if matrix mode
+                state.cursorX = event.offsetX;
+                state.cursorY = event.offsetY;
+            }
+        }
+
         const handleRequest = (param: any) => {
             const zoom = param.viewState.zoom;
+            const old_zoom = state.zoom;
             state.zoom = zoom;
+            let switchThreshold = zoomThreshold;
 
-            // toggleDisableLabel(zoom);
+            if (state.dimension === "3D") {
+                switchThreshold = 1.5;
+            }
+
+            state.transitionInProgress = true;
+            if (old_zoom < switchThreshold && zoom >= switchThreshold) {
+                // if matrix mode, zoom to closest graph on zoom
+                const closest = deckgl.pickObject({
+                    x: state.cursorX,
+                    y: state.cursorY,
+                    radius: 100,
+                    layerIds: ['overlay-layer'],
+                    unproject3D: state.dimension === "3D"
+                });
+                if (closest) {
+                    let obj = closest.object as Typing.PlotHead;
+                    zoomToPlot(obj.layer, obj.head, false);
+                }
+            } else if (old_zoom >= switchThreshold && zoom < switchThreshold) {
+                // if single mode
+                reset(false);
+            }
+
+            state.transitionInProgress = false;
         };
 
         /**
          * Reset the view state to matrix mode
          */
-        const reset = () => {
+        const reset = (clicked: boolean) => {
+            store.commit("setMode", "matrix");
             store.commit("setLayer", "");
             store.commit("setHead", "");
-            store.commit("setMode", "matrix");
             state.activePoints = [];
 
             if (state.view == 'attn') {
@@ -535,16 +581,25 @@ export default defineComponent({
             // deckgl.setProps({
             //     initialViewState: nullInitialView,
             // });
-            deckgl.setProps({
-                // this alone doesn't change anything apparently?
-                initialViewState: state.viewState,
-            });
+
+            if (clicked) {
+                deckgl.setProps({
+                    // this alone doesn't change anything apparently?
+                    initialViewState: state.viewState,
+                });
+            }
         };
 
         /* 
          * Reset zoom only
          */
         const resetZoom = () => {
+            const curTarget = state.viewState.target;
+            const center = deckgl.getViewports()[0].center;
+            const zoom = deckgl.getViewports()[0].zoom;
+            if (curTarget[0] == center[0] && curTarget[1] == center[1] && state.zoom == zoom && state.dimension === "2D") {
+                return; // no reset needed
+            }
             if (state.mode == "matrix") {
                 deckgl.setProps({
                     initialViewState: nullInitialView,
@@ -587,18 +642,19 @@ export default defineComponent({
             console.error("viewport", deckgl.getViewports());
         };
 
-        const zoomToPlot = (layer: number, head: number) => {
+        const zoomToPlot = (layer: number, head: number, clicked: boolean) => {
             // zoom to plot
             if (state.mode !== "single") {
                 store.commit("setMode", "single");
             }
+
             const x_center = head * (matrixCellWidth + matrixCellMargin) + 0.5 * matrixCellWidth;
             const y_center =
                 -layer * (matrixCellHeight + matrixCellMargin) + 0.5 * matrixCellHeight;
             initialStateZoom = {
                 target: [x_center, y_center, 0],
-                zoom: 2.75,
-                minZoom: 2,
+                zoom: zoomThreshold,
+                minZoom: -1.5,
                 maxZoom: 9,
                 transitionDuration: 1000,
             };
@@ -606,9 +662,12 @@ export default defineComponent({
             // deckgl.setProps({
             //     initialViewState: nullInitialViewZoom,
             // });
-            deckgl.setProps({
-                initialViewState: state.viewState,
-            });
+
+            if (clicked) {
+                deckgl.setProps({
+                    initialViewState: state.viewState,
+                });
+            }
 
             console.log("Layer " + layer + ", Head " + head);
             store.commit("setLayer", layer);
@@ -633,6 +692,8 @@ export default defineComponent({
         });
 
         watch(() => state.dimension, () => {
+            resetZoom();
+
             deckgl.setProps({
                 views: state.dimension == "3D" ?
                     new OrbitView({
@@ -643,10 +704,10 @@ export default defineComponent({
                     }),
             });
 
-            if (state.mode == "single") {
-                state.zoom = deckgl.getViewports()[0].zoom;
-                // toggleDisableLabel(state.zoom);
-            }
+            // if (state.mode == "single") {
+            //     state.zoom = deckgl.getViewports()[0].zoom;
+            //     // toggleDisableLabel(state.zoom);
+            // }
 
             deckgl.setProps({ layers: [...toLayers()] });
         })
@@ -703,61 +764,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-$background: #f5f5f7;
-
 #matrix-canvas {
     transition: 0.5s;
-}
-
-#label-wrapper {
-    position: absolute;
-    left: 10px;
-    z-index: 9999;
-}
-
-#matrix-labels {
-    transition: 0.5s;
-}
-
-.axis-label {
-    transition: 0.5s;
-}
-
-.axis-label span {
-    display: block;
-    font-size: smaller;
-    transition: 0.5s;
-}
-
-div#matrix-wrapper {
-    position: relative;
-    height: 100vh;
-    width: 100%;
-
-    canvas {
-        height: 100%;
-        width: 100%;
-    }
-}
-
-.gradient-edge {
-    position: absolute;
-    top: 0;
-    z-index: 1;
-    left: 0;
-    height: 100vh;
-    width: calc(100px + 8vw);
-    background: linear-gradient(to right, #f5f5f7, rgba(255, 255, 255, 0));
-}
-
-.gradient-edge.right {
-    left: unset;
-    right: 0;
-    background: linear-gradient(to left, #f5f5f7, rgba(255, 255, 255, 0));
-}
-
-div.matrix-cell {
-    position: absolute;
-    border: 1px solid #1d1d1f;
 }
 </style>

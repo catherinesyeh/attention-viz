@@ -73,10 +73,10 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
 
         if (punctuationless.length == 0) {
             // token is only punctuation characters
-            colorstr = td.type === "query" ? punctColors[0] : punctColors[2]
+            colorstr = td.type === "query" ? punctColors[2] : punctColors[0]
         } else {
             // token has alphanumeric characters
-            colorstr = td.type === "query" ? punctColors[1] : punctColors[3]
+            colorstr = td.type === "query" ? punctColors[3] : punctColors[1]
         }
 
         const color = d3.color(colorstr)?.rgb();
