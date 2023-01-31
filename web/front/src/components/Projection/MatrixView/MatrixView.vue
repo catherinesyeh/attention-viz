@@ -88,7 +88,7 @@ export default defineComponent({
             curHead: computed(() => store.state.head),
             doneLoading: computed(() => store.state.doneLoading),
             showAll: computed(() => store.state.showAll),
-            disableLabel: computed(() => store.state.disableLabel),
+            // disableLabel: computed(() => store.state.disableLabel),
             zoom: nullInitialView.zoom,
             activePoints: [] as Typing.Point[],
             dimension: computed(() => store.state.dimension)

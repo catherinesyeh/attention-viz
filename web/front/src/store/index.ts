@@ -38,7 +38,7 @@ export interface State {
 
   // labels
   showAll: boolean;
-  disableLabel: boolean;
+  // disableLabel: boolean;
 }
 
 // define injection key
@@ -64,7 +64,7 @@ export const store = createStore<State>({
     dimension: '2D',
     userTheme: 'light-theme',
     showAll: false,
-    disableLabel: false
+    // disableLabel: false
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -135,10 +135,10 @@ export const store = createStore<State>({
       state.showAll = showAll;
       console.log('setShowAll', showAll);
     },
-    setDisableLabel(state, disableLabel) {
-      state.disableLabel = disableLabel;
-      console.log('setDisableLabel', disableLabel);
-    }
+    // setDisableLabel(state, disableLabel) {
+    //   state.disableLabel = disableLabel;
+    //   console.log('setDisableLabel', disableLabel);
+    // }
   },
   actions: { // actions commit mutations
     async init({ state, dispatch }) {

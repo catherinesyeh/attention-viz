@@ -21,7 +21,7 @@
 
                     <p class="label">Labels</p>
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
-                        :class="{ disabled: mode == 'matrix' || disableLabel }">show</a-checkbox>
+                        :class="{ disabled: mode == 'matrix' }">show</a-checkbox>
 
                     <!-- <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
@@ -111,7 +111,7 @@ export default defineComponent({
             searchToken: "",
             view: computed(() => store.state.view),
             showAll: computed(() => store.state.showAll),
-            disableLabel: computed(() => store.state.disableLabel),
+            // disableLabel: computed(() => store.state.disableLabel),
             colorBy: computed(() => store.state.colorBy),
             layer: computed(() => store.state.layer),
             head: computed(() => store.state.head),
