@@ -30,6 +30,9 @@ import { toTypeString } from "@vue/shared";
 import { computeMatrixProjection } from "@/utils/dataTransform";
 import { StaticReadUsage } from "three";
 import { head, initial } from "underscore";
+import { validate } from "@babel/types";
+import RBush from 'rbush';
+import { dragDisable } from "d3";
 
 interface ViewState {
     target: number[];
@@ -203,47 +206,36 @@ export default defineComponent({
                 },
             });
         };
-        const toLabelOutlineLayer = (points: Typing.Point[]) => {
+        const toLabelOutlineLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
             return new TextLayer({
                 id: "label-outline-layer",
                 data: points,
                 pickable: false,
                 getPosition: (d: Typing.Point) => {
+                    if (!state.showAll || !visiblePoints[d.index]) {
+                        return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
+                    }
                     let coord = getPointCoordinate(d);
-                    let whiteOffset = state.zoom <= 5
+                    let whiteOffset = state.zoom <= 3.5
                         ? 0.1
-                        : state.zoom <= 8
-                            ? 0.075 / state.zoom
-                            : 0.05 / (1.5 * state.zoom);
-                    let offset = (1 / (state.zoom * 2)) + whiteOffset;
+                        : state.zoom <= 5.5
+                            ? 0.1 / state.zoom
+                            : state.zoom <= 8
+                                ? 0.08 / state.zoom
+                                : 0.05 / (1.5 * state.zoom);
+                    let offset = 1 / Math.pow(1.5, state.zoom) + whiteOffset;
                     return [coord[0] + offset, coord[1] + whiteOffset];
                 },
                 getText: (d: Typing.Point) => d.value,
                 getColor: (d: Typing.Point) => {
+                    if (!state.showAll || !visiblePoints[d.index]) {
+                        return [255, 255, 255, 0];
+                    }
+
                     const defaultOpacity = 225;
-                    // control how many labels show up
-                    var threshold = state.zoom > 8
-                        ? 1
-                        : state.zoom > 7
-                            ? 2
-                            : 10 - Math.floor(state.zoom);
-                    if (state.highlightedTokenIndices.length === 0)
-                        return (state.showAll && !state.disableLabel && (d.index % threshold == 0))
-                            ? state.userTheme == "light-theme"
-                                ? [255, 255, 255, defaultOpacity]
-                                : [0, 0, 0, defaultOpacity]
-                            : [255, 255, 255, 0];
-                    return state.highlightedTokenIndices.includes(d.index)
-                        ? (state.showAll && !state.disableLabel && (d.index % threshold == 0))
-                            ? state.userTheme == "light-theme"
-                                ? [255, 255, 255, defaultOpacity]
-                                : [0, 0, 0, defaultOpacity]
-                            : [255, 255, 255, 0]
-                        : (state.showAll && !state.disableLabel && (d.index % threshold == 0))
-                            ? state.userTheme == "light-theme"
-                                ? [255, 255, 255, defaultOpacity]
-                                : [0, 0, 0, defaultOpacity]
-                            : [255, 255, 255, 0];
+                    return state.userTheme == "light-theme"
+                        ? [255, 255, 255, defaultOpacity]
+                        : [0, 0, 0, defaultOpacity];
                 },
                 getSize: 12,
                 getAngle: 0,
@@ -253,90 +245,75 @@ export default defineComponent({
                     getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
                     getPosition: [state.projectionMethod, state.zoom]
                 },
-                // onClick: (info, event) => console.log("Clicked:", info, event),
             });
         };
 
-        let coveredPixels: number[][] = [];
-        const noOverlap = (d: Typing.Point) => {
-            let coord = getPointCoordinate(d);
-            let numLetters = d.value.length;
-            let offset = Math.ceil(1 / (state.zoom * 2));
-            if (state.zoom <= 7) {
-                offset *= 2;
+        const tree = new RBush();
+        const sizeMeasurer = (label: string, fontSize: number) => {
+            let threshold =
+                state.zoom <= 5
+                    ? 2
+                    : state.zoom <= 7
+                        ? 2.25
+                        : state.zoom <= 8.5
+                            ? 2.5
+                            : 4;
+            if (state.zoom > 3.5 && state.zoom <= 8.5 && state.dimension === "3D") {
+                threshold *= 1.5;
             }
-            let leftX = coord[0] - offset;
-            let rightX = coord[0] + offset + numLetters * offset;
-            let bottomY = coord[1] - offset;
-            let topY = coord[1] + offset;
-            // let boundBox = [[leftX, bottomY],
-            //         [leftX, topY],
-            //         [rightX, topY],
-            //         [rightX, bottomY],
-            //         ];
-            let coordsToAdd = [];
-            for (let x = leftX; x <= rightX; x++) {
-                for (let y = bottomY; y <= topY; y++) {
-                    if (coveredPixels.includes([x, y])) {
-                        return false;
-                    }
-                    coordsToAdd.push([x, y]);
-                }
-            }
-            coveredPixels = [...coveredPixels, ...coordsToAdd];
-            return true;
+            const size = {
+                width: fontSize * (1 / Math.pow(threshold, state.zoom)) * label.length,
+                height: fontSize
+            };
+            return size;
         }
-        const toPointLabelLayer = (points: Typing.Point[]) => {
+
+        const toPointLabelLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
             return new TextLayer({
                 id: "point-label-layer",
                 data: points, // (state.pointScaleFactor < 0.3) ? points: [],
                 pickable: false,
                 getPosition: (d: Typing.Point) => {
+                    if (!state.showAll || !visiblePoints[d.index]) {
+                        return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
+                    }
                     let coord = getPointCoordinate(d);
-                    let offset = 1 / (state.zoom * 2);
+                    let offset = 1 / Math.pow(1.5, state.zoom);
                     return coord.length == 2
                         ? [coord[0] + offset, coord[1]]
                         : [coord[0] + offset, coord[1], coord[2] + offset];
                 },
                 getText: (d: Typing.Point) => d.value,
                 getColor: (d: Typing.Point) => {
+                    if (!state.showAll || !visiblePoints[d.index]) {
+                        return [255, 255, 255, 0];
+                    }
+
                     const defaultOpacity = 225,
                         lightOpacity = 50;
-                    // control how many labels show up
-                    var threshold = state.zoom > 8 || (state.zoom > 5 && state.dimension == "3D")
-                        ? 1
-                        : state.zoom > 7
-                            ? 2
-                            : 10 - Math.floor(state.zoom);
                     if (state.highlightedTokenIndices.length === 0)
-                        return (state.showAll && !state.disableLabel && (d.index % threshold == 0))
-                            ? d.type == "query"
-                                ? state.userTheme == "light-theme"
-                                    ? [43, 91, 25, defaultOpacity]
-                                    : [194, 232, 180, defaultOpacity]
-                                : state.userTheme == "light-theme"
-                                    ? [117, 29, 58, defaultOpacity]
-                                    : [240, 179, 199, defaultOpacity]
-                            : [255, 255, 255, 0];
+                        return d.type == "query"
+                            ? state.userTheme == "light-theme"
+                                ? [43, 91, 25, defaultOpacity]
+                                : [194, 232, 180, defaultOpacity]
+                            : state.userTheme == "light-theme"
+                                ? [117, 29, 58, defaultOpacity]
+                                : [240, 179, 199, defaultOpacity]
                     return state.highlightedTokenIndices.includes(d.index)
-                        ? (state.showAll && !state.disableLabel && (d.index % threshold == 0))
-                            ? d.type == "query"
-                                ? state.userTheme == "light-theme"
-                                    ? [43, 91, 25, defaultOpacity]
-                                    : [194, 232, 180, defaultOpacity]
-                                : state.userTheme == "light-theme"
-                                    ? [117, 29, 58, defaultOpacity]
-                                    : [240, 179, 199, defaultOpacity]
-                            : [255, 255, 255, 0]
-                        : (state.showAll && !state.disableLabel && (d.index % threshold == 0))
-                            ? d.type == "query"
-                                ? state.userTheme == "light-theme"
-                                    ? [43, 91, 25, lightOpacity]
-                                    : [194, 232, 180, lightOpacity]
-                                : state.userTheme == "light-theme"
-                                    ? [117, 29, 58, lightOpacity]
-                                    : [240, 179, 199, lightOpacity]
-                            : [255, 255, 255, 0];
+                        ? d.type == "query"
+                            ? state.userTheme == "light-theme"
+                                ? [43, 91, 25, defaultOpacity]
+                                : [194, 232, 180, defaultOpacity]
+                            : state.userTheme == "light-theme"
+                                ? [117, 29, 58, defaultOpacity]
+                                : [240, 179, 199, defaultOpacity]
+                        : d.type == "query"
+                            ? state.userTheme == "light-theme"
+                                ? [43, 91, 25, lightOpacity]
+                                : [194, 232, 180, lightOpacity]
+                            : state.userTheme == "light-theme"
+                                ? [117, 29, 58, lightOpacity]
+                                : [240, 179, 199, lightOpacity];
                 },
                 getSize: 12,
                 getAngle: 0,
@@ -346,7 +323,6 @@ export default defineComponent({
                     getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll, state.dimension],
                     getPosition: [state.projectionMethod, state.zoom]
                 },
-                // onClick: (info, event) => console.log("Clicked:", info, event),
             });
         };
 
@@ -366,7 +342,6 @@ export default defineComponent({
                 updateTriggers: {
                     getColor: state.userTheme
                 }
-                // onClick: (info, event) => console.log("Clicked:", info, event),
             });
         };
 
@@ -397,31 +372,24 @@ export default defineComponent({
             });
         };
 
-        const toTextBlockLayer = (points: Typing.Point[]) => {
-            return new PolygonLayer({
-                id: "text-block-layer",
-                data: points,
-                pickable: false,
-                strokable: true,
-                filled: true,
-                getPolygon: d => {
-                    let coord = getPointCoordinate(d);
-                    let numLetters = d.value.length;
-                    let offset = (1 / (state.zoom * 2));
-                    if (state.zoom <= 7) {
-                        offset *= 2;
-                    }
-                    return [[coord[0] - offset, coord[1] - offset],
-                    [coord[0] - offset, coord[1] + offset],
-                    [coord[0] + offset + numLetters * offset, coord[1] + offset],
-                    [coord[0] + offset + numLetters * offset, coord[1] - offset],
-                    ]
-                },
-                getFillColor: [0, 0, 0, 255],
-                getLineWidth: 0.01,
-                getLineColor: [255, 255, 255, 255]
-            });
-        };
+        const makeTree = (d: Typing.Point) => {
+            let coord = getPointCoordinate(d);
+            let labelSize = sizeMeasurer(d.value, 12);
+            let new_coord = {
+                minX: coord[0] - 0.5 * labelSize.width,
+                minY: coord[1] - 0.5 * labelSize.width,
+                maxX: coord[0] + 0.5 * labelSize.width,
+                maxY: coord[1] + 0.5 * labelSize.height
+            }
+            const overlap = tree.collides(new_coord);
+            if (overlap) {
+                // return [255, 255, 255, 0];
+                return false;
+            }
+            tree.insert(new_coord);
+            return true;
+        }
+
         const toLayers = () => {
             let { points, headings } = shallowData.value;
             if (state.curHead !== "" && state.curLayer !== "") { // single mode
@@ -434,14 +402,16 @@ export default defineComponent({
                 const layer_points = points.slice(startInd, endInd);
                 state.activePoints = layer_points;
                 const layer_headings = headings[headIndex];
-                // coveredPixels = [];
-                // let results = points.map(x => noOverlap(x));
-                // console.log(results);
+
+                tree.clear(); // reset RBush on change
+                const visiblePoints = layer_points.map((v) => makeTree(v));
+
                 if (state.dimension == "2D") {
-                    return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toLabelOutlineLayer(layer_points), toPointLabelLayer(layer_points)];
+                    return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toLabelOutlineLayer(layer_points, visiblePoints), toPointLabelLayer(layer_points, visiblePoints)];
                 }
+
                 // no white outline around labels in 3d view
-                return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toPointLabelLayer(layer_points)];
+                return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toPointLabelLayer(layer_points, visiblePoints)];
             }
             // else: return matrix
             return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
@@ -523,29 +493,29 @@ export default defineComponent({
             store.commit("updateRenderState", false);
         };
 
-        const toggleDisableLabel = (zoom: number) => {
-            if (state.dimension == "2D") {
-                if (zoom >= 5 && state.disableLabel) {
-                    store.commit("setDisableLabel", false);
-                } else if (zoom < 5 && !state.disableLabel) {
-                    store.commit("setDisableLabel", true);
-                    // store.commit("setShowAll", false);
-                }
-            } else {
-                if (zoom >= 3 && state.disableLabel) {
-                    store.commit("setDisableLabel", false);
-                } else if (zoom < 3 && !state.disableLabel) {
-                    store.commit("setDisableLabel", true);
-                    // store.commit("setShowAll", false);
-                }
-            }
-        }
+        // const toggleDisableLabel = (zoom: number) => {
+        //     if (state.dimension == "2D") {
+        //         if (zoom >= 5 && state.disableLabel) {
+        //             store.commit("setDisableLabel", false);
+        //         } else if (zoom < 5 && !state.disableLabel) {
+        //             store.commit("setDisableLabel", true);
+        //             // store.commit("setShowAll", false);
+        //         }
+        //     } else {
+        //         if (zoom >= 3 && state.disableLabel) {
+        //             store.commit("setDisableLabel", false);
+        //         } else if (zoom < 3 && !state.disableLabel) {
+        //             store.commit("setDisableLabel", true);
+        //             // store.commit("setShowAll", false);
+        //         }
+        //     }
+        // }
 
         const handleRequest = (param: any) => {
             const zoom = param.viewState.zoom;
             state.zoom = zoom;
 
-            toggleDisableLabel(zoom);
+            // toggleDisableLabel(zoom);
         };
 
         /**
@@ -622,7 +592,6 @@ export default defineComponent({
             if (state.mode !== "single") {
                 store.commit("setMode", "single");
             }
-
             const x_center = head * (matrixCellWidth + matrixCellMargin) + 0.5 * matrixCellWidth;
             const y_center =
                 -layer * (matrixCellHeight + matrixCellMargin) + 0.5 * matrixCellHeight;
@@ -676,7 +645,7 @@ export default defineComponent({
 
             if (state.mode == "single") {
                 state.zoom = deckgl.getViewports()[0].zoom;
-                toggleDisableLabel(state.zoom);
+                // toggleDisableLabel(state.zoom);
             }
 
             deckgl.setProps({ layers: [...toLayers()] });

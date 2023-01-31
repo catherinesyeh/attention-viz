@@ -14,7 +14,6 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
          }, arr[0])
      }
     const maxStringLength = longestString(values).length;
-    console.log(maxStringLength);
 
     // compute colors for each token
     const queryColor = d3.scaleSequential(function (t) {

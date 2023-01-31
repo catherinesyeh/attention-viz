@@ -64,7 +64,7 @@ export const store = createStore<State>({
     dimension: '2D',
     userTheme: 'light-theme',
     showAll: false,
-    disableLabel: true
+    disableLabel: false
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
