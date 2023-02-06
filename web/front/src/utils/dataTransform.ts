@@ -182,6 +182,13 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, pos: ${tokenData[index].pos_int} of ${tokenData[index].length}, norm: ${Math.round(x.norm * 100) / 100})`
         );
 
+        const norms = data.map((x) => x.norm);
+        const norm_range = d3.extent(norms) as [number, number];
+        const min_norm = norm_range[0];
+        const max_norm = norm_range[1];
+        const range_norm = max_norm - min_norm;
+        const norms_scaled = norms.map((x) => (x - min_norm) / range_norm);
+
         const colorsByType = data.map((x, index) => {
             const tokenType = tokenData[index].type
             let colorstr = "rgb()";
@@ -220,7 +227,8 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             head,
             index,
             value: values[index],
-            type: types[index]
+            type: types[index],
+            normScaled: norms_scaled[index]
         }));
 
         xs.push(...[xoffset, matrixCellWidth + xoffset]);

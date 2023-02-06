@@ -70,6 +70,7 @@ export namespace Typing {
         index: number;
         value: string;
         type: string;
+        normScaled: number;
     }
     export interface PlotHead {
         layer: number;

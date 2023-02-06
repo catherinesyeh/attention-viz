@@ -36,8 +36,9 @@ export interface State {
   projectionMethod: keyof Typing.PointCoordinate; // tsne or umap
   colorBy: keyof Typing.PointColor; // different colorings (e.g., type, position, norm, etc.)
 
-  // labels
-  showAll: boolean;
+  // adjust plot in single view
+  showAll: boolean; // labels
+  sizeByNorm: boolean; // dot size
   // disableLabel: boolean;
 }
 
@@ -64,6 +65,7 @@ export const store = createStore<State>({
     dimension: '2D',
     userTheme: 'light-theme',
     showAll: false,
+    sizeByNorm: false,
     // disableLabel: false
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
@@ -134,6 +136,10 @@ export const store = createStore<State>({
     setShowAll(state, showAll) {
       state.showAll = showAll;
       console.log('setShowAll', showAll);
+    },
+    setSizeByNorm(state, sizeByNorm) {
+      state.sizeByNorm = sizeByNorm;
+      console.log('setSizeByNorm', sizeByNorm);
     },
     // setDisableLabel(state, disableLabel) {
     //   state.disableLabel = disableLabel;

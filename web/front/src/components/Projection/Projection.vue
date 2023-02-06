@@ -23,6 +23,10 @@
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
                         :class="{ disabled: mode == 'matrix' }">show</a-checkbox>
 
+                    <p class="label">Dot Size</p>
+                    <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm"
+                        :class="{ disabled: mode == 'matrix' }">scale by norm</a-checkbox>
+
                     <!-- <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
                         <a-radio-button value="single">single</a-radio-button>
@@ -111,6 +115,7 @@ export default defineComponent({
             searchToken: "",
             view: computed(() => store.state.view),
             showAll: computed(() => store.state.showAll),
+            sizeByNorm: computed(() => store.state.sizeByNorm),
             // disableLabel: computed(() => store.state.disableLabel),
             colorBy: computed(() => store.state.colorBy),
             layer: computed(() => store.state.layer),
@@ -152,6 +157,10 @@ export default defineComponent({
 
         const toggleCheckbox = () => {
             store.commit('setShowAll', !state.showAll);
+        }
+
+        const toggleCheckboxNorm = () => {
+            store.commit('setSizeByNorm', !state.sizeByNorm);
         }
 
         // zoom to single plot
@@ -204,7 +213,8 @@ export default defineComponent({
             logViewport,
             zoomToPlot,
             moveToPlot,
-            toggleCheckbox
+            toggleCheckbox,
+            toggleCheckboxNorm
         };
     }
 });

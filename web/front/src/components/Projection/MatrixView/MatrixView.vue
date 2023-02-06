@@ -88,6 +88,7 @@ export default defineComponent({
             curHead: computed(() => store.state.head),
             doneLoading: computed(() => store.state.doneLoading),
             showAll: computed(() => store.state.showAll),
+            sizeByNorm: computed(() => store.state.sizeByNorm),
             zoom: nullInitialView.zoom,
             activePoints: [] as Typing.Point[],
             dimension: computed(() => store.state.dimension),
@@ -148,8 +149,15 @@ export default defineComponent({
                 stroked: state.mode == 'single',
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getRadius: (d: Typing.Point) => {
-                    const defaultSize = 0.4,
-                        highlightedSize = 6;
+                    let defaultSize = 0.4,
+                        highlightedSize = 5;
+
+                    if (state.mode === "single" && state.sizeByNorm) {
+                        // scale dot size by norm if checkbox on
+                        defaultSize = 0.15 + d.normScaled * 0.5;
+                    }
+
+                    // otherwise, proceed as normal
                     if (state.highlightedTokenIndices.length === 0) return defaultSize;
                     return state.highlightedTokenIndices.includes(d.index)
                         ? highlightedSize
@@ -225,7 +233,7 @@ export default defineComponent({
                 },
                 updateTriggers: {
                     getFillColor: [state.colorBy, state.highlightedTokenIndices, state.userTheme],
-                    getRadius: state.highlightedTokenIndices,
+                    getRadius: [state.highlightedTokenIndices, state.sizeByNorm],
                     getPosition: [state.projectionMethod, state.dimension]
                 },
             });
@@ -709,7 +717,8 @@ export default defineComponent({
                 () => state.curHead,
                 () => state.curLayer,
                 () => state.zoom,
-                () => state.showAll
+                () => state.showAll,
+                () => state.sizeByNorm
             ],
             () => {
                 deckgl.setProps({ layers: [...toLayers()] });
