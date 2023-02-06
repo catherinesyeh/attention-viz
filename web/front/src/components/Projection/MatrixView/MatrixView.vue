@@ -628,6 +628,7 @@ export default defineComponent({
          * @param str
          */
         const onSearch = (str: string) => {
+            str = str.toLowerCase(); // convert to lowercase first to match other tokens
             let tokenIndices = state.tokenData
                 .map((x, idx) => (x.value === str ? idx : undefined))
                 .filter((x) => x) as number[];
