@@ -93,7 +93,7 @@ export default defineComponent({
         get: () => store.state.projectionMethod,
         set: (v) => store.commit("setProjectionMethod", v),
       }),
-      projectionMethods: ["umap", "tsne"].map((x) => ({ value: x, label: x })),
+      projectionMethods: ["tsne", "umap", "pca"].map((x) => ({ value: x, label: x })),
       colorBy: computed({
         get: () => store.state.colorBy,
         set: (v) => store.commit("setColorBy", v),

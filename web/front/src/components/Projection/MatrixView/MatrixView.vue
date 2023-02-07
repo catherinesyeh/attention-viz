@@ -115,6 +115,8 @@ export default defineComponent({
                     return state.dimension === "2D" ? d.coordinate.tsne : d.coordinate.tsne_3d;
                 case "umap":
                     return state.dimension === "2D" ? d.coordinate.umap : d.coordinate.umap_3d;
+                case "pca":
+                    return state.dimension === "2D" ? d.coordinate.pca : d.coordinate.pca_3d;
                 default:
                     throw Error("Invalid projection method!");
             }
@@ -154,7 +156,9 @@ export default defineComponent({
 
                     if (state.mode === "single" && state.sizeByNorm) {
                         // scale dot size by norm if checkbox on
+                        // maybe still need adjustment for highlighted size?
                         defaultSize = 0.15 + d.normScaled * 0.5;
+                        highlightedSize = defaultSize * 2;
                     }
 
                     // otherwise, proceed as normal
@@ -228,7 +232,20 @@ export default defineComponent({
                     let pt = info.object as Typing.Point;
                     store.dispatch("setClickedPoint", pt);
 
-                    let tokenIndices = [pt.index];
+                    let pt_info = state.tokenData[pt.index];
+                    let offset = state.tokenData.length / 2;
+                    let start_index = pt.index - pt_info.pos_int;
+                    // let end_index = pt.index + pt_info.length;
+                    if (pt_info.type === "key") {
+                        start_index -= offset;
+                        // end_index -= offset;
+                    } else {
+                        start_index += offset;
+                        // end_index += offset;
+                    }
+
+                    let opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
+                    let tokenIndices = [...opposite_indices, pt.index];
                     store.commit("setHighlightedTokenIndices", tokenIndices);
                 },
                 updateTriggers: {

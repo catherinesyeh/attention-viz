@@ -17,6 +17,11 @@ export namespace Typing {
         umap_x_3d: number;
         umap_y_3d: number;
         umap_z_3d: number;
+        pca_x: number;
+        pca_y: number;
+        pca_x_3d: number;
+        pca_y_3d: number;
+        pca_z_3d: number;
     }
     export interface AttentionData {
         head: number;
@@ -41,8 +46,10 @@ export namespace Typing {
     export interface PointCoordinate {
         tsne: [number, number];
         umap: [number, number];
+        pca: [number, number];
         tsne_3d: [number, number, number];
         umap_3d: [number, number, number];
+        pca_3d: [number, number, number];
     }
 
     export interface PointColor {
