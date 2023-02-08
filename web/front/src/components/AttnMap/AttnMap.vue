@@ -8,7 +8,7 @@
             </p>
             <Transition>
                 <div class="attn-btns" v-show="showAttn">
-                    <a-button id="attn-reset" class="clear" type="link" @click="bertviz">reset</a-button>
+                    <a-button id="attn-reset" class="clear" type="link" @click="resetAttn">reset</a-button>
                     <span>|</span>
                     <a-button id="attn-clear" class="clear" type="link" @click="clearAttn">clear</a-button>
                 </div>
@@ -107,13 +107,17 @@ export default {
                 state.attn_vals = transpose(state.attn_vals);
             }
             state.cur_attn = state.attn_vals;
+            state.hidden["left"] = [];
+            state.hidden["right"] = [];
 
             // hide first/last tokens if checkboxes selected
             if (state.hideFirst) {
                 state.cur_attn = hideKey(0);
+                state.hidden["right"].push(0);
             }
             if (state.hideLast) {
                 state.cur_attn = hideKey(token_text.length - 1);
+                state.hidden["right"].push(token_text.length - 1);
             }
 
             const layer = attentionByToken.layer;
@@ -584,8 +588,15 @@ export default {
             store.commit("setHighlightedTokenIndices", []);
         }
 
+        const resetAttn = () => {
+            state.hideFirst = false;
+            state.hideLast = false;
+            state.hidden["left"] = [];
+            state.hidden["right"] = [];
+            bertviz();
+        }
+
         const hideTokens = (type: string) => {
-            console.log("here");
             // filter out first/cls/sep tokens
             const tokenContainers = d3.select("#main-svg #right .attentionBoxes + g");
             let selectedToken;
@@ -623,7 +634,8 @@ export default {
             ...toRefs(state),
             clearAttn,
             bertviz,
-            hideTokens
+            hideTokens,
+            resetAttn
         };
     },
 };
