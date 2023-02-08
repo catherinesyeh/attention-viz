@@ -7,8 +7,11 @@
                 </Transition>
             </p>
             <Transition>
-                <a-button id="attn-clear" class="clear" type="link" @click="clearAttn"
-                    v-show="showAttn">clear</a-button>
+                <div class="attn-btns" v-show="showAttn">
+                    <a-button id="attn-reset" class="clear" type="link" @click="bertviz">reset</a-button>
+                    <span>|</span>
+                    <a-button id="attn-clear" class="clear" type="link" @click="clearAttn">clear</a-button>
+                </div>
             </Transition>
         </div>
         <span class="subtitle">{{ attnMsg }}</span>
@@ -61,19 +64,23 @@ export default {
             layerHead: "",
             userTheme: computed(() => store.state.userTheme),
             mode: computed(() => store.state.mode),
+            attn_vals: [] as number[][],
+            cur_attn: [] as number[][],
+            hidden: { left: [] as number[], right: [] as number[] }
         });
 
         // start bertviz
         const bertviz = () => {
             // parse info from data
             let { attentionByToken } = state;
-            let attn_vals: number[][] = attentionByToken.attns;
+            state.attn_vals = attentionByToken.attns;
             const token_type: string = attentionByToken.token.type;
             const token_pos: number = attentionByToken.token.pos_int;
             const token_text: string[] = attentionByToken.token.sentence.split(" ");
             if (token_type == "key") { // flip graph if key
-                attn_vals = transpose(attn_vals);
+                state.attn_vals = transpose(state.attn_vals);
             }
+            state.cur_attn = state.attn_vals;
 
             const layer = attentionByToken.layer;
             const head = attentionByToken.head;
@@ -83,7 +90,7 @@ export default {
                 attention: [
                     {
                         name: null,
-                        attn: [[attn_vals]],
+                        attn: [[state.cur_attn]],
                         left_text: token_text,
                         right_text: token_text,
                         layer: 0,
@@ -297,25 +304,85 @@ export default {
                 tokenContainer.on("click", function (this: any, e: Event, d: any) {
                     // toggle lines on and off on token click
                     const select = tokenContainer.nodes();
-                    const index = select.indexOf(this);
-                    let hidden = d3.select(this).classed("clicked");
-                    d3.select(this).classed("clicked", !hidden);
-                    if (isLeft) {
-                        let selected = svg
-                            .select("#attention")
-                            .selectAll("line[left-token-index='" + index + "']");
-                        selected.classed("hide", !hidden);
-                    } else {
-                        let selected = svg
-                            .select("#attention")
-                            .selectAll("line[right-token-index='" + index + "']");
-                        selected.classed("hide", !hidden);
+                    const ind = select.indexOf(this);
+                    // let hidden = d3.select(this).classed("clicked");
+                    // d3.select(this).classed("clicked", !hidden);
+                    let hidden, new_attn;
+                    if (isLeft) { // query
+                        let hid_index = state.hidden["left"].indexOf(ind);
+                        if (hid_index != -1) { // was hidden, now unhide
+                            hidden = true;
+                            delete state.hidden["left"][hid_index];
+                        } else { // was visible, now hide
+                            hidden = false;
+                            state.hidden["left"].push(ind);
+                        }
+
+                        let sent_length = state.cur_attn[ind].length;
+                        if (!hidden) { // hide
+                            state.cur_attn[ind] = new Array(sent_length).fill(0);
+                        } else { // show
+                            new_attn = state.cur_attn[ind].map((x, index) => {
+                                // reset to current state (account for any tokens that are hidden on right side)
+                                // if (!state.hidden["right"].includes(index)) {
+                                return state.attn_vals[ind][index];
+                                // }
+                                // return 0;
+                            });
+                            state.cur_attn[ind] = new_attn;
+                        }
+                    } else { // key
+                        let hid_index = state.hidden["right"].indexOf(ind);
+                        if (hid_index != -1) { // was hidden, now unhide
+                            hidden = true;
+                            delete state.hidden["right"][hid_index];
+                        } else { // was visible, now hide
+                            hidden = false;
+                            state.hidden["right"].push(ind);
+                        }
+                        if (!hidden) { // hide
+                            // 0 out cells corresponding to clicked on token
+                            new_attn = state.cur_attn.map((row: number[]) => {
+                                let rem_attn = 1 - row[ind];
+                                return row.map((cell: number, index: number) => {
+                                    if (index != ind) {
+                                        return rem_attn == 0 ? 0 : Math.min(1, cell / rem_attn);
+                                    }
+                                    return 0;
+                                })
+                            })
+                        } else { // show again
+                            // add back cells corresponding to clicked on token
+                            new_attn = state.cur_attn.map((row: number[], index: number) => {
+                                // let token_val = state.attn_vals[index][ind];
+                                let rem_attn = 1;
+                                let row_index = index;
+                                state.hidden["right"].forEach((x, index) => {
+                                    // account for other hidden keys too
+                                    rem_attn -= state.attn_vals[row_index][x];
+                                })
+                                // let rem_attn = 1 - token_val;
+                                return row.map((cell: number, index: number) => {
+                                    // if (index != ind) {
+                                    //     return cell * rem_attn;
+                                    // }
+                                    return rem_attn == 0 || state.hidden["right"].includes(index)
+                                        ? 0
+                                        : Math.min(1, state.attn_vals[row_index][index] / rem_attn);
+                                })
+                            })
+                        }
+
+                        state.cur_attn = new_attn;
                     }
+                    config.attention[config.filter].attn = [[state.cur_attn]];
+                    renderVis();
                 });
 
                 tokenContainer.on("mouseover", function (this: any, e: Event, d: string) {
                     const select = tokenContainer.nodes();
                     const index = select.indexOf(this);
+
                     // Show gray background for moused-over token
                     textContainer
                         .selectAll(".background")
@@ -515,7 +582,8 @@ export default {
 
         return {
             ...toRefs(state),
-            clearAttn
+            clearAttn,
+            bertviz
         };
     },
 };
@@ -538,10 +606,16 @@ export default {
     margin-bottom: 0 !important;
 }
 
-#attn-clear {
+.attn-btns span {
+    margin: 0 2px;
+}
+
+#attn-clear,
+#attn-reset {
     position: relative;
     padding: 0;
     height: auto;
+    display: inline-block;
 }
 
 .subtitle {
