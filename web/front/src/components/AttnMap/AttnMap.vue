@@ -16,6 +16,17 @@
         </div>
         <span class="subtitle">{{ attnMsg }}</span>
         <Transition>
+            <div v-show="showAttn">
+                <p class="label">Hide</p>
+                <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt'">first
+                    token</a-checkbox>
+                <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
+                    v-show="model == 'bert'">[cls]</a-checkbox>
+                <a-checkbox v-model:checked="hideLast" @click="hideTokens('last')"
+                    v-show="model == 'bert'">[sep]</a-checkbox>
+            </div>
+        </Transition>
+        <Transition>
             <div id="bertviz" v-show="showAttn">
                 <div id="vis"></div>
             </div>
@@ -64,10 +75,25 @@ export default {
             layerHead: "",
             userTheme: computed(() => store.state.userTheme),
             mode: computed(() => store.state.mode),
+            model: computed(() => store.state.modelType),
             attn_vals: [] as number[][],
             cur_attn: [] as number[][],
-            hidden: { left: [] as number[], right: [] as number[] }
+            hidden: { left: [] as number[], right: [] as number[] },
+            hideFirst: false,
+            hideLast: false
         });
+
+        const hideKey = (ind: number) => {
+            return state.cur_attn.map((row: number[]) => {
+                let rem_attn = 1 - row[ind];
+                return row.map((cell: number, index: number) => {
+                    if (index != ind) {
+                        return rem_attn == 0 ? 0 : Math.min(1, cell / rem_attn);
+                    }
+                    return 0;
+                })
+            })
+        }
 
         // start bertviz
         const bertviz = () => {
@@ -81,6 +107,14 @@ export default {
                 state.attn_vals = transpose(state.attn_vals);
             }
             state.cur_attn = state.attn_vals;
+
+            // hide first/last tokens if checkboxes selected
+            if (state.hideFirst) {
+                state.cur_attn = hideKey(0);
+            }
+            if (state.hideLast) {
+                state.cur_attn = hideKey(token_text.length - 1);
+            }
 
             const layer = attentionByToken.layer;
             const head = attentionByToken.head;
@@ -342,15 +376,7 @@ export default {
                         }
                         if (!hidden) { // hide
                             // 0 out cells corresponding to clicked on token
-                            new_attn = state.cur_attn.map((row: number[]) => {
-                                let rem_attn = 1 - row[ind];
-                                return row.map((cell: number, index: number) => {
-                                    if (index != ind) {
-                                        return rem_attn == 0 ? 0 : Math.min(1, cell / rem_attn);
-                                    }
-                                    return 0;
-                                })
-                            })
+                            new_attn = hideKey(ind);
                         } else { // show again
                             // add back cells corresponding to clicked on token
                             new_attn = state.cur_attn.map((row: number[], index: number) => {
@@ -558,6 +584,19 @@ export default {
             store.commit("setHighlightedTokenIndices", []);
         }
 
+        const hideTokens = (type: string) => {
+            console.log("here");
+            // filter out first/cls/sep tokens
+            const tokenContainers = d3.select("#main-svg #right .attentionBoxes + g");
+            let selectedToken;
+            if (type == "first") {
+                selectedToken = tokenContainers.selectChild(":first-child");
+            } else {
+                selectedToken = tokenContainers.selectChild(":last-child");
+            }
+            selectedToken.dispatch("click");
+        }
+
         watch(
             () => state.attentionByToken,
             () => {
@@ -583,7 +622,8 @@ export default {
         return {
             ...toRefs(state),
             clearAttn,
-            bertviz
+            bertviz,
+            hideTokens
         };
     },
 };
@@ -637,7 +677,7 @@ export default {
 #vis {
     overflow-y: scroll;
     max-height: calc(100vh - 100px);
-    padding-bottom: 40px;
+    padding-bottom: 100px;
 }
 
 // hide scrollbar but still allow scroll
