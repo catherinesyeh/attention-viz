@@ -150,14 +150,16 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 .range([0, matrixCellHeight]);
 
             if (projectionMethod === "tsne" || projectionMethod === "umap" || projectionMethod === "pca") { // 2d case
-                return data.map(d => [xScale(getX(d)) + xoffset, yScale(getY(d)) + yoffset] as [number, number]);
+                return data.map(d => [+xScale(getX(d)).toFixed(6) + xoffset, +yScale(getY(d)).toFixed(6) + yoffset] as [number, number]);
             }
             // 3d case
             const zScale = d3
                 .scaleLinear()
                 .domain(d3.extent(data.map((x) => getZ(x))) as any)
                 .range([0, matrixCellHeight]);
-            return data.map(d => [xScale(getX(d)) + xoffset, yScale(getY(d)) + yoffset, zScale(getZ(d))] as [number, number, number]);
+            return data.map(d => [+xScale(getX(d)).toFixed(6) + xoffset, 
+                +yScale(getY(d)).toFixed(6) + yoffset, 
+                +zScale(getZ(d)).toFixed(6)] as [number, number, number]);
         }
         const pointsCoordinates = {
             'tsne': computeCoordinate('tsne'),
@@ -194,7 +196,11 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         const min_norm = norm_range[0];
         const max_norm = norm_range[1];
         const range_norm = max_norm - min_norm;
-        const norms_scaled = norms.map((x) => (x - min_norm) / range_norm);
+        // round to 6 decimal places
+        const norms_scaled = norms.map((x) => {
+            let scaled = (x - min_norm) / range_norm;
+            return +scaled.toFixed(6);
+        });
 
         const colorsByType = data.map((x, index) => {
             const tokenType = tokenData[index].type

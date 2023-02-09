@@ -34,12 +34,17 @@ def _index():
 #     return data
 
 
-@app.route("/getMatrixData", methods=['POST'])
-def _get_matrix_data():
-    post_data = json.loads(request.data.decode())
-    data = dataService.get_matrix_data(post_data["model"])  # return a list
-    return json.dumps({'data': data})  # a response cannot be a list
+# @app.route("/getMatrixData", methods=['POST'])
+# def _get_matrix_data():
+#     post_data = json.loads(request.data.decode())
+#     data = dataService.get_matrix_data(post_data["model"])  # return a list
+#     return json.dumps({'data': data})  # a response cannot be a list
 
+
+@app.route('/getMatrixData/<model>', methods=['GET'])
+def _matrix_data_by_method(model):
+    data = dataService.get_matrix_data(model)
+    return json.dumps({'data': data})
 
 # @app.route("/getAttentionData", methods=['GET'])
 # def _get_attention_data():
@@ -47,17 +52,28 @@ def _get_matrix_data():
 #     return {'data': data}  # a response cannot be a list
 
 
-@app.route("/getTokenData", methods=['POST'])
-def _get_token_data():
-    post_data = json.loads(request.data.decode())
-    data = dataService.get_token_data(post_data["model"])
+# @app.route("/getTokenData", methods=['POST'])
+# def _get_token_data():
+#     post_data = json.loads(request.data.decode())
+#     data = dataService.get_token_data(post_data["model"])
+#     return data
+
+
+@app.route("/getTokenData/<model>", methods=['GET'])
+def _token_data_by_method(model):
+    data = dataService.get_token_data(model)
     return data
 
 
-@app.route('/getAttentionByToken', methods=['POST'])
-def _get_attention_by_token():
+# @app.route('/getAttentionByToken', methods=['POST'])
+# def _get_attention_by_token():
+#     post_data = json.loads(request.data.decode())
+#     return dataService.get_attention_by_token(post_data["token"], post_data["model"])
+
+@app.route('/getAttentionByToken/<model>', methods=['POST'])
+def _get_attention_by_token(model):
     post_data = json.loads(request.data.decode())
-    return dataService.get_attention_by_token(post_data["token"], post_data["model"])
+    return dataService.get_attention_by_token(post_data, model)
 
 # @app.route("/test", methods=['GET'])
 # def test():
@@ -68,9 +84,6 @@ def _get_attention_by_token():
 #             mimetype='image/jpeg'
 #         )
 
-# @app.route('/getVideoById/<id>', methods=['GET'])
-# def _get_video_by_id(id):
-#     return dataService.get_video_by_id(id)
 
 # @app.route('/getVideoList')
 # def _get_video_list():
@@ -99,7 +112,6 @@ def _get_attention_by_token():
 # def _query_videos():
 #     post_data = json.loads(request.data.decode())
 #     return dataService.query_videos(post_data)
-
 
 if __name__ == '__main__':
     pass

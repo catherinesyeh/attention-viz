@@ -46,7 +46,8 @@ function post(field: string, payload: any): Promise<any> {
 // }
 
 export async function getMatrixData(model: string) {
-  return post(`getMatrixData`, {"model": model});
+  // return post(`getMatrixData`, {"model": model});
+  return get("getMatrixData/" + model)
 }
 
 // export async function getAttentionData() {
@@ -54,11 +55,11 @@ export async function getMatrixData(model: string) {
 // }
 
 export async function getTokenData(model: string) {
-  return post(`getTokenData`, {"model": model});
+  return get("getTokenData/" + model);
 }
 
 export async function getAttentionByToken(token: Typing.Point, model: string) : Promise<Typing.AttentionData> {
-  return post("getAttentionByToken", {"token": token, "model": model}); 
+  return post("getAttentionByToken/" + model, token); 
 }
 // export async function getPitfallById(id: string) {
 //   return get(`getPitfallById/${id}`);
