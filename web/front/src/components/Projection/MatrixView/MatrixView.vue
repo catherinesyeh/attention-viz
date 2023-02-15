@@ -129,49 +129,6 @@ export default defineComponent({
             }
         };
 
-        const toLineLayer = (points: Typing.Point[]) => {
-            const clickedIndex = state.clickedPoint.index;
-            const sourcePosition = getPointCoordinate(state.clickedPoint);
-            const searchIndex = state.tokenData[clickedIndex].pos_int;
-            let minIndex = clickedIndex - searchIndex;
-            const offset = state.tokenData.length / 2;
-            if (state.clickedPoint.type === "query") {
-                minIndex += offset;
-            } else {
-                minIndex -= offset;
-            }
-            return new LineLayer({
-                id: "attention-line-layer",
-                pickable: false,
-                data: points,
-                widthMaxPixels: 10,
-                widthScale: 5,
-                getSourcePosition: sourcePosition,
-                getTargetPosition: (d: Typing.Point) => getPointCoordinate(d),
-                getColor: (d: Typing.Point) => {
-                    if (d.index == clickedIndex) {
-                        // don't show line to self
-                        return [255, 255, 255, 0];
-                    }
-                    const arrayIndex = d.index - minIndex;
-                    const opacity = state.attentionByToken.attns[searchIndex][arrayIndex] * 255;
-
-                    return state.clickedPoint.type === "query" ?
-                        state.userTheme == "light-theme"
-                            ? [43, 91, 25, opacity]
-                            : [194, 232, 180, opacity]
-                        : state.userTheme == "light-theme"
-                            ? [117, 29, 58, opacity]
-                            : [240, 179, 199, opacity];
-                },
-                updateTriggers: {
-                    getSourcePosition: [state.projectionMethod, state.dimension],
-                    getTargetPosition: [state.projectionMethod, state.dimension],
-                    getColor: [state.attentionByToken, state.userTheme]
-                }
-            });
-        }
-
         const tree = new RBush(); // fast label overlap detection
         const sizeMeasurer = (label: string, fontSize: number) => {
             let threshold =
@@ -193,6 +150,54 @@ export default defineComponent({
         }
 
         // LAYERS
+        const toLineLayer = (points: Typing.Point[]) => {
+            const clickedIndex = state.clickedPoint.index;
+            const sourcePosition = getPointCoordinate(state.clickedPoint);
+            const searchIndex = state.tokenData[clickedIndex].pos_int;
+            let minIndex = clickedIndex - searchIndex;
+            const offset = state.tokenData.length / 2;
+            if (state.clickedPoint.type === "query") {
+                minIndex += offset;
+            } else {
+                minIndex -= offset;
+            }
+
+            return new LineLayer({
+                id: "attention-line-layer",
+                pickable: false,
+                data: points,
+                widthMaxPixels: 10,
+                widthScale: 5,
+                getSourcePosition: sourcePosition,
+                getTargetPosition: (d: Typing.Point) => getPointCoordinate(d),
+                getColor: (d: Typing.Point) => {
+                    if (d.index == clickedIndex) {
+                        // don't show line to self
+                        return [255, 255, 255, 0];
+                    }
+                    const arrayIndex = d.index - minIndex;
+                    const opacity = state.attentionByToken.attns[searchIndex][arrayIndex] * 255;
+
+                    if (opacity == 0) { // fix 3d lines
+                        return [255, 255, 255, 0];
+                    }
+
+                    return state.clickedPoint.type === "query" ?
+                        state.userTheme == "light-theme"
+                            ? [43, 91, 25, opacity]
+                            : [194, 232, 180, opacity]
+                        : state.userTheme == "light-theme"
+                            ? [117, 29, 58, opacity]
+                            : [240, 179, 199, opacity];
+                },
+                updateTriggers: {
+                    getSourcePosition: [state.projectionMethod, state.dimension],
+                    getTargetPosition: [state.projectionMethod, state.dimension],
+                    getColor: [state.attentionByToken, state.userTheme]
+                }
+            });
+        }
+
         const toPointLayer = (points: Typing.Point[]) => {
             return new ScatterplotLayer({
                 pickable: state.mode == 'single',
