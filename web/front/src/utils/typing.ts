@@ -23,14 +23,14 @@ export namespace Typing {
         pca_y_3d: number;
         pca_z_3d: number;
     }
-    export interface AttentionData {
-        head: number;
-        layer: number;
-        tokens: AttnCoordinate[];
-    }
-    export interface AttnCoordinate {
-        attention: number[];
-    }
+    // export interface AttentionData {
+    //     head: number;
+    //     layer: number;
+    //     tokens: AttnCoordinate[];
+    // }
+    // export interface AttnCoordinate {
+    //     attention: number[];
+    // }
     export interface TokenData { // shared by all heads and layers
         position: number;
         pos_int: number;

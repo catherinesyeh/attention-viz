@@ -72,6 +72,8 @@ export default {
             attnMsg: "click a plot to zoom in",
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             view: computed(() => store.state.view),
+            curLayer: computed(() => store.state.layer),
+            curHead: computed(() => store.state.head),
             layerHead: "",
             userTheme: computed(() => store.state.userTheme),
             mode: computed(() => store.state.mode),
@@ -120,9 +122,9 @@ export default {
                 state.hidden["right"].push(token_text.length - 1);
             }
 
-            const layer = attentionByToken.layer;
-            const head = attentionByToken.head;
-            state.layerHead = "L" + layer + " H" + head;
+            // const layer = attentionByToken.layer;
+            // const head = attentionByToken.head;
+            state.layerHead = "L" + state.curLayer + " H" + state.curHead;
 
             const params = {
                 attention: [
@@ -609,7 +611,7 @@ export default {
         }
 
         watch(
-            () => state.attentionByToken,
+            () => [state.attentionByToken],
             () => {
                 // draw attention plot
                 state.showAttn = true;

@@ -23,6 +23,10 @@
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
                         :class="{ disabled: mode == 'matrix' }">show</a-checkbox>
 
+                    <p class="label">Attention Lines</p>
+                    <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
+                        :class="{ disabled: mode == 'matrix' }">show</a-checkbox>
+
                     <p class="label">Dot Size</p>
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm"
                         :class="{ disabled: mode == 'matrix' }">scale by norm</a-checkbox>
@@ -116,6 +120,7 @@ export default defineComponent({
             view: computed(() => store.state.view),
             showAll: computed(() => store.state.showAll),
             sizeByNorm: computed(() => store.state.sizeByNorm),
+            showAttention: computed(() => store.state.showAttention),
             // disableLabel: computed(() => store.state.disableLabel),
             colorBy: computed(() => store.state.colorBy),
             layer: computed(() => store.state.layer),
@@ -157,6 +162,10 @@ export default defineComponent({
 
         const toggleCheckbox = () => {
             store.commit('setShowAll', !state.showAll);
+        }
+
+        const toggleCheckboxAttention = () => {
+            store.commit('setShowAttention', !state.showAttention);
         }
 
         const toggleCheckboxNorm = () => {
@@ -214,7 +223,8 @@ export default defineComponent({
             zoomToPlot,
             moveToPlot,
             toggleCheckbox,
-            toggleCheckboxNorm
+            toggleCheckboxNorm,
+            toggleCheckboxAttention
         };
     }
 });

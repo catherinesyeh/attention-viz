@@ -24,13 +24,13 @@ import { Typing } from "@/utils/typing";
 
 import { Deck, OrbitView, OrthographicView, View } from "@deck.gl/core/typed";
 // import interface {Deck} from "@deck.gl/core/typed";
-import { PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers/typed";
+import { PolygonLayer, ScatterplotLayer, TextLayer, LineLayer } from "@deck.gl/layers/typed";
 import { toTypeString } from "@vue/shared";
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
-import { StaticReadUsage } from "three";
+import { Line, StaticReadUsage, TubeBufferGeometry } from "three";
 import { head, initial } from "underscore";
-import { validate } from "@babel/types";
+import { STATEMENT_TYPES, validate } from "@babel/types";
 import RBush from 'rbush';
 import { dragDisable } from "d3";
 
@@ -69,6 +69,9 @@ const nullInitialViewZoom: ViewState = {
 let initialState = nullInitialView;
 let initialStateZoom = nullInitialViewZoom;
 
+const defaultOpacity = 225,
+    lightOpacity = 50;
+
 export default defineComponent({
     components: {},
     setup(props, context) {
@@ -79,6 +82,7 @@ export default defineComponent({
             tokenData: computed(() => store.state.tokenData),
             viewState: nullInitialView,
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
+            attentionByToken: computed(() => store.state.attentionByToken),
             projectionMethod: computed(() => store.state.projectionMethod),
             colorBy: computed(() => store.state.colorBy),
             view: computed(() => store.state.view),
@@ -88,13 +92,16 @@ export default defineComponent({
             curHead: computed(() => store.state.head),
             doneLoading: computed(() => store.state.doneLoading),
             showAll: computed(() => store.state.showAll),
+            showAttention: computed(() => store.state.showAttention),
             sizeByNorm: computed(() => store.state.sizeByNorm),
             zoom: nullInitialView.zoom,
+            clickedPoint: "" as any,
             activePoints: [] as Typing.Point[],
             dimension: computed(() => store.state.dimension),
             cursorX: 0,
             cursorY: 0,
-            transitionInProgress: false
+            transitionInProgress: false,
+            attentionLoading: computed(() => store.state.attentionLoading),
         });
 
         var shallowData = shallowRef({
@@ -121,6 +128,49 @@ export default defineComponent({
                     throw Error("Invalid projection method!");
             }
         };
+
+        const toLineLayer = (points: Typing.Point[]) => {
+            const clickedIndex = state.clickedPoint.index;
+            const sourcePosition = getPointCoordinate(state.clickedPoint);
+            const searchIndex = state.tokenData[clickedIndex].pos_int;
+            let minIndex = clickedIndex - searchIndex;
+            const offset = state.tokenData.length / 2;
+            if (state.clickedPoint.type === "query") {
+                minIndex += offset;
+            } else {
+                minIndex -= offset;
+            }
+            return new LineLayer({
+                id: "attention-line-layer",
+                pickable: false,
+                data: points,
+                widthMaxPixels: 10,
+                widthScale: 5,
+                getSourcePosition: sourcePosition,
+                getTargetPosition: (d: Typing.Point) => getPointCoordinate(d),
+                getColor: (d: Typing.Point) => {
+                    if (d.index == clickedIndex) {
+                        // don't show line to self
+                        return [255, 255, 255, 0];
+                    }
+                    const arrayIndex = d.index - minIndex;
+                    const opacity = state.attentionByToken.attns[searchIndex][arrayIndex] * 255;
+
+                    return state.clickedPoint.type === "query" ?
+                        state.userTheme == "light-theme"
+                            ? [43, 91, 25, opacity]
+                            : [194, 232, 180, opacity]
+                        : state.userTheme == "light-theme"
+                            ? [117, 29, 58, opacity]
+                            : [240, 179, 199, opacity];
+                },
+                updateTriggers: {
+                    getSourcePosition: [state.projectionMethod, state.dimension],
+                    getTargetPosition: [state.projectionMethod, state.dimension],
+                    getColor: [state.attentionByToken, state.userTheme]
+                }
+            });
+        }
 
         const tree = new RBush(); // fast label overlap detection
         const sizeMeasurer = (label: string, fontSize: number) => {
@@ -228,8 +278,10 @@ export default defineComponent({
                     }
                     console.log('onClick', info.object);
                     store.commit("setView", 'attn');
+                    store.commit("updateAttentionLoading", true);
 
                     let pt = info.object as Typing.Point;
+                    state.clickedPoint = pt;
                     store.dispatch("setClickedPoint", pt);
 
                     let pt_info = state.tokenData[pt.index];
@@ -280,8 +332,6 @@ export default defineComponent({
                     if (!state.showAll || !visiblePoints[d.index]) {
                         return [255, 255, 255, 0];
                     }
-
-                    const defaultOpacity = 225;
                     return state.userTheme == "light-theme"
                         ? [255, 255, 255, defaultOpacity]
                         : [0, 0, 0, defaultOpacity];
@@ -317,9 +367,6 @@ export default defineComponent({
                     if (!state.showAll || !visiblePoints[d.index]) {
                         return [255, 255, 255, 0];
                     }
-
-                    const defaultOpacity = 225,
-                        lightOpacity = 50;
                     if (state.highlightedTokenIndices.length === 0)
                         return d.type == "query"
                             ? state.userTheme == "light-theme"
@@ -436,14 +483,28 @@ export default defineComponent({
                 tree.clear(); // reset RBush on change
                 const visiblePoints = layer_points.map((v) => makeTree(v));
 
-                if (state.dimension == "2D") {
-                    return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toLabelOutlineLayer(layer_points, visiblePoints), toPointLabelLayer(layer_points, visiblePoints)];
+                let layers = [];
+                if (state.view === 'attn' && state.showAttention) { // show lines in attention view if checkbox on
+                    if (state.clickedPoint != "") { // already in attn view
+                        state.clickedPoint = layer_points[state.clickedPoint.index];
+                    }
+                    const attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                    layers.push(toLineLayer(attn_points));
                 }
 
-                // no white outline around labels in 3d view
-                return [toPointLayer(layer_points), toPlotHeadLayer([layer_headings]), toPointLabelLayer(layer_points, visiblePoints)];
+                layers.push(toPointLayer(layer_points));
+                layers.push(toPlotHeadLayer([layer_headings]));
+
+                if (state.dimension == "2D") {
+                    // only white outline around labels in 2d view
+                    layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
+                }
+
+                layers.push(toPointLabelLayer(layer_points, visiblePoints));
+
+                return layers;
             }
-            // else: return matrix
+            // else: return matrix view
             return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
         };
 
@@ -736,19 +797,26 @@ export default defineComponent({
                 () => state.curLayer,
                 () => state.zoom,
                 () => state.showAll,
-                () => state.sizeByNorm
+                () => state.showAttention,
+                () => state.sizeByNorm,
+                () => state.attentionLoading
             ],
             () => {
+                if (state.view === "attn" && state.attentionLoading) {
+                    // wait until attention info done loading
+                    return;
+                }
                 deckgl.setProps({ layers: [...toLayers()] });
             }
         );
 
         watch([() => state.doneLoading, () => state.curLayer, () => state.curHead],
             () => {
-                if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn") {
+                if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn" && state.clickedPoint != "") {
                     // fix attention view
-                    let ind = state.highlightedTokenIndices[0];
-                    let pt = state.activePoints[ind];
+                    // let ind = state.highlightedTokenIndices[0];
+                    // let pt = state.activePoints[ind];
+                    let pt = state.clickedPoint;
                     store.dispatch("setClickedPoint", pt);
                 }
             }
@@ -758,6 +826,7 @@ export default defineComponent({
             () => {
                 if (state.highlightedTokenIndices.length == 0) {
                     store.commit("setView", "none");
+                    state.clickedPoint = "";
                 }
             })
 

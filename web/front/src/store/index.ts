@@ -21,6 +21,7 @@ export interface State {
   head: number | string;
 
   renderState: boolean; // true when the canvas is being rendered; false upon finished
+  attentionLoading: boolean; 
   doneLoading: boolean;
   userTheme: string; // dark or light
   view: string; // none, search, or attention
@@ -38,6 +39,7 @@ export interface State {
 
   // adjust plot in single view
   showAll: boolean; // labels
+  showAttention: boolean; // attention lines
   sizeByNorm: boolean; // dot size
   // disableLabel: boolean;
 }
@@ -54,6 +56,7 @@ export const store = createStore<State>({
     head: "",
     doneLoading: false,
     renderState: true,
+    attentionLoading: false,
     attentionByToken: {layer: 0, head: 0, attns: [], token: {} as Typing.TokenData},
     // attentionByTokenLock: false,
     modelType: 'gpt',
@@ -65,6 +68,7 @@ export const store = createStore<State>({
     dimension: '2D',
     userTheme: 'light-theme',
     showAll: false,
+    showAttention: false,
     sizeByNorm: false,
     // disableLabel: false
   },
@@ -91,6 +95,10 @@ export const store = createStore<State>({
     updateDoneLoading(state, doneLoading) {
       state.doneLoading = doneLoading;
       console.log('state: doneLoading', doneLoading);
+    },
+    updateAttentionLoading(state, attentionLoading) {
+      state.attentionLoading = attentionLoading;
+      console.log('state: attentionLoading', attentionLoading);
     },
     updateRenderState(state, renderState) {
       state.renderState = renderState;
@@ -137,6 +145,10 @@ export const store = createStore<State>({
       state.showAll = showAll;
       console.log('setShowAll', showAll);
     },
+    setShowAttention(state, showAttention) {
+      state.showAttention = showAttention;
+      console.log('setShowAttention', showAttention);
+    },
     setSizeByNorm(state, sizeByNorm) {
       state.sizeByNorm = sizeByNorm;
       console.log('setSizeByNorm', sizeByNorm);
@@ -178,6 +190,7 @@ export const store = createStore<State>({
       const attentionByToken = (await dataService.getAttentionByToken(pt, state.modelType));
       console.log('attentionDataByToken', attentionByToken);
       commit('setAttentionByToken', attentionByToken);
+      commit('updateAttentionLoading', false);
       // commit('setAttentionByTokenLock', false)
     }
   },
