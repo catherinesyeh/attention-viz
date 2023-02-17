@@ -345,6 +345,11 @@ export default {
                     // toggle lines on and off on token click
                     const select = tokenContainer.nodes();
                     const ind = select.indexOf(this);
+                    if (ind == 0) {
+                        state.hideFirst = !state.hideFirst;
+                    } else if (ind == select.length - 1) {
+                        state.hideLast = !state.hideLast;
+                    }
                     // let hidden = d3.select(this).classed("clicked");
                     // d3.select(this).classed("clicked", !hidden);
                     let hidden, new_attn;

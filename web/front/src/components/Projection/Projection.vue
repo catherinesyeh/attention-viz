@@ -25,7 +25,7 @@
 
                     <p class="label">Attention Lines</p>
                     <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
-                        :class="{ disabled: mode == 'matrix' }">show</a-checkbox>
+                        :class="{ disabled: mode == 'matrix' || view != 'attn' }">show</a-checkbox>
 
                     <p class="label">Dot Size</p>
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm"
