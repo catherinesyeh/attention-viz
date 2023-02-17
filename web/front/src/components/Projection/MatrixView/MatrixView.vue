@@ -819,9 +819,9 @@ export default defineComponent({
             () => {
                 if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn" && state.clickedPoint != "") {
                     // fix attention view
-                    // let ind = state.highlightedTokenIndices[0];
-                    // let pt = state.activePoints[ind];
-                    let pt = state.clickedPoint;
+                    let ind = state.highlightedTokenIndices[state.highlightedTokenIndices.length - 1];
+                    let pt = state.activePoints[ind];
+                    state.clickedPoint = pt;
                     store.dispatch("setClickedPoint", pt);
                 }
             }
