@@ -49,7 +49,8 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     const colorsByLength = tokenData.map((td) => getLengthColor(td));
 
     // const discreteColors =  ["#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#b2df8a","#33a02c","#a6cee3","#1f78b4","#cab2d6","#6a3d9a"];
-    const discreteColors =  ["#FFB5CF","#E3378F","#f5ca86","#F39226","#addfa2","#5FB96C","#9fd2ea","#2E93D9","#CFB0EF","#7F5BDB"];
+    // const discreteColors =  ["#FFB5CF","#E3378F","#f5ca86","#F39226","#addfa2","#5FB96C","#9fd2ea","#2E93D9","#CFB0EF","#7F5BDB"];
+    const discreteColors =  ["#F5C0CA","#E3378F","#F0D6A5","#EDB50E","#C4D6B8","#5FB96C","#C8DDED","#528DDB","#D6BAE3","#A144DB"];
     // const discreteColors =  ["#ED82B9","#9BD3A3","#E3378F","#5FB96C","#AA296B","#3B7444"];
     const numDiscrete = discreteColors.length / 2;
 

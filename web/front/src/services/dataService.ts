@@ -58,7 +58,7 @@ export async function getTokenData(model: string) {
   return get("getTokenData/" + model);
 }
 
-export async function getAttentionByToken(token: Typing.Point, model: string) : Promise<Typing.AttentionData> {
+export async function getAttentionByToken(token: Typing.Point, model: string) : Promise<Typing.AttnByToken> {
   return post("getAttentionByToken/" + model, token); 
 }
 // export async function getPitfallById(id: string) {
