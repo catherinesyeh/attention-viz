@@ -152,11 +152,12 @@ export default defineComponent({
         // LAYERS
         const toLineLayer = (points: Typing.Point[]) => {
             const clickedIndex = state.clickedPoint.index;
+            const clickedType = state.clickedPoint.type;
             const sourcePosition = getPointCoordinate(state.clickedPoint);
             const searchIndex = state.tokenData[clickedIndex].pos_int;
             let minIndex = clickedIndex - searchIndex;
             const offset = state.tokenData.length / 2;
-            if (state.clickedPoint.type === "query") {
+            if (clickedType === "query") {
                 minIndex += offset;
             } else {
                 minIndex -= offset;
@@ -171,8 +172,8 @@ export default defineComponent({
                 getSourcePosition: sourcePosition,
                 getTargetPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getColor: (d: Typing.Point) => {
-                    if (d.index == clickedIndex) {
-                        // don't show line to self
+                    if (d.index == clickedIndex || d.type === clickedType) {
+                        // don't show line to self or same type of token
                         return [255, 255, 255, 0];
                     }
                     const arrayIndex = d.index - minIndex;
@@ -182,7 +183,7 @@ export default defineComponent({
                         return [255, 255, 255, 0];
                     }
 
-                    return state.clickedPoint.type === "query" ?
+                    return clickedType === "query" ?
                         state.userTheme == "light-theme"
                             ? [43, 91, 25, opacity]
                             : [194, 232, 180, opacity]
@@ -198,8 +199,34 @@ export default defineComponent({
             });
         }
 
+        const toPointOutlineLayer = (points: Typing.Point[]) => {
+            return new ScatterplotLayer({
+                id: "point-outline-layer",
+                pickable: false,
+                data: points,
+                radiusMaxPixels: 8,
+                stroked: true,
+                getPosition: (d: Typing.Point) => getPointCoordinate(d),
+                getRadius: (d: Typing.Point) => {
+                    return state.mode === "single" && state.sizeByNorm
+                        ? (0.15 + d.normScaled * 0.5) * 3
+                        : 4
+                },
+                getFillColor: [255, 195, 0, 255],
+                getLineColor: state.userTheme != "light-theme" ? [255, 255, 255, 255] : [0, 0, 0, 255],
+                getLineWidth: 1 / state.zoom,
+                lineWidthMaxPixels: 1,
+                updateTriggers: {
+                    getFillColor: [state.userTheme],
+                    getRadius: [state.sizeByNorm],
+                    getPosition: [state.projectionMethod, state.dimension]
+                },
+            })
+        }
+
         const toPointLayer = (points: Typing.Point[]) => {
             return new ScatterplotLayer({
+                id: "point-layer",
                 pickable: state.mode == 'single',
                 data: points,
                 radiusMaxPixels: 5,
@@ -207,7 +234,7 @@ export default defineComponent({
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getRadius: (d: Typing.Point) => {
                     let defaultSize = 0.4,
-                        highlightedSize = 5;
+                        highlightedSize = 2;
 
                     if (state.mode === "single" && state.sizeByNorm) {
                         // scale dot size by norm if checkbox on
@@ -292,17 +319,16 @@ export default defineComponent({
                     let pt_info = state.tokenData[pt.index];
                     let offset = state.tokenData.length / 2;
                     let start_index = pt.index - pt_info.pos_int;
-                    // let end_index = pt.index + pt_info.length;
+
+                    let same_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
                     if (pt_info.type === "key") {
                         start_index -= offset;
-                        // end_index -= offset;
                     } else {
                         start_index += offset;
-                        // end_index += offset;
                     }
 
                     let opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
-                    let tokenIndices = [...opposite_indices, pt.index];
+                    let tokenIndices = [...same_indices, ...opposite_indices];
                     store.commit("setHighlightedTokenIndices", tokenIndices);
                 },
                 updateTriggers: {
@@ -489,12 +515,16 @@ export default defineComponent({
                 const visiblePoints = layer_points.map((v) => makeTree(v));
 
                 let layers = [];
-                if (state.view === 'attn' && state.showAttention) { // show lines in attention view if checkbox on
-                    if (state.clickedPoint != "") { // already in attn view
-                        state.clickedPoint = layer_points[state.clickedPoint.index];
+                if (state.view === 'attn') {
+                    if (state.showAttention) { // show lines in attention view if checkbox on
+                        if (state.clickedPoint != "") { // already in attn view
+                            state.clickedPoint = layer_points[state.clickedPoint.index];
+                        }
+                        const attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                        layers.push(toLineLayer(attn_points));
                     }
-                    const attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
-                    layers.push(toLineLayer(attn_points));
+                    // add extra outline for clicked point
+                    layers.push(toPointOutlineLayer([state.clickedPoint]));
                 }
 
                 layers.push(toPointLayer(layer_points));
@@ -804,7 +834,8 @@ export default defineComponent({
                 () => state.showAll,
                 () => state.showAttention,
                 () => state.sizeByNorm,
-                () => state.attentionLoading
+                () => state.attentionLoading,
+                () => state.clickedPoint,
             ],
             () => {
                 if (state.view === "attn" && state.attentionLoading) {
