@@ -15,12 +15,14 @@ git clone https://github.com/catherinesyeh/attention-viz.git
 3. Start back end:
 ```
 cd web/back/
+pip install -U flask-cors
 python3 run.py
 ```
 
 4. Start front end:
 ```
 cd ../front
+npm i
 npm run serve
 ```
 
