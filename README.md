@@ -17,27 +17,33 @@ git clone https://github.com/catherinesyeh/attention-viz.git
 cd web/back/
 ```
 
-4. Install requirements:
+4. Create virtual env and activate:
 ```
-pip install -r requirements.txt
+python3 -m venv env
+source env/bin/activate
 ```
 
-5. Start back end:
+5. Install requirements:
+```
+pip3 install -r requirements.txt
+```
+
+6. Start back end:
 ```
 python3 run.py
 ```
 
-6. Navigate to front end:
+7. Navigate to front end:
 ```
 cd ../front
 ```
 
-7. Install necessary packages and start front end:
+8. Install necessary packages and start front end:
 ```
 npm i
 npm run serve
 ```
 
-7. The interface should be running at: [http://localhost:8561](http://localhost:8561)
+9. The interface should be running at: [http://localhost:8561](http://localhost:8561)
 
 
