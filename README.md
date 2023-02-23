@@ -17,9 +17,9 @@ git clone https://github.com/catherinesyeh/attention-viz.git
 cd web/back/
 ```
 
-4. Install [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/) if you don't have it already:
+4. Install requirements:
 ```
-pip install -U flask-cors
+pip install -r requirements.txt
 ```
 
 5. Start back end:
