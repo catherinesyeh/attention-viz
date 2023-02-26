@@ -19,6 +19,7 @@ import * as _ from "underscore";
 import * as d3 from "d3";
 import { useStore } from "@/store/index";
 import { ScatterGL, Point2D } from "scatter-gl";
+import {IconLayer} from '@deck.gl/layers/typed';
 
 import { Typing } from "@/utils/typing";
 
@@ -28,6 +29,7 @@ import { PolygonLayer, ScatterplotLayer, TextLayer, LineLayer } from "@deck.gl/l
 import { toTypeString } from "@vue/shared";
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
+import { computeVitMatrixProjection } from "@/utils/vitDataTransform"
 import { Line, StaticReadUsage, TubeBufferGeometry } from "three";
 import { head, initial } from "underscore";
 import { STATEMENT_TYPES, validate } from "@babel/types";
@@ -102,6 +104,7 @@ export default defineComponent({
             cursorY: 0,
             transitionInProgress: false,
             attentionLoading: computed(() => store.state.attentionLoading),
+            modelType: computed(() => store.state.modelType),
         });
 
         var shallowData = shallowRef({
@@ -127,6 +130,15 @@ export default defineComponent({
                 default:
                     throw Error("Invalid projection method!");
             }
+        };
+
+        const getImageSize = () => {
+            const zoom = state.zoom
+            var size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.5) * 80
+            if (size < 1) {
+                size = 1
+            }
+            return size
         };
 
         const tree = new RBush(); // fast label overlap detection
@@ -338,6 +350,34 @@ export default defineComponent({
                 },
             });
         };
+
+        const toImageLayer = (points: Typing.Point[]) => {
+            return new IconLayer({
+                id: 'image-scatter-layer',
+                pickable: state.mode == 'single',
+                data: points,
+                radiusMaxPixels: 0,
+                stroked: state.mode == 'single',
+                // alphaCutoff: 0.05,
+                // billboard: true,
+                // getAngle: 0,
+                // getColor: d => [Math.sqrt(d.exits), 140, 0],
+                getIcon: d => ({
+                    url: d.imagePath,
+                    width: 128,
+                    height: 128,
+                }),
+                // getPixelOffset: [0, 0],
+                getPosition: (d: Typing.Point) => getPointCoordinate(d),
+                getSize: d => 35,
+                sizeScale: 1,
+                sizeMaxPixels: getImageSize(),
+                sizeMinPixels: 1,
+                sizeUnits: "pixels",
+                opacity: 0.9,
+            })
+        };
+
         const toLabelOutlineLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
             return new TextLayer({
                 id: "label-outline-layer",
@@ -526,8 +566,13 @@ export default defineComponent({
                     // add extra outline for clicked point
                     layers.push(toPointOutlineLayer([state.clickedPoint]));
                 }
-
-                layers.push(toPointLayer(layer_points));
+                
+                if (state.modelType == "bert" || state.modelType == "gpt") {
+                    layers.push(toPointLayer(layer_points));
+                }
+                else if (state.modelType == "vit-16" || state.modelType == "vit-32")  {
+                    layers.push(toImageLayer(layer_points));
+                }
                 layers.push(toPlotHeadLayer([layer_headings]));
 
                 if (state.dimension == "2D") {
@@ -540,7 +585,12 @@ export default defineComponent({
                 return layers;
             }
             // else: return matrix view
-            return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
+            if (state.modelType == "bert" || state.modelType == "gpt") {
+                return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
+            }
+            else {
+                return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
+            }
         };
 
         /**
@@ -731,8 +781,14 @@ export default defineComponent({
         const computedProjection = () => {
             let { matrixData, tokenData } = state;
             if (matrixData.length && tokenData.length) {
-                let projData = computeMatrixProjection(matrixData, tokenData);
-                shallowData.value = projData;
+                if (state.modelType == "gpt" || state.modelType == "bert") {
+                    let projData = computeMatrixProjection(matrixData, tokenData);
+                    shallowData.value = projData;
+                }
+                else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
+                    let projData = computeVitMatrixProjection(matrixData, tokenData);
+                    shallowData.value = projData;
+                }
             }
         };
 
