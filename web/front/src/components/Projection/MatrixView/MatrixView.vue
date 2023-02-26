@@ -149,8 +149,27 @@ export default defineComponent({
             return size;
         }
 
+        const makeTree = (d: Typing.Point) => {
+            let coord = getPointCoordinate(d);
+            let labelSize = sizeMeasurer(d.value, 12);
+            let new_coord = {
+                minX: coord[0] - 0.5 * labelSize.width,
+                minY: coord[1] - 0.5 * labelSize.width,
+                maxX: coord[0] + 0.5 * labelSize.width,
+                maxY: coord[1] + 0.5 * labelSize.height
+            }
+            const overlap = tree.collides(new_coord);
+            if (overlap) {
+                // return [255, 255, 255, 0];
+                return false;
+            }
+            tree.insert(new_coord);
+            return true;
+        }
+
         // LAYERS
         const toLineLayer = (points: Typing.Point[]) => {
+            // show attention lines on scatterplot
             const clickedIndex = state.clickedPoint.index;
             const clickedType = state.clickedPoint.type;
             const sourcePosition = getPointCoordinate(state.clickedPoint);
@@ -200,6 +219,7 @@ export default defineComponent({
         }
 
         const toPointOutlineLayer = (points: Typing.Point[]) => {
+            // draw thicker line around clicked on point
             return new ScatterplotLayer({
                 id: "point-outline-layer",
                 pickable: false,
@@ -225,6 +245,7 @@ export default defineComponent({
         }
 
         const toPointLayer = (points: Typing.Point[]) => {
+            // main scatterplot(s)
             return new ScatterplotLayer({
                 id: "point-layer",
                 pickable: state.mode == 'single',
@@ -339,6 +360,7 @@ export default defineComponent({
             });
         };
         const toLabelOutlineLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
+            // white outline around text
             return new TextLayer({
                 id: "label-outline-layer",
                 data: points,
@@ -379,6 +401,7 @@ export default defineComponent({
         };
 
         const toPointLabelLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
+            // main text labels for scatterplot points
             return new TextLayer({
                 id: "point-label-layer",
                 data: points, // (state.pointScaleFactor < 0.3) ? points: [],
@@ -434,6 +457,7 @@ export default defineComponent({
         };
 
         const toPlotHeadLayer = (headings: Typing.PlotHead[]) => {
+            // layer/head label for each plot
             return new TextLayer({
                 id: "text-layer",
                 data: headings,
@@ -454,6 +478,7 @@ export default defineComponent({
         };
 
         const toOverlayLayer = (headings: Typing.PlotHead[]) => {
+            // invisible polygon overlay to allow us to click on plots in matrix mode
             return new PolygonLayer({
                 id: "overlay-layer",
                 data: headings,
@@ -480,24 +505,7 @@ export default defineComponent({
             });
         };
 
-        const makeTree = (d: Typing.Point) => {
-            let coord = getPointCoordinate(d);
-            let labelSize = sizeMeasurer(d.value, 12);
-            let new_coord = {
-                minX: coord[0] - 0.5 * labelSize.width,
-                minY: coord[1] - 0.5 * labelSize.width,
-                maxX: coord[0] + 0.5 * labelSize.width,
-                maxY: coord[1] + 0.5 * labelSize.height
-            }
-            const overlap = tree.collides(new_coord);
-            if (overlap) {
-                // return [255, 255, 255, 0];
-                return false;
-            }
-            tree.insert(new_coord);
-            return true;
-        }
-
+        // compute + render layers for current view
         const toLayers = () => {
             let { points, headings } = shallowData.value;
             if (state.curHead !== "" && state.curLayer !== "") { // single mode
@@ -563,6 +571,7 @@ export default defineComponent({
             };
             state.viewState = state.mode === 'matrix' ? initialState : initialStateZoom;
 
+            // main deckgl object
             deckgl = new Deck({
                 canvas: "matrix-canvas",
                 controller: true,
@@ -787,6 +796,7 @@ export default defineComponent({
             computedProjection();
         });
 
+        // watchers
         watch([() => state.matrixData, () => state.tokenData],
             () => {
                 if (state.doneLoading) {
@@ -796,10 +806,12 @@ export default defineComponent({
         );
 
         watch([shallowData], () => {
+            // redraw matrices if data changes
             initMatrices();
         });
 
         watch(() => state.dimension, () => {
+            // deal with 2D/3D transition
             deckgl.setProps({
                 views: state.dimension == "3D" ?
                     new OrbitView({
@@ -861,6 +873,7 @@ export default defineComponent({
         watch(() => state.highlightedTokenIndices,
             () => {
                 if (state.highlightedTokenIndices.length == 0) {
+                    // reset highlighted token indices
                     store.commit("setView", "none");
                     state.clickedPoint = "";
                 }
