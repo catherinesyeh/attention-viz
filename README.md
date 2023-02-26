@@ -4,9 +4,10 @@ Interactive TSNE plots of query + key vectors generated from BERT and GPT
 Old version: [https://catherinesyeh.github.io/attention-viz/](https://catherinesyeh.github.io/attention-viz/)
 
 ## set up instructions
-1. Clone repo: 
+1. Clone repo and navigate into folder: 
 ```
 git clone https://github.com/catherinesyeh/attention-viz.git
+cd attention-viz
 ```
 
 2. Ask Catherine for ```data``` folder. It should be included in the ```web``` folder like so:
