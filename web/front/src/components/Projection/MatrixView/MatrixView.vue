@@ -411,6 +411,7 @@ export default defineComponent({
                 id: "label-outline-layer",
                 data: points,
                 pickable: false,
+                characterSet: 'auto',
                 getPosition: (d: Typing.Point) => {
                     if (!state.showAll || !visiblePoints[d.index]) {
                         return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
@@ -452,6 +453,7 @@ export default defineComponent({
                 id: "point-label-layer",
                 data: points, // (state.pointScaleFactor < 0.3) ? points: [],
                 pickable: false,
+                characterSet: 'auto',
                 getPosition: (d: Typing.Point) => {
                     if (!state.showAll || !visiblePoints[d.index]) {
                         return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
