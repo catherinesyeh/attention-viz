@@ -83,6 +83,7 @@ export default defineComponent({
             viewState: nullInitialView,
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             attentionByToken: computed(() => store.state.attentionByToken),
+            curAttn: computed(() => store.state.curAttn),
             projectionMethod: computed(() => store.state.projectionMethod),
             colorBy: computed(() => store.state.colorBy),
             view: computed(() => store.state.view),
@@ -102,6 +103,8 @@ export default defineComponent({
             cursorY: 0,
             transitionInProgress: false,
             attentionLoading: computed(() => store.state.attentionLoading),
+            // attnIndex: computed(() => store.state.attnIndex),
+            // attnSide: computed(() => store.state.attnSide)
         });
 
         var shallowData = shallowRef({
@@ -167,53 +170,96 @@ export default defineComponent({
             return true;
         }
 
+        // helper when drawing attentino lines
+        function get_k_attn(k: number) {
+            let attention = state.curAttn;
+
+            let top_attn: any = [];
+            // find top k attention weights for each query
+            for (let row = 0; row < attention.length; row++) {
+                const row_with_i = attention[row].map((v, index) => [index, v]);
+                row_with_i.sort((a, b) => a[1] > b[1] ? -1 : a[1] < b[1] ? 1 : 0);
+
+                let top_k = row_with_i.splice(0, k);
+                // add points to top_attn data
+                top_k.map((v) => {
+                    if (v[1] >= 0.05) { // skip very low opacity lines
+                        top_attn.push({ from: row, to: v[0], att: v[1] })
+                    }
+                });
+            }
+
+            // only show relevant lines on hover
+            // too laggy right now...
+            // if (state.attnIndex != -1) {
+            //     if (state.attnSide === "left") {
+            //         top_attn = top_attn.filter((v: any) => v.from === state.attnIndex);
+            //     } else {
+            //         top_attn = top_attn.filter((v: any) => v.to === state.attnIndex);
+            //     }
+            // }
+            // console.log(state.attnIndex);
+            // console.log(top_attn);
+            return top_attn;
+        }
+
         // LAYERS
         const toLineLayer = (points: Typing.Point[]) => {
             // show attention lines on scatterplot
-            const clickedIndex = state.clickedPoint.index;
-            const clickedType = state.clickedPoint.type;
-            const sourcePosition = getPointCoordinate(state.clickedPoint);
-            const searchIndex = state.tokenData[clickedIndex].pos_int;
-            let minIndex = clickedIndex - searchIndex;
-            const offset = state.tokenData.length / 2;
-            if (clickedType === "query") {
-                minIndex += offset;
-            } else {
-                minIndex -= offset;
-            }
+            // const clickedIndex = state.clickedPoint.index;
+            // const clickedType = state.clickedPoint.type;
+
+            // const sourcePosition = getPointCoordinate(state.clickedPoint);
+            // const searchIndex = state.tokenData[clickedIndex].pos_int;
+            // let minIndex = clickedIndex - searchIndex;
+            // const offset = state.tokenData.length / 2;
+            // if (clickedType === "query") {
+            //     minIndex += offset;
+            // } else {
+            //     minIndex -= offset;
+            // }
+
+            const queries = points.filter((v) => v.type === "query");
+            const keys = points.filter((v) => v.type === "key");
+
+            // get top k attns for each query
+            let top_attn = get_k_attn(2);
 
             return new LineLayer({
                 id: "attention-line-layer",
                 pickable: false,
-                data: points,
+                data: top_attn,
                 widthMaxPixels: 10,
                 widthScale: 5,
-                getSourcePosition: sourcePosition,
-                getTargetPosition: (d: Typing.Point) => getPointCoordinate(d),
-                getColor: (d: Typing.Point) => {
-                    if (d.index == clickedIndex || d.type === clickedType) {
-                        // don't show line to self or same type of token
-                        return [255, 255, 255, 0];
-                    }
-                    const arrayIndex = d.index - minIndex;
-                    const opacity = state.attentionByToken.attns[searchIndex][arrayIndex] * 255;
+                getSourcePosition: (d: any) => getPointCoordinate(queries[d.from]),
+                getTargetPosition: (d: any) => getPointCoordinate(keys[d.to]),
+                getColor: (d: any) => {
+                    // if (d.index == clickedIndex || d.type === clickedType) {
+                    //     // don't show line to self or same type of token
+                    //     return [255, 255, 255, 0];
+                    // }
+                    // const arrayIndex = d.index - minIndex;
+                    // const opacity = state.attentionByToken.attns[searchIndex][arrayIndex] * 255;
+                    const opacity = d.att * 255;
 
-                    if (opacity == 0) { // fix 3d lines
-                        return [255, 255, 255, 0];
-                    }
+                    // if (opacity == 0) { // fix 3d lines
+                    //     return [255, 255, 255, 0];
+                    // }
 
-                    return clickedType === "query" ?
-                        state.userTheme == "light-theme"
-                            ? [43, 91, 25, opacity]
-                            : [194, 232, 180, opacity]
-                        : state.userTheme == "light-theme"
-                            ? [117, 29, 58, opacity]
-                            : [240, 179, 199, opacity];
+                    return [255, 195, 0, opacity];
+
+                    // return clickedType === "query" ?
+                    //     state.userTheme == "light-theme"
+                    //         ? [43, 91, 25, opacity]
+                    //         : [194, 232, 180, opacity]
+                    //     : state.userTheme == "light-theme"
+                    //         ? [117, 29, 58, opacity]
+                    //         : [240, 179, 199, opacity];
                 },
                 updateTriggers: {
-                    getSourcePosition: [state.projectionMethod, state.dimension],
-                    getTargetPosition: [state.projectionMethod, state.dimension],
-                    getColor: [state.attentionByToken, state.userTheme]
+                    getSourcePosition: [state.projectionMethod, state.dimension, state.curAttn],
+                    getTargetPosition: [state.projectionMethod, state.dimension, state.curAttn],
+                    getColor: [state.curAttn]
                 }
             });
         }
@@ -848,6 +894,7 @@ export default defineComponent({
                 () => state.sizeByNorm,
                 () => state.attentionLoading,
                 () => state.clickedPoint,
+                () => state.curAttn
             ],
             () => {
                 if (state.view === "attn" && state.attentionLoading) {
@@ -862,7 +909,8 @@ export default defineComponent({
             () => {
                 if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn" && state.clickedPoint != "") {
                     // fix attention view
-                    let ind = state.highlightedTokenIndices[state.highlightedTokenIndices.length - 1];
+                    // let ind = state.highlightedTokenIndices[state.highlightedTokenIndices.length - 1];
+                    let ind = state.clickedPoint.index;
                     let pt = state.activePoints[ind];
                     state.clickedPoint = pt;
                     store.dispatch("setClickedPoint", pt);

@@ -79,10 +79,12 @@ export default {
             mode: computed(() => store.state.mode),
             model: computed(() => store.state.modelType),
             attn_vals: [] as number[][],
-            cur_attn: [] as number[][],
+            cur_attn: computed(() => store.state.curAttn),
             hidden: { left: [] as number[], right: [] as number[] },
             hideFirst: false,
-            hideLast: false
+            hideLast: false,
+            // attnIndex: computed(() => store.state.attnIndex),
+            // attnSide: computed(() => store.state.attnSide)
         });
 
         const hideKey = (ind: number) => {
@@ -108,17 +110,17 @@ export default {
             if (token_type == "key") { // flip graph if key
                 state.attn_vals = transpose(state.attn_vals);
             }
-            state.cur_attn = state.attn_vals;
+            store.commit("setCurAttn", state.attn_vals);
             state.hidden["left"] = [];
             state.hidden["right"] = [];
 
             // hide first/last tokens if checkboxes selected
             if (state.hideFirst) {
-                state.cur_attn = hideKey(0);
+                store.commit("setCurAttn", hideKey(0));
                 state.hidden["right"].push(0);
             }
             if (state.hideLast) {
-                state.cur_attn = hideKey(token_text.length - 1);
+                store.commit("setCurAttn", hideKey(token_text.length - 1));
                 state.hidden["right"].push(token_text.length - 1);
             }
 
@@ -364,8 +366,9 @@ export default {
                         }
 
                         let sent_length = state.cur_attn[ind].length;
+                        let attn_copy = state.cur_attn.map((a) => a.slice());
                         if (!hidden) { // hide
-                            state.cur_attn[ind] = new Array(sent_length).fill(0);
+                            attn_copy[ind] = new Array(sent_length).fill(0);
                         } else { // show
                             new_attn = state.cur_attn[ind].map((x, index) => {
                                 // reset to current state (account for any tokens that are hidden on right side)
@@ -374,8 +377,9 @@ export default {
                                 // }
                                 // return 0;
                             });
-                            state.cur_attn[ind] = new_attn;
+                            attn_copy[ind] = new_attn;
                         }
+                        store.commit("setCurAttn", attn_copy);
                     } else { // key
                         let hid_index = state.hidden["right"].indexOf(ind);
                         if (hid_index != -1) { // was hidden, now unhide
@@ -410,7 +414,7 @@ export default {
                             })
                         }
 
-                        state.cur_attn = new_attn;
+                        store.commit("setCurAttn", new_attn);
                     }
                     config.attention[config.filter].attn = [[state.cur_attn]];
                     renderVis();
@@ -419,6 +423,9 @@ export default {
                 tokenContainer.on("mouseover", function (this: any, e: Event, d: string) {
                     const select = tokenContainer.nodes();
                     const index = select.indexOf(this);
+
+                    // store.commit("setAttnIndex", index);
+                    // store.commit("setAttnSide", isLeft ? "left" : "right");
 
                     // Show gray background for moused-over token
                     textContainer
@@ -477,6 +484,7 @@ export default {
                 });
 
                 textContainer.on("mouseleave", function (this: any) {
+                    // store.commit("setAttnIndex", -1);
                     // Unhighlight selected token
                     d3.select(this).selectAll(".background").style("opacity", 0.0);
 
@@ -622,6 +630,7 @@ export default {
                 state.showAttn = true;
                 state.attnMsg = "click a token to toggle lines off/on";
                 bertviz();
+                store.commit('updateAttentionLoading', false);
             }
         );
 
