@@ -120,10 +120,14 @@ class DataService(object):
                 attns = plot['tokens'][start:end]
                 break
 
+        attn = [t['attention'] for t in attns]
+        norms = [] if model == "bert" else [t['value_norm'] for t in attns]
+
         return {
             'layer': layer,
             'head': head,
-            'attns': [t['attention'] for t in attns],
+            'attns': attn,
+            'norms': norms,
             'token': all_token_info
         }
 

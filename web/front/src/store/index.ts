@@ -60,7 +60,7 @@ export const store = createStore<State>({
     doneLoading: false,
     renderState: true,
     attentionLoading: false,
-    attentionByToken: {layer: 0, head: 0, attns: [], token: {} as Typing.TokenData},
+    attentionByToken: {layer: 0, head: 0, attns: [], norms: [], token: {} as Typing.TokenData},
     curAttn: [],
     attnIndex: -1,
     attnSide: "",
