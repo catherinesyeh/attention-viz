@@ -121,7 +121,8 @@ class DataService(object):
                 break
 
         attn = [t['attention'] for t in attns]
-        norms = [] if model == "bert" else [t['value_norm'] for t in attns]
+        norms = [] if model != "gpt" else [t['value_norm'] for t in attns]
+        # norms = []
 
         return {
             'layer': layer,

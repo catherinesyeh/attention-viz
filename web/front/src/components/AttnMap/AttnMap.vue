@@ -172,6 +172,8 @@ export default {
                 }
             }
 
+            store.commit('updateAttentionLoading', false);
+
             // const layer = attentionByToken.layer;
             // const head = attentionByToken.head;
             state.layerHead = "L" + state.curLayer + " H" + state.curHead;
@@ -681,7 +683,6 @@ export default {
                 state.showAttn = true;
                 state.attnMsg = "click a token to toggle lines off/on";
                 bertviz();
-                store.commit('updateAttentionLoading', false);
             }
         );
 
@@ -696,15 +697,6 @@ export default {
                 }
             }
         )
-
-        // watch(
-        //     () => [state.model],
-        //     () => {
-        //         if (state.model == 'bert') {
-        //             state.weightByNorm = false;
-        //         }
-        //     }
-        // )
 
         return {
             ...toRefs(state),
