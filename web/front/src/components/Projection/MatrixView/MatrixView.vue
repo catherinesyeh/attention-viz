@@ -16,9 +16,7 @@ import {
     shallowRef,
 } from "vue";
 import * as _ from "underscore";
-import * as d3 from "d3";
 import { useStore } from "@/store/index";
-import { ScatterGL, Point2D } from "scatter-gl";
 import { IconLayer } from '@deck.gl/layers/typed';
 
 import { Typing } from "@/utils/typing";
@@ -26,15 +24,10 @@ import { Typing } from "@/utils/typing";
 import { Deck, OrbitView, OrthographicView, View } from "@deck.gl/core/typed";
 // import interface {Deck} from "@deck.gl/core/typed";
 import { PolygonLayer, ScatterplotLayer, TextLayer, LineLayer } from "@deck.gl/layers/typed";
-import { toTypeString } from "@vue/shared";
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
 import { computeVitMatrixProjection } from "@/utils/vitDataTransform"
-import { Line, StaticReadUsage, TubeBufferGeometry } from "three";
-import { head, initial } from "underscore";
-import { STATEMENT_TYPES, validate } from "@babel/types";
 import RBush from 'rbush';
-import { dragDisable } from "d3";
 
 // constants
 const matrixCellHeight = 100;
@@ -136,12 +129,9 @@ export default defineComponent({
         };
 
         const getImageSize = () => {
-            const zoom = state.zoom
-            var size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.5) * 80
-            if (size < 1) {
-                size = 1
-            }
-            return size
+            const zoom = state.zoom;
+            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.5) * 80;
+            return size < 1 ? 1 : size;
         };
 
         const tree = new RBush(); // fast label overlap detection
@@ -314,6 +304,10 @@ export default defineComponent({
                 getRadius: (d: Typing.Point) => {
                     let defaultSize = 0.4,
                         highlightedSize = 2;
+
+                    if (state.mode === "matrix") {
+                        highlightedSize = 4;
+                    }
 
                     if (state.mode === "single" && state.sizeByNorm) {
                         // scale dot size by norm if checkbox on
@@ -799,6 +793,7 @@ export default defineComponent({
         onwheel = (event: WheelEvent) => { // track cursor position on zoom
             if (state.transitionInProgress) {
                 event.preventDefault;
+                return;
             }
 
             if (state.mode === "matrix") {
@@ -872,6 +867,7 @@ export default defineComponent({
             const curTarget = state.viewState.target;
             const center = deckgl.getViewports()[0].center;
             const zoom = deckgl.getViewports()[0].zoom;
+
             if (curTarget[0] == center[0] && curTarget[1] == center[1] && state.zoom == zoom && state.dimension === "2D") {
                 return; // no reset needed
             }
@@ -968,6 +964,7 @@ export default defineComponent({
             initMatrices();
         });
 
+        // this might still need some tweaking...
         watch(() => state.dimension, () => {
             // deal with 2D/3D transition
             deckgl.setProps({
@@ -980,14 +977,24 @@ export default defineComponent({
                     }),
             });
 
-            if (state.mode == "single") {
-                if (state.dimension === "3D") {
-                    resetZoom();
-                }
-                const curZoom = deckgl.getViewports()[0].zoom;
-                state.zoom = curZoom < zoomThreshold ? zoomThreshold : curZoom;
+            // if (state.mode == "single" || state.modelType == "vit-32" || state.modelType == "vit-16") {
+            // if (state.mode == "single" && state.dimension === "3D") {
+            //     resetZoom();
+            // }
+            const curZoom = deckgl.getViewports()[0].zoom;
+
+            let switchThreshold = zoomThreshold;
+            if (state.dimension === "3D") {
+                resetZoom();
+                switchThreshold = 1.5;
             }
 
+            if (state.mode == "single") {
+                state.zoom = Math.max(curZoom, switchThreshold);
+            } else { // matrix mode
+                state.zoom = Math.min(curZoom, switchThreshold - 0.1);
+            }
+            // }
             deckgl.setProps({ layers: [...toLayers()] });
         })
 
@@ -1009,11 +1016,10 @@ export default defineComponent({
                 () => state.curAttn
             ],
             () => {
-                if (state.view === "attn" && state.attentionLoading) {
+                if (!(state.view === "attn" && state.attentionLoading)) {
                     // wait until attention info done loading
-                    return;
+                    deckgl.setProps({ layers: [...toLayers()] });
                 }
-                deckgl.setProps({ layers: [...toLayers()] });
             }
         );
 

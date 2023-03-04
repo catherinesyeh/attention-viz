@@ -109,10 +109,10 @@ class DataService(object):
         if model == "bert":
             return self.token_data_bert
         elif model == "vit-16":
-            print(self.token_data_vit_16)
+            # print(self.token_data_vit_16)
             return self.token_data_vit_16
         elif model == "vit-32":
-            print(self.token_data_vit_32)
+            # print(self.token_data_vit_32)
             return self.token_data_vit_32
         return self.token_data_gpt
 
