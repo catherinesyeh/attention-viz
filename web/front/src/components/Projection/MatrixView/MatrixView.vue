@@ -19,7 +19,7 @@ import * as _ from "underscore";
 import * as d3 from "d3";
 import { useStore } from "@/store/index";
 import { ScatterGL, Point2D } from "scatter-gl";
-import {IconLayer} from '@deck.gl/layers/typed';
+import { IconLayer } from '@deck.gl/layers/typed';
 
 import { Typing } from "@/utils/typing";
 
@@ -375,6 +375,9 @@ export default defineComponent({
                 sizeMinPixels: 1,
                 sizeUnits: "pixels",
                 opacity: 0.9,
+                updateTriggers: {
+                    getPosition: [state.projectionMethod, state.dimension]
+                },
             })
         };
 
@@ -566,21 +569,23 @@ export default defineComponent({
                     // add extra outline for clicked point
                     layers.push(toPointOutlineLayer([state.clickedPoint]));
                 }
-                
+
                 if (state.modelType == "bert" || state.modelType == "gpt") {
                     layers.push(toPointLayer(layer_points));
                 }
-                else if (state.modelType == "vit-16" || state.modelType == "vit-32")  {
+                else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
                     layers.push(toImageLayer(layer_points));
                 }
                 layers.push(toPlotHeadLayer([layer_headings]));
 
-                if (state.dimension == "2D") {
-                    // only white outline around labels in 2d view
-                    layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
-                }
+                if (state.modelType == "bert" || state.modelType == "gpt") {
+                    if (state.dimension == "2D") {
+                        // only white outline around labels in 2d view
+                        layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
+                    }
 
-                layers.push(toPointLabelLayer(layer_points, visiblePoints));
+                    layers.push(toPointLabelLayer(layer_points, visiblePoints));
+                }
 
                 return layers;
             }
