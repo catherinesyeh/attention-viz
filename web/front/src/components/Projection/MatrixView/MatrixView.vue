@@ -134,7 +134,7 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom
-            var size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.5) * 80
+            var size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.8) * 90
             if (size < 1) {
                 size = 1
             }
@@ -375,6 +375,33 @@ export default defineComponent({
                 sizeMinPixels: 1,
                 sizeUnits: "pixels",
                 opacity: 0.9,
+                onClick: (info, event) => {
+                    if (state.mode === 'matrix') {
+                        return;
+                    }
+                    console.log('onClick', info.object);
+                    store.commit("setView", 'attn');
+                    store.commit("updateAttentionLoading", true);
+
+                    let pt = info.object as Typing.Point;
+                    state.clickedPoint = pt;
+                    store.dispatch("setClickedPoint", pt);
+
+                    let pt_info = state.tokenData[pt.index];
+                    let offset = state.tokenData.length / 2;
+                    let start_index = pt.index - pt_info.pos_int;
+
+                    let same_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
+                    if (pt_info.type === "key") {
+                        start_index -= offset;
+                    } else {
+                        start_index += offset;
+                    }
+
+                    let opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
+                    let tokenIndices = [...same_indices, ...opposite_indices];
+                    store.commit("setHighlightedTokenIndices", tokenIndices);
+                },
             })
         };
 
@@ -540,6 +567,8 @@ export default defineComponent({
 
         const toLayers = () => {
             let { points, headings } = shallowData.value;
+            console.log(state.modelType)
+
             if (state.curHead !== "" && state.curLayer !== "") { // single mode
                 // filter only points in this layer
                 const pointsPerHead = points.length / headings.length; // number points per attention head
