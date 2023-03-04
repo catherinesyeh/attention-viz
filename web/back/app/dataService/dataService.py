@@ -138,10 +138,15 @@ class DataService(object):
                 attns = plot['tokens'][start:end]
                 break
 
+        attn = [t['attention'] for t in attns]
+        norms = [] if model != "gpt" else [t['value_norm'] for t in attns]
+        # norms = []
+
         return {
             'layer': layer,
             'head': head,
-            'attns': [t['attention'] for t in attns],
+            'attns': attn,
+            'norms': norms,
             'token': all_token_info
         }
 

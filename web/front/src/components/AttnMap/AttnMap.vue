@@ -16,14 +16,20 @@
         </div>
         <span class="subtitle">{{ attnMsg }}</span>
         <Transition>
-            <div v-show="showAttn">
-                <p class="label">Hide</p>
-                <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt'">first
-                    token</a-checkbox>
-                <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
-                    v-show="model == 'bert'">[cls]</a-checkbox>
-                <a-checkbox v-model:checked="hideLast" @click="hideTokens('last')"
-                    v-show="model == 'bert'">[sep]</a-checkbox>
+            <div v-show="showAttn" class="checkbox-contain">
+                <div :class="{ half: model == 'gpt' }">
+                    <p class="label">Hide</p>
+                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt'">first
+                        token</a-checkbox>
+                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
+                        v-show="model == 'bert'">[cls]</a-checkbox>
+                    <a-checkbox v-model:checked="hideLast" @click="hideTokens('last')"
+                        v-show="model == 'bert'">[sep]</a-checkbox>
+                </div>
+                <div class="half" v-show="model == 'gpt'">
+                    <p class="label">Weight by</p>
+                    <a-checkbox v-model:checked="weightByNorm" @click="toggleWeightBy">value norm</a-checkbox>
+                </div>
             </div>
         </Transition>
         <Transition>
@@ -41,6 +47,7 @@ import { useStore } from "@/store/index";
 import * as d3 from "d3";
 import moment from "moment";
 import { getAttentionByToken } from "@/services/dataService";
+import { stat } from "fs";
 
 type Config = {
     attention: any;
@@ -79,12 +86,17 @@ export default {
             mode: computed(() => store.state.mode),
             model: computed(() => store.state.modelType),
             attn_vals: [] as number[][],
-            cur_attn: [] as number[][],
+            cur_attn: computed(() => store.state.curAttn),
+            weighted_attn: [] as number[][],
             hidden: { left: [] as number[], right: [] as number[] },
             hideFirst: false,
-            hideLast: false
+            hideLast: false,
+            weightByNorm: false,
+            // attnIndex: computed(() => store.state.attnIndex),
+            // attnSide: computed(() => store.state.attnSide)
         });
 
+        // helper function for renormalizing attention when a key is hidden
         const hideKey = (ind: number) => {
             return state.cur_attn.map((row: number[]) => {
                 let rem_attn = 1 - row[ind];
@@ -95,6 +107,34 @@ export default {
                     return 0;
                 })
             })
+        }
+
+        // helper function for weighting attention by value norms
+        const weightAttn = (attns: number[][]) => {
+            const norms = state.attentionByToken.norms;
+
+            const new_attn = attns.map((row: number[]) => {
+                // scale
+                let new_row = row.map((cell: number, index: number) => {
+                    // if (state.weightByNorm) { // multiply if checkbox on
+                    return cell * norms[index];
+                    // } // else divide
+                    // return cell / norms[index];
+                })
+                // now renormalize 
+                const row_sum = new_row.reduce((sum, elem) => sum + elem, 0);
+                if (row_sum == 0) { // control for NaNs
+                    return new_row;
+                }
+                return new_row.map((cell: number) => cell / row_sum);
+            })
+
+            return new_attn;
+        }
+
+        const toggleWeightBy = () => { // toggle weightby checkbox
+            state.weightByNorm = !state.weightByNorm;
+            bertviz();
         }
 
         // start bertviz
@@ -108,19 +148,31 @@ export default {
             if (token_type == "key") { // flip graph if key
                 state.attn_vals = transpose(state.attn_vals);
             }
-            state.cur_attn = state.attn_vals;
+
+            store.commit("setCurAttn", state.attn_vals);
             state.hidden["left"] = [];
             state.hidden["right"] = [];
 
             // hide first/last tokens if checkboxes selected
             if (state.hideFirst) {
-                state.cur_attn = hideKey(0);
+                store.commit("setCurAttn", hideKey(0));
                 state.hidden["right"].push(0);
             }
-            if (state.hideLast) {
-                state.cur_attn = hideKey(token_text.length - 1);
+            if (state.model == "bert" && state.hideLast) {
+                // gpt doesn't have hide last option
+                store.commit("setCurAttn", hideKey(token_text.length - 1));
                 state.hidden["right"].push(token_text.length - 1);
             }
+
+            if (state.attentionByToken.norms.length > 0) {
+                // don't weight for bert
+                state.weighted_attn = weightAttn(state.attn_vals);
+                if (state.weightByNorm) {
+                    store.commit("setCurAttn", weightAttn(state.cur_attn));
+                }
+            }
+
+            store.commit('updateAttentionLoading', false);
 
             // const layer = attentionByToken.layer;
             // const head = attentionByToken.head;
@@ -357,30 +409,33 @@ export default {
                         let hid_index = state.hidden["left"].indexOf(ind);
                         if (hid_index != -1) { // was hidden, now unhide
                             hidden = true;
-                            delete state.hidden["left"][hid_index];
+                            state.hidden["left"].splice(hid_index, 1);
                         } else { // was visible, now hide
                             hidden = false;
                             state.hidden["left"].push(ind);
                         }
 
                         let sent_length = state.cur_attn[ind].length;
+                        let attn_copy = state.cur_attn.map((a) => a.slice());
                         if (!hidden) { // hide
-                            state.cur_attn[ind] = new Array(sent_length).fill(0);
+                            attn_copy[ind] = new Array(sent_length).fill(0);
                         } else { // show
+                            const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
                             new_attn = state.cur_attn[ind].map((x, index) => {
                                 // reset to current state (account for any tokens that are hidden on right side)
                                 // if (!state.hidden["right"].includes(index)) {
-                                return state.attn_vals[ind][index];
+                                return reset_to[ind][index];
                                 // }
                                 // return 0;
                             });
-                            state.cur_attn[ind] = new_attn;
+                            attn_copy[ind] = new_attn;
                         }
+                        store.commit("setCurAttn", attn_copy);
                     } else { // key
                         let hid_index = state.hidden["right"].indexOf(ind);
                         if (hid_index != -1) { // was hidden, now unhide
                             hidden = true;
-                            delete state.hidden["right"][hid_index];
+                            state.hidden["right"].splice(hid_index, 1);
                         } else { // was visible, now hide
                             hidden = false;
                             state.hidden["right"].push(ind);
@@ -390,13 +445,14 @@ export default {
                             new_attn = hideKey(ind);
                         } else { // show again
                             // add back cells corresponding to clicked on token
+                            const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
                             new_attn = state.cur_attn.map((row: number[], index: number) => {
                                 // let token_val = state.attn_vals[index][ind];
                                 let rem_attn = 1;
                                 let row_index = index;
                                 state.hidden["right"].forEach((x, index) => {
                                     // account for other hidden keys too
-                                    rem_attn -= state.attn_vals[row_index][x];
+                                    rem_attn -= reset_to[row_index][x];
                                 })
                                 // let rem_attn = 1 - token_val;
                                 return row.map((cell: number, index: number) => {
@@ -405,12 +461,12 @@ export default {
                                     // }
                                     return rem_attn == 0 || state.hidden["right"].includes(index)
                                         ? 0
-                                        : Math.min(1, state.attn_vals[row_index][index] / rem_attn);
+                                        : Math.min(1, reset_to[row_index][index] / rem_attn);
                                 })
                             })
                         }
 
-                        state.cur_attn = new_attn;
+                        store.commit("setCurAttn", new_attn);
                     }
                     config.attention[config.filter].attn = [[state.cur_attn]];
                     renderVis();
@@ -419,6 +475,9 @@ export default {
                 tokenContainer.on("mouseover", function (this: any, e: Event, d: string) {
                     const select = tokenContainer.nodes();
                     const index = select.indexOf(this);
+
+                    // store.commit("setAttnIndex", index);
+                    // store.commit("setAttnSide", isLeft ? "left" : "right");
 
                     // Show gray background for moused-over token
                     textContainer
@@ -477,6 +536,7 @@ export default {
                 });
 
                 textContainer.on("mouseleave", function (this: any) {
+                    // store.commit("setAttnIndex", -1);
                     // Unhighlight selected token
                     d3.select(this).selectAll(".background").style("opacity", 0.0);
 
@@ -596,10 +656,11 @@ export default {
         }
 
         const resetAttn = () => {
-            state.hideFirst = false;
-            state.hideLast = false;
             state.hidden["left"] = [];
             state.hidden["right"] = [];
+            state.hideFirst = false;
+            state.hideLast = false;
+            state.weightByNorm = false;
             bertviz();
         }
 
@@ -642,7 +703,8 @@ export default {
             clearAttn,
             bertviz,
             hideTokens,
-            resetAttn
+            resetAttn,
+            toggleWeightBy
         };
     },
 };
@@ -736,5 +798,14 @@ text.bold.key {
     visibility: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
+}
+
+.checkbox-contain {
+    display: flex;
+}
+
+.half {
+    width: 50%;
+    display: inline-block;
 }
 </style>
