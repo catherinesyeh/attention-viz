@@ -88,7 +88,7 @@ export default defineComponent({
         get: () => store.state.modelType,
         set: (v) => store.dispatch("switchModel", v)
       }),
-      modelOptions: ["bert", "gpt"].map((x) => ({ value: x, label: x })),
+      modelOptions: ["vit-16", "vit-32", "bert", "gpt"].map((x) => ({ value: x, label: x })),
       projectionMethod: computed({
         get: () => store.state.projectionMethod,
         set: (v) => store.commit("setProjectionMethod", v),

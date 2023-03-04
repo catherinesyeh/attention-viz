@@ -38,6 +38,7 @@ export namespace Typing {
         sentence: string;
         type: string;
         value: string;
+        imagePath: string;
     }
 
     // export type projectionMethod = "tsne" | "umap";
@@ -78,7 +79,9 @@ export namespace Typing {
         value: string;
         type: string;
         normScaled: number;
+        imagePath: string;
     }
+    
     export interface PlotHead {
         layer: number;
         head: number;

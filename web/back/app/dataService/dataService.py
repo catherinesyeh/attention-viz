@@ -77,6 +77,14 @@ class DataService(object):
         self.attention_data_gpt = read_attention_data("gpt")
         self.token_data_gpt = read_token_data("gpt")
 
+        # VIT-32
+        self.matrix_data_vit_32 = read_matrix_data("vit_32")
+        self.token_data_vit_32 = read_token_data("vit_32")
+
+        # VIT-16
+        self.matrix_data_vit_16 = read_matrix_data("vit_16")
+        self.token_data_vit_16 = read_token_data("vit_16")
+
         return None
 
     # def get_raw_data(self):
@@ -86,6 +94,10 @@ class DataService(object):
     def get_matrix_data(self, model):
         if model == "bert":
             return self.matrix_data_bert
+        elif model == "vit-16":
+            return self.matrix_data_vit_16
+        elif model == "vit-32":
+            return self.matrix_data_vit_32
         return self.matrix_data_gpt
 
     # def get_attention_data(self, model):
@@ -96,6 +108,12 @@ class DataService(object):
     def get_token_data(self, model):
         if model == "bert":
             return self.token_data_bert
+        elif model == "vit-16":
+            print(self.token_data_vit_16)
+            return self.token_data_vit_16
+        elif model == "vit-32":
+            print(self.token_data_vit_32)
+            return self.token_data_vit_32
         return self.token_data_gpt
 
     def get_attention_by_token(self, token, model):

@@ -90,7 +90,7 @@
                 <Legend />
             </div>
             <!-- <canvas id="matrix-canvas" /> -->
-
+            
             <MatrixView v-show="!renderState" ref="matrixView" />
         </div>
     </div>
