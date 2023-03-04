@@ -15,13 +15,12 @@
                     <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
                         @search="onSearch(searchToken)" spellcheck="false" />
                     <Transition>
-                        <a-button class="clear" type="link" v-show="searchToken != ''"
-                            @click="clearSearch">clear</a-button>
+                        <a-button class="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
                     </Transition>
 
                     <p class="label">Labels</p>
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
-                        :class="{ disabled: mode == 'matrix' }">show</a-checkbox>
+                        :class="{ disabled: mode == 'matrix' || view == 'attn' }">show</a-checkbox>
 
                     <p class="label">Attention Lines</p>
                     <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
@@ -31,11 +30,11 @@
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm"
                         :class="{ disabled: mode == 'matrix' }">scale by norm</a-checkbox>
 
-                    <!-- <p class="label">Mode</p>
+                <!-- <p class="label">Mode</p>
                     <a-radio-group v-model:value="mode">
                         <a-radio-button value="single">single</a-radio-button>
                         <a-radio-button value="matrix">matrix</a-radio-button>
-                    </a-radio-group> -->
+                        </a-radio-group> -->
 
                     <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">

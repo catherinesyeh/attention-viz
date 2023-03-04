@@ -498,10 +498,51 @@ export default defineComponent({
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
-                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll, state.dimension],
-                    getPosition: [state.projectionMethod, state.zoom]
+                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
+                    getPosition: [state.projectionMethod, state.zoom, state.dimension]
                 },
             });
+        };
+
+        const toAttentionLabelLayer = (points: Typing.Point[]) => {
+            // text labels for tokens in currently highlighted sentence
+            return new TextLayer({
+                id: "attention-label-layer",
+                data: points, // (state.pointScaleFactor < 0.3) ? points: [],
+                pickable: false,
+                characterSet: 'auto',
+                getPosition: (d: Typing.Point) => {
+                    let coord = getPointCoordinate(d);
+                    let offset = 1 / (0.3 * state.zoom);
+                    if (state.zoom > 4 && state.zoom <= 6) {
+                        offset = 1 / (0.5 * state.zoom);
+                    }
+                    else if (state.zoom > 6) {
+                        offset = 1 / ((state.zoom - 5) * state.zoom);
+                    }
+                    return coord.length == 2
+                        ? [coord[0] + offset, coord[1]]
+                        : [coord[0] + offset, coord[1], coord[2] + offset];
+                },
+                getText: (d: Typing.Point) => state.tokenData[d.index].pos_int + ":" + d.value,
+                getColor: (d: Typing.Point) => {
+                    return d.type == "query"
+                        ? state.userTheme == "light-theme"
+                            ? [43, 91, 25, defaultOpacity]
+                            : [194, 232, 180, defaultOpacity]
+                        : state.userTheme == "light-theme"
+                            ? [117, 29, 58, defaultOpacity]
+                            : [240, 179, 199, defaultOpacity]
+                },
+                getSize: 12,
+                getAngle: 0,
+                getTextAnchor: "start",
+                getAlignmentBaseline: "center",
+                updateTriggers: {
+                    getColor: [state.userTheme],
+                    getPosition: [state.projectionMethod, state.zoom, state.dimension]
+                },
+            })
         };
 
         const toPlotHeadLayer = (headings: Typing.PlotHead[]) => {
@@ -571,12 +612,13 @@ export default defineComponent({
                 const visiblePoints = layer_points.map((v) => makeTree(v));
 
                 let layers = [];
+                let attn_points: Typing.Point[] = [];
                 if (state.view === 'attn') {
                     if (state.showAttention) { // show lines in attention view if checkbox on
                         if (state.clickedPoint != "") { // already in attn view
                             state.clickedPoint = layer_points[state.clickedPoint.index];
                         }
-                        const attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                        attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
                         layers.push(toLineLayer(attn_points));
                     }
                     // add extra outline for clicked point
@@ -584,15 +626,24 @@ export default defineComponent({
                 }
 
                 layers.push(toPointLayer(layer_points));
+
+                if (state.view == "attn") {
+                    if (attn_points.length == 0) {
+                        // always show labels in attn view
+                        attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                    }
+                    layers.push(toAttentionLabelLayer(attn_points));
+                }
                 layers.push(toPlotHeadLayer([layer_headings]));
 
-                if (state.dimension == "2D") {
-                    // only white outline around labels in 2d view
-                    layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
+                if (state.view != "attn" && state.showAll) {
+                    if (state.dimension == "2D") {
+                        // only white outline around labels in 2d view
+                        layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
+                    }
+
+                    layers.push(toPointLabelLayer(layer_points, visiblePoints));
                 }
-
-                layers.push(toPointLabelLayer(layer_points, visiblePoints));
-
                 return layers;
             }
             // else: return matrix view
