@@ -68,6 +68,16 @@ class DataService(object):
         # read data here
 
         # bert
+        # self.all_data = {}
+        # for model in os.listdir(join(rootDir, 'data')):
+        #     if model.startswith("."):
+        #         continue
+        #     self.all_data[model] = {}
+        #     self.all_data[model]["matrix"] = read_matrix_data(model)
+        #     self.all_data[model]["attention"] = read_attention_data(model)
+        #     self.all_data[model]["token"] = read_token_data(model)
+            
+
         self.matrix_data_bert = read_matrix_data("bert")
         self.attention_data_bert = read_attention_data("bert")
         self.token_data_bert = read_token_data("bert")
@@ -112,7 +122,6 @@ class DataService(object):
             print(self.token_data_vit_16)
             return self.token_data_vit_16
         elif model == "vit-32":
-            print(self.token_data_vit_32)
             return self.token_data_vit_32
         return self.token_data_gpt
 
