@@ -65,8 +65,8 @@
                 </div>
             </Transition>
             <Transition>
-                <div id="bertviz" v-show="showAttn">
-                    <div id="vis"></div>
+                <div v-show="showAttn">
+                    <canvas id="bertviz" />
                 </div>
             </Transition>
         </div>
@@ -81,7 +81,8 @@ import * as d3 from "d3";
 import moment from "moment";
 import { getAttentionByToken } from "@/services/dataService";
 import { stat } from "fs";
-import { BitmapLayer } from "@deck.gl/layers/typed";
+import { BitmapLayer, IconLayer } from "@deck.gl/layers/typed";
+import { Deck } from "@deck.gl/core/typed";
 
 
 type Config = {
@@ -174,6 +175,8 @@ export default {
 
         // start bertviz
         const bertviz = () => {
+            console.log(state.model)
+            console.log(state.model.includes("vit"))
             if (state.model.includes("vit")) {
                 console.log("Here")
                 // parse info from data
@@ -181,7 +184,6 @@ export default {
                 state.attn_vals = attentionByToken.attns;
                 const token_type: string = attentionByToken.token.type;
                 const token_pos: number = attentionByToken.token.pos_int;
-                const token_text: string[] = attentionByToken.token.sentence.split(" ");
                 state.cur_attn = state.attn_vals;
                 state.hidden["left"] = [];
                 state.hidden["right"] = [];
@@ -195,8 +197,6 @@ export default {
                         {
                             name: null,
                             attn: [[state.cur_attn]],
-                            left_text: token_text,
-                            right_text: token_text,
                             layer: 0,
                             head: 0,
                         },
@@ -233,8 +233,6 @@ export default {
                     } else {
                         config.headVis = new Array(config.nHeads).fill(true);
                     }
-                    config.initialTextLength =
-                        config.attention[config.filter].right_text.length;
                     config.layer_seq =
                         params["layer"] == null
                             ? 0
@@ -244,12 +242,29 @@ export default {
                 }
 
                 const toOriginalImageLayer = new BitmapLayer({
-                        id: 'bertviz',
-                        bounds: [0, 0, 15, 15],
-                        image: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/sf-districts.png'
+                        id: 'bertviz-image',
+                        bounds: [-490, 75, -350, 89],
+                        image: attentionByToken.token.originalImagePath
                     });
+                // const toOriginalImageLayer = new IconLayer(
+                //     {
+                //         id: 'icon-layer',
+                //         // iconAtlas and iconMapping are required
+                //         // getIcon: return a string
+                //         getIcon: d => attentionByToken.token.originalImagePath,
+                //         getSize: d => 50,
+                //         getPosition: d => [0, 0],
+                //     }
+                // )
 
-                return [toOriginalImageLayer]
+                const deckgl = new Deck({
+                    canvas: "bertviz",
+                    initialViewState: state.view,
+                    layers: [toOriginalImageLayer],
+                });
+
+                console.log(state.view)
+
             } else {
                 // parse info from data
                 let { attentionByToken } = state;

@@ -89,11 +89,14 @@ class DataService(object):
 
         # VIT-32
         self.matrix_data_vit_32 = read_matrix_data("vit_32")
+        self.attention_data_vit_32 = read_attention_data("vit_32")
         self.token_data_vit_32 = read_token_data("vit_32")
 
         # VIT-16
         self.matrix_data_vit_16 = read_matrix_data("vit_16")
+        # self.attention_data_vit_16 = read_attention_data("vit_16")
         self.token_data_vit_16 = read_token_data("vit_16")
+        
 
         return None
 
@@ -126,19 +129,38 @@ class DataService(object):
         return self.token_data_gpt
 
     def get_attention_by_token(self, token, model):
+        print(model)
         layer = token['layer']
         head = token['head']
         index = token['index']
 
         if model == "bert":
             all_token_info = self.token_data_bert['tokens'][index]
+        elif model == "vit-32":
+            all_token_info = self.token_data_vit_32['tokens'][index]
+        # elif model == "vit_16":
+            # all_token_info = self.token_data_vit_16['tokens'][index]
         else:
             all_token_info = self.token_data_gpt['tokens'][index]
-        start = index - all_token_info['pos_int']
-        end = start + all_token_info['length']
+        if model == "vit-32":
+            start = index - (all_token_info['position'] * 7 + all_token_info['pos_int'])
+            end = start + 49
+            all_token_info['originalImagePath'] = self.token_data_vit_32['tokens'][start]['originalImagePath']
+        # elif model == "vit_16":
+        #     start = index - (all_token_info['position'] * 14 + all_token_info['pos_int'])
+        #     end = start + 196
+        else:
+            start = index - all_token_info['pos_int']
+            end = start + all_token_info['length']
+
+        print(all_token_info)
 
         if model == "bert":
             attn_data = self.attention_data_bert
+        elif model == "vit-32":
+            attn_data = self.attention_data_vit_32
+        # elif model == "vit_16":
+            # attn_data = self.attention_data_vit_16
         else:
             attn_data = self.attention_data_gpt
 

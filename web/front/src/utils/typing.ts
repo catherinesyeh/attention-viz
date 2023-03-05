@@ -39,6 +39,8 @@ export namespace Typing {
         type: string;
         value: string;
         imagePath: string;
+        originalPatchPath: string;
+        originalImagePath: string;
     }
 
     // export type projectionMethod = "tsne" | "umap";

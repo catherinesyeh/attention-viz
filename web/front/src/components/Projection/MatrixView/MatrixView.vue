@@ -455,10 +455,16 @@ export default defineComponent({
                     store.dispatch("setClickedPoint", pt);
 
                     let pt_info = state.tokenData[pt.index];
-                    let offset = state.tokenData.length / 2;
-                    let start_index = pt.index - pt_info.pos_int;
+                    let offset = 0
+                    if (state.modelType == "vit-32") {
+                        let offset = 49;
+                    }
+                    else {
+                        let offset = 196;
+                    }
+                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset) + pt_info.pos_int);
 
-                    let same_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
+                    let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
                     if (pt_info.type === "key") {
                         start_index -= offset;
                     } else {
