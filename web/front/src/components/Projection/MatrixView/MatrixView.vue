@@ -1,6 +1,11 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
-    <canvas id="matrix-canvas" />
+    <div>
+        <Transition>
+            <Circle v-show="attentionLoading || transitionInProgress" />
+        </Transition>
+        <canvas id="matrix-canvas" />
+    </div>
 </template>
 
 <script lang="ts">
@@ -26,7 +31,8 @@ import { Deck, OrbitView, OrthographicView, View } from "@deck.gl/core/typed";
 import { PolygonLayer, ScatterplotLayer, TextLayer, LineLayer } from "@deck.gl/layers/typed";
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
-import { computeVitMatrixProjection } from "@/utils/vitDataTransform"
+import { computeVitMatrixProjection } from "@/utils/vitDataTransform";
+import Circle from './Circle.vue';
 import RBush from 'rbush';
 
 // constants
@@ -68,7 +74,7 @@ const defaultOpacity = 225,
     lightOpacity = 50;
 
 export default defineComponent({
-    components: {},
+    components: { Circle },
     setup(props, context) {
         const store = useStore();
 
@@ -840,6 +846,7 @@ export default defineComponent({
          * Reset the view state to matrix mode
          */
         const reset = (clicked: boolean) => {
+            state.transitionInProgress = true;
             if (state.mode !== "matrix") {
                 store.commit("setMode", "matrix");
                 store.commit("setLayer", "");
@@ -858,6 +865,7 @@ export default defineComponent({
                     initialViewState: state.viewState,
                 });
             }
+            state.transitionInProgress = false;
         };
 
         /* 
@@ -904,11 +912,16 @@ export default defineComponent({
          * @param str
          */
         const onSearch = (str: string) => {
+            state.transitionInProgress = true;
             str = str.toLowerCase(); // convert to lowercase first to match other tokens
-            let tokenIndices = state.tokenData
-                .map((x, idx) => (x.value === str ? idx : undefined))
-                .filter((x) => x) as number[];
+            let tokenIndices = [] as number[];
+            if (str != "") {
+                tokenIndices = state.tokenData
+                    .map((x, idx) => (x.value === str ? idx : undefined))
+                    .filter((x) => x) as number[];
+            }
             store.commit("setHighlightedTokenIndices", tokenIndices);
+            state.transitionInProgress = false;
             return tokenIndices.length;
         };
 
