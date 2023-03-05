@@ -19,7 +19,7 @@ import * as _ from "underscore";
 import * as d3 from "d3";
 import { useStore } from "@/store/index";
 import { ScatterGL, Point2D } from "scatter-gl";
-import {IconLayer} from '@deck.gl/layers/typed';
+import { IconLayer } from '@deck.gl/layers/typed';
 
 import { Typing } from "@/utils/typing";
 
@@ -85,6 +85,7 @@ export default defineComponent({
             viewState: nullInitialView,
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             attentionByToken: computed(() => store.state.attentionByToken),
+            curAttn: computed(() => store.state.curAttn),
             projectionMethod: computed(() => store.state.projectionMethod),
             colorBy: computed(() => store.state.colorBy),
             view: computed(() => store.state.view),
@@ -105,6 +106,8 @@ export default defineComponent({
             transitionInProgress: false,
             attentionLoading: computed(() => store.state.attentionLoading),
             modelType: computed(() => store.state.modelType),
+            // attnIndex: computed(() => store.state.attnIndex),
+            // attnSide: computed(() => store.state.attnSide)
         });
 
         var shallowData = shallowRef({
@@ -161,57 +164,120 @@ export default defineComponent({
             return size;
         }
 
+        const makeTree = (d: Typing.Point) => {
+            let coord = getPointCoordinate(d);
+            let labelSize = sizeMeasurer(d.value, 12);
+            let new_coord = {
+                minX: coord[0] - 0.5 * labelSize.width,
+                minY: coord[1] - 0.5 * labelSize.width,
+                maxX: coord[0] + 0.5 * labelSize.width,
+                maxY: coord[1] + 0.5 * labelSize.height
+            }
+            const overlap = tree.collides(new_coord);
+            if (overlap) {
+                // return [255, 255, 255, 0];
+                return false;
+            }
+            tree.insert(new_coord);
+            return true;
+        }
+
+        // helper when drawing attentino lines
+        function get_k_attn(k: number) {
+            let attention = state.curAttn;
+
+            let top_attn: any = [];
+            // find top k attention weights for each query
+            for (let row = 0; row < attention.length; row++) {
+                const row_with_i = attention[row].map((v, index) => [index, v]);
+                row_with_i.sort((a, b) => a[1] > b[1] ? -1 : a[1] < b[1] ? 1 : 0);
+
+                let top_k = row_with_i.splice(0, k);
+                // add points to top_attn data
+                top_k.map((v) => {
+                    if (v[1] >= 0.05) { // skip very low opacity lines
+                        top_attn.push({ from: row, to: v[0], att: v[1] })
+                    }
+                });
+            }
+
+            // only show relevant lines on hover
+            // too laggy right now...
+            // if (state.attnIndex != -1) {
+            //     if (state.attnSide === "left") {
+            //         top_attn = top_attn.filter((v: any) => v.from === state.attnIndex);
+            //     } else {
+            //         top_attn = top_attn.filter((v: any) => v.to === state.attnIndex);
+            //     }
+            // }
+            // console.log(state.attnIndex);
+            // console.log(top_attn);
+            return top_attn;
+        }
+
         // LAYERS
         const toLineLayer = (points: Typing.Point[]) => {
-            const clickedIndex = state.clickedPoint.index;
-            const clickedType = state.clickedPoint.type;
-            const sourcePosition = getPointCoordinate(state.clickedPoint);
-            const searchIndex = state.tokenData[clickedIndex].pos_int;
-            let minIndex = clickedIndex - searchIndex;
-            const offset = state.tokenData.length / 2;
-            if (clickedType === "query") {
-                minIndex += offset;
-            } else {
-                minIndex -= offset;
-            }
+            // show attention lines on scatterplot
+            // const clickedIndex = state.clickedPoint.index;
+            // const clickedType = state.clickedPoint.type;
+
+            // const sourcePosition = getPointCoordinate(state.clickedPoint);
+            // const searchIndex = state.tokenData[clickedIndex].pos_int;
+            // let minIndex = clickedIndex - searchIndex;
+            // const offset = state.tokenData.length / 2;
+            // if (clickedType === "query") {
+            //     minIndex += offset;
+            // } else {
+            //     minIndex -= offset;
+            // }
+
+            const queries = points.filter((v) => v.type === "query");
+            const keys = points.filter((v) => v.type === "key");
+
+            // get top k attns for each query
+            let top_attn = get_k_attn(2);
 
             return new LineLayer({
                 id: "attention-line-layer",
                 pickable: false,
-                data: points,
+                data: top_attn,
                 widthMaxPixels: 10,
                 widthScale: 5,
-                getSourcePosition: sourcePosition,
-                getTargetPosition: (d: Typing.Point) => getPointCoordinate(d),
-                getColor: (d: Typing.Point) => {
-                    if (d.index == clickedIndex || d.type === clickedType) {
-                        // don't show line to self or same type of token
-                        return [255, 255, 255, 0];
-                    }
-                    const arrayIndex = d.index - minIndex;
-                    const opacity = state.attentionByToken.attns[searchIndex][arrayIndex] * 255;
+                getSourcePosition: (d: any) => getPointCoordinate(queries[d.from]),
+                getTargetPosition: (d: any) => getPointCoordinate(keys[d.to]),
+                getColor: (d: any) => {
+                    // if (d.index == clickedIndex || d.type === clickedType) {
+                    //     // don't show line to self or same type of token
+                    //     return [255, 255, 255, 0];
+                    // }
+                    // const arrayIndex = d.index - minIndex;
+                    // const opacity = state.attentionByToken.attns[searchIndex][arrayIndex] * 255;
+                    const opacity = d.att * 255;
 
-                    if (opacity == 0) { // fix 3d lines
-                        return [255, 255, 255, 0];
-                    }
+                    // if (opacity == 0) { // fix 3d lines
+                    //     return [255, 255, 255, 0];
+                    // }
 
-                    return clickedType === "query" ?
-                        state.userTheme == "light-theme"
-                            ? [43, 91, 25, opacity]
-                            : [194, 232, 180, opacity]
-                        : state.userTheme == "light-theme"
-                            ? [117, 29, 58, opacity]
-                            : [240, 179, 199, opacity];
+                    return [255, 195, 0, opacity];
+
+                    // return clickedType === "query" ?
+                    //     state.userTheme == "light-theme"
+                    //         ? [43, 91, 25, opacity]
+                    //         : [194, 232, 180, opacity]
+                    //     : state.userTheme == "light-theme"
+                    //         ? [117, 29, 58, opacity]
+                    //         : [240, 179, 199, opacity];
                 },
                 updateTriggers: {
-                    getSourcePosition: [state.projectionMethod, state.dimension],
-                    getTargetPosition: [state.projectionMethod, state.dimension],
-                    getColor: [state.attentionByToken, state.userTheme]
+                    getSourcePosition: [state.projectionMethod, state.dimension, state.curAttn],
+                    getTargetPosition: [state.projectionMethod, state.dimension, state.curAttn],
+                    getColor: [state.curAttn]
                 }
             });
         }
 
         const toPointOutlineLayer = (points: Typing.Point[]) => {
+            // draw thicker line around clicked on point
             return new ScatterplotLayer({
                 id: "point-outline-layer",
                 pickable: false,
@@ -237,6 +303,7 @@ export default defineComponent({
         }
 
         const toPointLayer = (points: Typing.Point[]) => {
+            // main scatterplot(s)
             return new ScatterplotLayer({
                 id: "point-layer",
                 pickable: state.mode == 'single',
@@ -375,6 +442,7 @@ export default defineComponent({
                 sizeMinPixels: 1,
                 sizeUnits: "pixels",
                 opacity: 0.9,
+<<<<<<< HEAD
                 onClick: (info, event) => {
                     if (state.mode === 'matrix') {
                         return;
@@ -401,15 +469,21 @@ export default defineComponent({
                     let opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
                     let tokenIndices = [...same_indices, ...opposite_indices];
                     store.commit("setHighlightedTokenIndices", tokenIndices);
+=======
+                updateTriggers: {
+                    getPosition: [state.projectionMethod, state.dimension]
+>>>>>>> c45c1b75b7c991151758d8eda5f1593fcf80e8c5
                 },
             })
         };
 
         const toLabelOutlineLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
+            // white outline around text
             return new TextLayer({
                 id: "label-outline-layer",
                 data: points,
                 pickable: false,
+                characterSet: 'auto',
                 getPosition: (d: Typing.Point) => {
                     if (!state.showAll || !visiblePoints[d.index]) {
                         return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
@@ -446,10 +520,12 @@ export default defineComponent({
         };
 
         const toPointLabelLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
+            // main text labels for scatterplot points
             return new TextLayer({
                 id: "point-label-layer",
                 data: points, // (state.pointScaleFactor < 0.3) ? points: [],
                 pickable: false,
+                characterSet: 'auto',
                 getPosition: (d: Typing.Point) => {
                     if (!state.showAll || !visiblePoints[d.index]) {
                         return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
@@ -494,13 +570,55 @@ export default defineComponent({
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
-                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll, state.dimension],
-                    getPosition: [state.projectionMethod, state.zoom]
+                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
+                    getPosition: [state.projectionMethod, state.zoom, state.dimension]
                 },
             });
         };
 
+        const toAttentionLabelLayer = (points: Typing.Point[]) => {
+            // text labels for tokens in currently highlighted sentence
+            return new TextLayer({
+                id: "attention-label-layer",
+                data: points, // (state.pointScaleFactor < 0.3) ? points: [],
+                pickable: false,
+                characterSet: 'auto',
+                getPosition: (d: Typing.Point) => {
+                    let coord = getPointCoordinate(d);
+                    let offset = 1 / (0.3 * state.zoom);
+                    if (state.zoom > 4 && state.zoom <= 6) {
+                        offset = 1 / (0.5 * state.zoom);
+                    }
+                    else if (state.zoom > 6) {
+                        offset = 1 / ((state.zoom - 5) * state.zoom);
+                    }
+                    return coord.length == 2
+                        ? [coord[0] + offset, coord[1]]
+                        : [coord[0] + offset, coord[1], coord[2] + offset];
+                },
+                getText: (d: Typing.Point) => state.tokenData[d.index].pos_int + ":" + d.value,
+                getColor: (d: Typing.Point) => {
+                    return d.type == "query"
+                        ? state.userTheme == "light-theme"
+                            ? [43, 91, 25, defaultOpacity]
+                            : [194, 232, 180, defaultOpacity]
+                        : state.userTheme == "light-theme"
+                            ? [117, 29, 58, defaultOpacity]
+                            : [240, 179, 199, defaultOpacity]
+                },
+                getSize: 12,
+                getAngle: 0,
+                getTextAnchor: "start",
+                getAlignmentBaseline: "center",
+                updateTriggers: {
+                    getColor: [state.userTheme],
+                    getPosition: [state.projectionMethod, state.zoom, state.dimension]
+                },
+            })
+        };
+
         const toPlotHeadLayer = (headings: Typing.PlotHead[]) => {
+            // layer/head label for each plot
             return new TextLayer({
                 id: "text-layer",
                 data: headings,
@@ -521,6 +639,7 @@ export default defineComponent({
         };
 
         const toOverlayLayer = (headings: Typing.PlotHead[]) => {
+            // invisible polygon overlay to allow us to click on plots in matrix mode
             return new PolygonLayer({
                 id: "overlay-layer",
                 data: headings,
@@ -547,24 +666,7 @@ export default defineComponent({
             });
         };
 
-        const makeTree = (d: Typing.Point) => {
-            let coord = getPointCoordinate(d);
-            let labelSize = sizeMeasurer(d.value, 12);
-            let new_coord = {
-                minX: coord[0] - 0.5 * labelSize.width,
-                minY: coord[1] - 0.5 * labelSize.width,
-                maxX: coord[0] + 0.5 * labelSize.width,
-                maxY: coord[1] + 0.5 * labelSize.height
-            }
-            const overlap = tree.collides(new_coord);
-            if (overlap) {
-                // return [255, 255, 255, 0];
-                return false;
-            }
-            tree.insert(new_coord);
-            return true;
-        }
-
+        // compute + render layers for current view
         const toLayers = () => {
             let { points, headings } = shallowData.value;
             console.log(state.modelType)
@@ -584,33 +686,43 @@ export default defineComponent({
                 const visiblePoints = layer_points.map((v) => makeTree(v));
 
                 let layers = [];
+                let attn_points: Typing.Point[] = [];
                 if (state.view === 'attn') {
                     if (state.showAttention) { // show lines in attention view if checkbox on
                         if (state.clickedPoint != "") { // already in attn view
                             state.clickedPoint = layer_points[state.clickedPoint.index];
                         }
-                        const attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                        attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
                         layers.push(toLineLayer(attn_points));
                     }
                     // add extra outline for clicked point
                     layers.push(toPointOutlineLayer([state.clickedPoint]));
                 }
-                
+
                 if (state.modelType == "bert" || state.modelType == "gpt") {
                     layers.push(toPointLayer(layer_points));
                 }
-                else if (state.modelType == "vit-16" || state.modelType == "vit-32")  {
+                else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
                     layers.push(toImageLayer(layer_points));
+                }
+
+                if (state.view == "attn") {
+                    if (attn_points.length == 0) {
+                        // always show labels in attn view
+                        attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                    }
+                    layers.push(toAttentionLabelLayer(attn_points));
                 }
                 layers.push(toPlotHeadLayer([layer_headings]));
 
-                if (state.dimension == "2D") {
-                    // only white outline around labels in 2d view
-                    layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
+                if ((state.modelType == "bert" || state.modelType == "gpt") && state.view != "attn" && state.showAll) {
+                    if (state.dimension == "2D") {
+                        // only white outline around labels in 2d view
+                        layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
+                    }
+
+                    layers.push(toPointLabelLayer(layer_points, visiblePoints));
                 }
-
-                layers.push(toPointLabelLayer(layer_points, visiblePoints));
-
                 return layers;
             }
             // else: return matrix view
@@ -642,6 +754,7 @@ export default defineComponent({
             };
             state.viewState = state.mode === 'matrix' ? initialState : initialStateZoom;
 
+            // main deckgl object
             deckgl = new Deck({
                 canvas: "matrix-canvas",
                 controller: true,
@@ -872,6 +985,7 @@ export default defineComponent({
             computedProjection();
         });
 
+        // watchers
         watch([() => state.matrixData, () => state.tokenData],
             () => {
                 if (state.doneLoading) {
@@ -881,10 +995,12 @@ export default defineComponent({
         );
 
         watch([shallowData], () => {
+            // redraw matrices if data changes
             initMatrices();
         });
 
         watch(() => state.dimension, () => {
+            // deal with 2D/3D transition
             deckgl.setProps({
                 views: state.dimension == "3D" ?
                     new OrbitView({
@@ -921,6 +1037,7 @@ export default defineComponent({
                 () => state.sizeByNorm,
                 () => state.attentionLoading,
                 () => state.clickedPoint,
+                () => state.curAttn
             ],
             () => {
                 if (state.view === "attn" && state.attentionLoading) {
@@ -935,7 +1052,8 @@ export default defineComponent({
             () => {
                 if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn" && state.clickedPoint != "") {
                     // fix attention view
-                    let ind = state.highlightedTokenIndices[state.highlightedTokenIndices.length - 1];
+                    // let ind = state.highlightedTokenIndices[state.highlightedTokenIndices.length - 1];
+                    let ind = state.clickedPoint.index;
                     let pt = state.activePoints[ind];
                     state.clickedPoint = pt;
                     store.dispatch("setClickedPoint", pt);
@@ -946,6 +1064,7 @@ export default defineComponent({
         watch(() => state.highlightedTokenIndices,
             () => {
                 if (state.highlightedTokenIndices.length == 0) {
+                    // reset highlighted token indices
                     store.commit("setView", "none");
                     state.clickedPoint = "";
                 }

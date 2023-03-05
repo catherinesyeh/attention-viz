@@ -31,6 +31,9 @@ export interface State {
   // attention
   attentionByToken: Typing.AttnByToken;
   highlightedTokenIndices: number[]; 
+  curAttn: number[][];
+  attnIndex: number;
+  attnSide: string;
   // attentionByTokenLock: boolean; 
 
   modelType: string; // bert or gpt
@@ -57,7 +60,10 @@ export const store = createStore<State>({
     doneLoading: false,
     renderState: true,
     attentionLoading: false,
-    attentionByToken: {layer: 0, head: 0, attns: [], token: {} as Typing.TokenData},
+    attentionByToken: {layer: 0, head: 0, attns: [], norms: [], token: {} as Typing.TokenData},
+    curAttn: [],
+    attnIndex: -1,
+    attnSide: "",
     // attentionByTokenLock: false,
     modelType: 'gpt',
     projectionMethod: 'tsne',
@@ -105,7 +111,16 @@ export const store = createStore<State>({
       console.log('state: renderState', renderState);
     }, 
     setAttentionByToken(state, attentionByToken) {
-      state.attentionByToken = attentionByToken
+      state.attentionByToken = attentionByToken;
+    },
+    setCurAttn(state, curAttn) {
+      state.curAttn = curAttn;
+    },
+    setAttnIndex(state, attnIndex) {
+      state.attnIndex = attnIndex;
+    },
+    setAttnSide(state, attnSide) {
+      state.attnSide = attnSide;
     },
     // setAttentionByTokenLock(state, attentionByTokenLock) {
     //   state.attentionByTokenLock = attentionByTokenLock;
@@ -190,7 +205,6 @@ export const store = createStore<State>({
       const attentionByToken = (await dataService.getAttentionByToken(pt, state.modelType));
       console.log('attentionDataByToken', attentionByToken);
       commit('setAttentionByToken', attentionByToken);
-      commit('updateAttentionLoading', false);
       // commit('setAttentionByTokenLock', false)
     }
   },
