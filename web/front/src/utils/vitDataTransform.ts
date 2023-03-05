@@ -103,10 +103,10 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         const min_norm = norm_range[0];
         const max_norm = norm_range[1];
         const range_norm = max_norm - min_norm;
-        // round to 6 decimal places
+        // round to 3 decimal places
         const norms_scaled = norms.map((x) => {
             let scaled = (x - min_norm) / range_norm;
-            return +scaled.toFixed(6);
+            return +scaled.toFixed(3);
         });
 
         const colorsByType = data.map((x, index) => {

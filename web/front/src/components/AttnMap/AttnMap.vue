@@ -145,9 +145,9 @@ export default {
             const token_type: string = attentionByToken.token.type;
             const token_pos: number = attentionByToken.token.pos_int;
             const token_text: string[] = attentionByToken.token.sentence.split(" ");
-            if (token_type == "key") { // flip graph if key
-                state.attn_vals = transpose(state.attn_vals);
-            }
+            // if (token_type == "key") { // flip graph if key
+            //     state.attn_vals = transpose(state.attn_vals);
+            // }
 
             store.commit("setCurAttn", state.attn_vals);
             state.hidden["left"] = [];

@@ -123,9 +123,14 @@ class DataService(object):
 
         if model == "bert":
             all_token_info = self.token_data_bert['tokens'][index]
+            offset = len(self.token_data_bert['tokens']) / 2
         else:
             all_token_info = self.token_data_gpt['tokens'][index]
+            offset = len(self.token_data_gpt['tokens']) / 2
+
         start = index - all_token_info['pos_int']
+        if all_token_info['type'] == "key":  # pass same attn info for key
+            start -= int(offset)
         end = start + all_token_info['length']
 
         if model == "bert":
