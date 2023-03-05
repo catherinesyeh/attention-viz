@@ -442,7 +442,6 @@ export default defineComponent({
                 sizeMinPixels: 1,
                 sizeUnits: "pixels",
                 opacity: 0.9,
-<<<<<<< HEAD
                 onClick: (info, event) => {
                     if (state.mode === 'matrix') {
                         return;
@@ -469,12 +468,12 @@ export default defineComponent({
                     let opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
                     let tokenIndices = [...same_indices, ...opposite_indices];
                     store.commit("setHighlightedTokenIndices", tokenIndices);
-=======
+                
+                },
                 updateTriggers: {
                     getPosition: [state.projectionMethod, state.dimension]
->>>>>>> c45c1b75b7c991151758d8eda5f1593fcf80e8c5
-                },
-            })
+            }
+        })
         };
 
         const toLabelOutlineLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
