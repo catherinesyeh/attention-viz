@@ -428,7 +428,6 @@ export default defineComponent({
                 // alphaCutoff: 0.05,
                 // billboard: true,
                 // getAngle: 0,
-                // getColor: d => [Math.sqrt(d.exits), 140, 0],
                 getIcon: d => ({
                     url: d.imagePath,
                     width: 128,
@@ -441,7 +440,12 @@ export default defineComponent({
                 sizeMaxPixels: getImageSize(),
                 sizeMinPixels: 1,
                 sizeUnits: "pixels",
-                opacity: 0.9,
+                getColor: (d: Typing.Point) => {
+                    if (state.highlightedTokenIndices.length === 0) return [0, 0, 0, 255];
+                    return state.highlightedTokenIndices.includes(d.index)
+                        ? [0, 0, 0, 255]
+                        : [0, 0, 0, 80];
+                },
                 onClick: (info, event) => {
                     if (state.mode === 'matrix') {
                         return;
@@ -455,12 +459,13 @@ export default defineComponent({
                     store.dispatch("setClickedPoint", pt);
 
                     let pt_info = state.tokenData[pt.index];
-                    let offset = 0
+                    var offset = 0
+                    console.log(state.modelType)
                     if (state.modelType == "vit-32") {
-                        let offset = 49;
+                        offset = 49;
                     }
                     else {
-                        let offset = 196;
+                        offset = 196;
                     }
                     let start_index = pt.index - (pt_info.position * Math.sqrt(offset) + pt_info.pos_int);
 
@@ -471,13 +476,13 @@ export default defineComponent({
                         start_index += offset;
                     }
 
-                    let opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
+                    let opposite_indices = Array.from({ length: offset }, (x, i) => i + start_index);
                     let tokenIndices = [...same_indices, ...opposite_indices];
                     store.commit("setHighlightedTokenIndices", tokenIndices);
-                
                 },
                 updateTriggers: {
-                    getPosition: [state.projectionMethod, state.dimension]
+                    getPosition: [state.projectionMethod, state.dimension],
+                    getColor: [state.highlightedTokenIndices],
             }
         })
         };
@@ -601,7 +606,12 @@ export default defineComponent({
                         ? [coord[0] + offset, coord[1]]
                         : [coord[0] + offset, coord[1], coord[2] + offset];
                 },
-                getText: (d: Typing.Point) => state.tokenData[d.index].pos_int + ":" + d.value,
+                getText: (d: Typing.Point) => {
+                    if (state.modelType == "bert" || state.modelType == "gpt") {
+                        return state.tokenData[d.index].pos_int + ":" + d.value
+                    } else{
+                        return " r:" + state.tokenData[d.index].position + " c:" + state.tokenData[d.index].pos_int
+                    }},
                 getColor: (d: Typing.Point) => {
                     return d.type == "query"
                         ? state.userTheme == "light-theme"
@@ -674,7 +684,6 @@ export default defineComponent({
         // compute + render layers for current view
         const toLayers = () => {
             let { points, headings } = shallowData.value;
-            console.log(state.modelType)
 
             if (state.curHead !== "" && state.curLayer !== "") { // single mode
                 // filter only points in this layer

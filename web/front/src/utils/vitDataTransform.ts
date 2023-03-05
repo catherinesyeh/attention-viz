@@ -97,7 +97,6 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         );
 
         const image_path = tokenData.map(td => td.imagePath)
-        console.log(tokenData[0].imagePath)
         const norms = data.map((x) => x.norm);
         const norm_range = d3.extent(norms) as [number, number];
         const min_norm = norm_range[0];

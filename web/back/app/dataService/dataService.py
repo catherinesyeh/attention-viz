@@ -20,6 +20,9 @@ from flask import jsonify
 import zipfile
 import json
 import time
+import base64
+import io
+import copy
 
 # get the /TableCharts
 # Alter: abspath('') is called from back/run.py
@@ -61,13 +64,60 @@ def read_token_data(model):
     return d
 
 
+def read_image_from_dataurl64(dataurl):
+    image_bytes = base64.b64decode(str(dataurl[dataurl.find(",") + 1:]))
+    image = np.asarray(Image.open(io.BytesIO(image_bytes)))
+
+    return image
+
+
+def highlight_a_patch(image, row, col, patch_size, width=3, c=[255, 230, 10]):
+    c = copy.copy(c)
+    if image.shape[-1] == 4:
+        c.append(255)
+    image[row * patch_size: (row + 1) * patch_size, col * patch_size: col * patch_size + width] = c
+    image[row * patch_size: (row + 1) * patch_size, (col + 1) * patch_size - width: (col + 1) * patch_size] = c
+    image[row * patch_size: row * patch_size + width, col * patch_size: (col + 1) * patch_size] = c
+    image[(row + 1) * patch_size - width: (row + 1) * patch_size, col * patch_size: (col + 1) * patch_size] = c
+
+    return image
+
+
+def highlight_patches(image, patch_size):
+    image_copy = image.copy()
+
+    for i in range(0, image.shape[0], patch_size):
+        if i == 0:
+            continue
+        for j in range(0, image.shape[1], patch_size):
+            if j == 0:
+                continue
+            image_copy[i - 1:i + 1,:] = 255
+            image_copy[:, j - 1: j + 1] = 255
+  
+    return image_copy
+
+
+def convert_np_image_to_dataurl64(np_image, compression_scheme="png"):
+    if np_image.max() < 1 and np_image.dtype != np.uint8:
+        np_image *= 255
+        
+    image = Image.fromarray(np_image.astype("uint8"))
+    rawBytes = io.BytesIO()
+    image.save(rawBytes, "PNG")
+    rawBytes.seek(0)  # return to the start of the file
+    serialized = base64.b64encode(rawBytes.read())
+    dataurl = f'data:image/{compression_scheme};base64,{str(serialized)[2:-1]}'
+
+    return dataurl
+
+
 class DataService(object):
     def __init__(self):
         print('------inited------')
         # self.df = pd.read_csv(join(rootDir, 'prodata', 'pro_data_results.csv')) .h5 .npy
         # read data here
 
-        # bert
         # self.all_data = {}
         # for model in os.listdir(join(rootDir, 'data')):
         #     if model.startswith("."):
@@ -78,6 +128,7 @@ class DataService(object):
         #     self.all_data[model]["token"] = read_token_data(model)
             
 
+        # bert
         self.matrix_data_bert = read_matrix_data("bert")
         self.attention_data_bert = read_attention_data("bert")
         self.token_data_bert = read_token_data("bert")
@@ -145,7 +196,17 @@ class DataService(object):
         if model == "vit-32":
             start = index - (all_token_info['position'] * 7 + all_token_info['pos_int'])
             end = start + 49
-            all_token_info['originalImagePath'] = self.token_data_vit_32['tokens'][start]['originalImagePath']
+            image = read_image_from_dataurl64(self.token_data_vit_32['tokens'][start]['originalImagePath']).copy()
+            # image = highlight_patches(image, patch_size=32)
+            print(self.token_data_vit_32['tokens'][index]['type'])
+            if self.token_data_vit_32['tokens'][index]['type'] == "key":
+                color = [227, 55, 143]
+            else:
+                color = [71, 222, 93]
+            image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'], 
+                                      32, width=3, c=color)
+
+            all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(image)
         # elif model == "vit_16":
         #     start = index - (all_token_info['position'] * 14 + all_token_info['pos_int'])
         #     end = start + 196

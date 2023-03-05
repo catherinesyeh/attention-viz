@@ -175,10 +175,7 @@ export default {
 
         // start bertviz
         const bertviz = () => {
-            console.log(state.model)
-            console.log(state.model.includes("vit"))
             if (state.model.includes("vit")) {
-                console.log("Here")
                 // parse info from data
                 let { attentionByToken } = state;
                 state.attn_vals = attentionByToken.attns;
@@ -243,7 +240,7 @@ export default {
 
                 const toOriginalImageLayer = new BitmapLayer({
                         id: 'bertviz-image',
-                        bounds: [-490, 75, -350, 89],
+                        bounds: [-490, 67, -350, 88],
                         image: attentionByToken.token.originalImagePath
                     });
                 // const toOriginalImageLayer = new IconLayer(
@@ -264,6 +261,8 @@ export default {
                 });
 
                 console.log(state.view)
+
+                store.commit('updateAttentionLoading', false);
 
             } else {
                 // parse info from data
