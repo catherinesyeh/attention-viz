@@ -1,10 +1,10 @@
 <template>
     <div class="row" :class="{ splitcol: showAgg }">
-        <AttnMap :myID="'sentAttn'" />
+        <AttnMap :myID="'sentAttn'" :otherID="'aggAttn'" />
     </div>
     <Transition>
         <div class="row splitcol" v-show="showAgg && view == 'attn'">
-            <AggAttnMap :myID="'aggAttn'" />
+            <AggAttnMap :myID="'aggAttn'" :otherID="'sentAttn'" />
         </div>
     </Transition>
     <Transition>

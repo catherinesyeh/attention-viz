@@ -48,7 +48,7 @@ const TEXT_TOP = 22;
 
 export default {
     components: {},
-    props: { myID: String },
+    props: { myID: String, otherID: String },
     setup(props: any) {
         const store = useStore();
 
@@ -468,7 +468,7 @@ export default {
                     // update other vis too
                     if (e.isTrusted) {
                         const sideId = isLeft ? "left" : "right";
-                        const selectedToken = d3.select(`#sentAttn #main-svg #${sideId} .attentionBoxes + g`).selectChild(`[index='${ind}']`);
+                        const selectedToken = d3.select(`#${props.otherID} #main-svg #${sideId} .attentionBoxes + g`).selectChild(`[index='${ind}']`);
                         selectedToken.dispatch("click");
                     }
                 });
