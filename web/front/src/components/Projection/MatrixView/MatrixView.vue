@@ -444,7 +444,7 @@ export default defineComponent({
                     if (state.highlightedTokenIndices.length === 0) return [0, 0, 0, 255];
                     return state.highlightedTokenIndices.includes(d.index)
                         ? [0, 0, 0, 255]
-                        : [0, 0, 0, 80];
+                        : [0, 0, 0, 70];
                 },
                 onClick: (info, event) => {
                     if (state.mode === 'matrix') {
@@ -610,7 +610,7 @@ export default defineComponent({
                     if (state.modelType == "bert" || state.modelType == "gpt") {
                         return state.tokenData[d.index].pos_int + ":" + d.value
                     } else{
-                        return " r:" + state.tokenData[d.index].position + " c:" + state.tokenData[d.index].pos_int
+                        return " " + state.tokenData[d.index].value + "\n (" + state.tokenData[d.index].position + "," + state.tokenData[d.index].pos_int + ")"
                     }},
                 getColor: (d: Typing.Point) => {
                     return d.type == "query"

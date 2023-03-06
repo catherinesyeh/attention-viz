@@ -10,15 +10,15 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     // compute msgs for each token
     const pos_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.type}</b> (row: ${td.position} col: ${td.pos_int})`
+            `<b class='${td.type}'>${td.type}</b> ${td.value} (row: ${td.position} col: ${td.pos_int})`
     );
     const cat_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.type}</b> (row: ${td.position} col: ${td.pos_int})`
+            `<b class='${td.type}'>${td.type}</b> ${td.value} (row: ${td.position} col: ${td.pos_int})`
     );
     const length_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.type}</b> (row: ${td.position} col: ${td.pos_int})`
+            `<b class='${td.type}'>${td.type}</b> ${td.value} (row: ${td.position} col: ${td.pos_int})`
     );
 
     // for recording the x/y ranges
