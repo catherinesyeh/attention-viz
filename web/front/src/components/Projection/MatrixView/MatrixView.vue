@@ -388,7 +388,9 @@ export default defineComponent({
                         return;
                     }
                     console.log('onClick', info.object);
-                    store.commit("setView", 'attn');
+                    if (state.view != "attn") { // switch to attention view if not already
+                        store.commit("setView", 'attn');
+                    }
                     store.commit("updateAttentionLoading", true);
 
                     let pt = info.object as Typing.Point;
@@ -1029,10 +1031,11 @@ export default defineComponent({
                 () => state.curAttn
             ],
             () => {
-                if (!(state.view === "attn" && state.attentionLoading)) {
-                    // wait until attention info done loading
-                    deckgl.setProps({ layers: [...toLayers()] });
+                if (state.view === "attn" && state.attentionLoading) {
+                    return;
                 }
+                // wait until attention info done loading
+                deckgl.setProps({ layers: [...toLayers()] });
             }
         );
 
@@ -1041,6 +1044,7 @@ export default defineComponent({
                 if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn" && state.clickedPoint != "") {
                     // fix attention view
                     // let ind = state.highlightedTokenIndices[state.highlightedTokenIndices.length - 1];
+                    store.commit("updateAttentionLoading", true);
                     let ind = state.clickedPoint.index;
                     let pt = state.activePoints[ind];
                     state.clickedPoint = pt;

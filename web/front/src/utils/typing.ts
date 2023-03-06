@@ -101,7 +101,9 @@ export namespace Typing {
         layer: number;
         head: number;
         attns: number[][];
+        agg_attns: number[][];
         norms: number[];
+        agg_norms: number[];
         token: TokenData
     }
 }

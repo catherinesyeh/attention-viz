@@ -29,11 +29,17 @@ export interface State {
   dimension: string; // 2D or 3D
 
   // attention
+  showAttn: boolean;
+  resetAttn: boolean;
   attentionByToken: Typing.AttnByToken;
   highlightedTokenIndices: number[]; 
   curAttn: number[][];
   attnIndex: number;
   attnSide: string;
+  hideFirst: boolean;
+  hideLast: boolean;
+  weightByNorm: boolean;
+  showAgg: boolean;
   // attentionByTokenLock: boolean; 
 
   modelType: string; // bert or gpt
@@ -59,13 +65,27 @@ export const store = createStore<State>({
     head: "",
     doneLoading: false,
     renderState: true,
+    showAttn: false,
+    resetAttn: false,
     attentionLoading: false,
-    attentionByToken: {layer: 0, head: 0, attns: [], norms: [], token: {} as Typing.TokenData},
+    attentionByToken: {
+      layer: 0, 
+      head: 0, 
+      attns: [], 
+      agg_attns: [],
+      norms: [], 
+      agg_norms: [],
+      token: {} as Typing.TokenData
+    },
     curAttn: [],
     attnIndex: -1,
     attnSide: "",
+    hideFirst: false,
+    hideLast: false,
+    weightByNorm: false,
+    showAgg: true,
     // attentionByTokenLock: false,
-    modelType: 'gpt',
+    modelType: 'bert',
     projectionMethod: 'tsne',
     colorBy: 'type',
     highlightedTokenIndices: [],
@@ -110,6 +130,12 @@ export const store = createStore<State>({
       state.renderState = renderState;
       console.log('state: renderState', renderState);
     }, 
+    setShowAttn(state, showAttn) {
+      state.showAttn = showAttn;
+    },
+    setResetAttn(state, resetAttn) {
+      state.resetAttn = resetAttn;
+    },
     setAttentionByToken(state, attentionByToken) {
       state.attentionByToken = attentionByToken;
     },
@@ -121,6 +147,18 @@ export const store = createStore<State>({
     },
     setAttnSide(state, attnSide) {
       state.attnSide = attnSide;
+    },
+    setHideFirst(state, hideFirst) {
+      state.hideFirst = hideFirst;
+    },
+    setHideLast(state, hideLast) {
+      state.hideLast = hideLast;
+    },
+    setWeightByNorm(state, weightByNorm) {
+      state.weightByNorm = weightByNorm;
+    },
+    setShowAgg(state, showAgg) {
+      state.showAgg = showAgg;
     },
     // setAttentionByTokenLock(state, attentionByTokenLock) {
     //   state.attentionByTokenLock = attentionByTokenLock;

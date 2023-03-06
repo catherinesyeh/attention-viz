@@ -1,37 +1,17 @@
 <template>
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
-            <p>Sentence View
-                <Transition>
-                    <span v-show="showAttn"> ({{ layerHead }})</span>
-                </Transition>
-            </p>
+            <Transition>
+                <p v-show="showAttn">
+                    Aggregate View ({{ layerHead }})
+                </p>
+            </Transition>
             <Transition>
                 <div class="attn-btns" v-show="showAttn">
-                    <a-button id="attn-reset" class="clear" type="link" @click="resetAttn">reset</a-button>
-                    <span>|</span>
-                    <a-button id="attn-clear" class="clear" type="link" @click="clearAttn">clear</a-button>
+                    <a-button id="hide-agg" class="clear" type="link" @click="hideShowAgg">hide</a-button>
                 </div>
             </Transition>
         </div>
-        <span class="subtitle">{{ attnMsg }}</span>
-        <Transition>
-            <div v-show="showAttn" class="checkbox-contain">
-                <div :class="{ half: model == 'gpt' }">
-                    <p class="label">Hide</p>
-                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt'">first
-                        token</a-checkbox>
-                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
-                        v-show="model == 'bert'">[cls]</a-checkbox>
-                    <a-checkbox v-model:checked="hideLast" @click="hideTokens('last')"
-                        v-show="model == 'bert'">[sep]</a-checkbox>
-                </div>
-                <div class="half" v-show="model == 'gpt'">
-                    <p class="label">Weight by</p>
-                    <a-checkbox v-model:checked="weightByNorm" @click="toggleWeightBy">value norm</a-checkbox>
-                </div>
-            </div>
-        </Transition>
         <Transition>
             <div :id="myID" class="bertviz" v-show="showAttn">
                 <div id="vis"></div>
@@ -45,6 +25,7 @@ import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
 import * as _ from "underscore";
 import { useStore } from "@/store/index";
 import * as d3 from "d3";
+import { select } from "d3";
 
 type Config = {
     attention: any;
@@ -74,7 +55,8 @@ export default {
         const state = reactive({
             attentionByToken: computed(() => store.state.attentionByToken),
             showAttn: computed(() => store.state.showAttn),
-            attnMsg: "click a plot to zoom in",
+            resetAttn: computed(() => store.state.resetAttn),
+            showAgg: computed(() => store.state.showAgg),
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             view: computed(() => store.state.view),
             curLayer: computed(() => store.state.layer),
@@ -84,17 +66,20 @@ export default {
             mode: computed(() => store.state.mode),
             model: computed(() => store.state.modelType),
             attn_vals: [] as number[][],
-            cur_attn: computed(() => store.state.curAttn),
+            cur_attn: [] as number[][],
             weighted_attn: [] as number[][],
             hidden: { left: [] as number[], right: [] as number[] },
             hideFirst: computed(() => store.state.hideFirst),
             hideLast: computed(() => store.state.hideLast),
             weightByNorm: computed(() => store.state.weightByNorm),
-            attentionLoading: computed(() => store.state.attentionLoading),
-            checkClick: false,
             // attnIndex: computed(() => store.state.attnIndex),
             // attnSide: computed(() => store.state.attnSide)
         });
+
+        // toggle agg attention view
+        const hideShowAgg = () => {
+            store.commit("setShowAgg", false);
+        }
 
         // scroll helper function        
         const scrollFunction = (curElement: Element) => {
@@ -120,7 +105,7 @@ export default {
         // helper function for weighting attention by value norms
         const weightAttn = (attns: number[][]) => {
             let { attentionByToken } = state;
-            const norms = attentionByToken.norms;
+            const norms = attentionByToken.agg_norms;
 
             const new_attn = attns.map((row: number[]) => {
                 // scale
@@ -141,36 +126,29 @@ export default {
             return new_attn;
         }
 
-        const toggleWeightBy = () => { // toggle weightby checkbox
-            store.commit("setWeightByNorm", !state.weightByNorm);
-            bertviz();
-        }
-
         // start bertviz
         const bertviz = () => {
             // parse info from data
             let { attentionByToken } = state;
-            state.attn_vals = attentionByToken.attns;
+            state.attn_vals = attentionByToken.agg_attns;
             const token_type: string = attentionByToken.token.type;
             const token_pos: number = attentionByToken.token.pos_int;
-            const token_text: string[] = attentionByToken.token.sentence.split(" ");
+            let token_text: string[] = attentionByToken.token.sentence.split(" ");
+            token_text = token_text.map((v, i) => i.toString());
 
-            // if (token_type == "key") { // flip graph if key
-            //     state.attn_vals = transpose(state.attn_vals);
-            // }
+            state.cur_attn = state.attn_vals;
 
-            store.commit("setCurAttn", state.attn_vals);
             state.hidden["left"] = [];
             state.hidden["right"] = [];
 
             // hide first/last tokens if checkboxes selected
             if (state.hideFirst) {
-                store.commit("setCurAttn", hideKey(0));
+                state.cur_attn = hideKey(0);
                 state.hidden["right"].push(0);
             }
             if (state.model == "bert" && state.hideLast) {
                 // gpt doesn't have hide last option
-                store.commit("setCurAttn", hideKey(token_text.length - 1));
+                state.cur_attn = hideKey(token_text.length - 1);
                 state.hidden["right"].push(token_text.length - 1);
             }
 
@@ -178,15 +156,10 @@ export default {
                 // don't weight for bert
                 state.weighted_attn = weightAttn(state.attn_vals);
                 if (state.weightByNorm) {
-                    store.commit("setCurAttn", weightAttn(state.cur_attn));
+                    state.cur_attn = weightAttn(state.cur_attn);
                 }
             }
 
-            if (state.attentionLoading) {
-                // set to false if still loading
-                store.commit('updateAttentionLoading', false);
-
-            }
             // const layer = attentionByToken.layer;
             // const head = attentionByToken.head;
             state.layerHead = "L" + state.curLayer + " H" + state.curHead;
@@ -203,7 +176,7 @@ export default {
                     },
                 ],
                 default_filter: "0",
-                root_div_id: props.myID || "bertviz",
+                root_div_id: props.myID || "my-bertviz",
                 layer: 0,
                 heads: [0],
                 include_layers: [0],
@@ -444,9 +417,9 @@ export default {
                             });
                             attn_copy[ind] = new_attn;
                         }
-                        store.commit("setCurAttn", attn_copy);
+                        state.cur_attn = attn_copy;
                     } else { // key
-                        if (e.isTrusted || state.checkClick) {
+                        if (e.isTrusted) {
                             if (ind == 0) {
                                 store.commit("setHideFirst", !state.hideFirst);
                             } else if (ind == select.length - 1) {
@@ -487,27 +460,22 @@ export default {
                             })
                         }
 
-                        store.commit("setCurAttn", new_attn);
+                        state.cur_attn = new_attn;
                     }
                     config.attention[config.filter].attn = [[state.cur_attn]];
                     renderVis();
 
                     // update other vis too
-                    if (e.isTrusted || state.checkClick) {
+                    if (e.isTrusted) {
                         const sideId = isLeft ? "left" : "right";
-                        const selectedToken = d3.select(`#aggAttn #main-svg #${sideId} .attentionBoxes + g`).selectChild(`[index='${ind}']`);
+                        const selectedToken = d3.select(`#sentAttn #main-svg #${sideId} .attentionBoxes + g`).selectChild(`[index='${ind}']`);
                         selectedToken.dispatch("click");
                     }
-
-                    state.checkClick = false;
                 });
 
                 tokenContainer.on("mouseover", function (this: any, e: Event, d: string) {
                     const select = tokenContainer.nodes();
                     const index = select.indexOf(this);
-
-                    // store.commit("setAttnIndex", index);
-                    // store.commit("setAttnSide", isLeft ? "left" : "right");
 
                     // Show gray background for moused-over token
                     textContainer
@@ -566,7 +534,6 @@ export default {
                 });
 
                 textContainer.on("mouseleave", function (this: any) {
-                    // store.commit("setAttnIndex", -1);
                     // Unhighlight selected token
                     d3.select(this).selectAll(".background").style("opacity", 0.0);
 
@@ -677,66 +644,23 @@ export default {
 
         }
 
-        const clearAttn = () => {
-            store.commit("setShowAttn", false);
-            state.attnMsg = state.mode == "single"
-                ? "click a point to explore its attention"
-                : "click a plot to zoom in";
-            store.commit("setHighlightedTokenIndices", []);
-        }
-
-        const resetAttn = () => {
-            // state.hidden["left"] = [];
-            // state.hidden["right"] = [];
-            store.commit("setHideFirst", false);
-            store.commit("setHideLast", false);
-            store.commit("setWeightByNorm", false);
-            store.commit("setResetAttn", true);
-            bertviz();
-        }
-
-        const hideTokens = (type: string) => {
-            state.checkClick = true;
-            // filter out first/cls/sep tokens
-            const tokenContainers = d3.select(`#${props.myID} #main-svg #right .attentionBoxes + g`);
-            let selectedToken;
-            if (type == "first") {
-                selectedToken = tokenContainers.selectChild(":first-child");
-            } else {
-                selectedToken = tokenContainers.selectChild(":last-child");
-            }
-            selectedToken.dispatch("click");
-        }
-
         watch(
-            () => [state.attentionByToken],
+            () => [state.showAttn, state.weightByNorm, state.resetAttn, state.attentionByToken],
             () => {
                 // draw attention plot
-                store.commit("setShowAttn", true);
-                state.attnMsg = "click a token to toggle lines off/on";
-                bertviz();
+                if (state.showAttn || state.resetAttn) {
+                    bertviz();
+                    if (state.resetAttn) { // reset complete
+                        store.commit("setResetAttn", false);
+                    }
+                }
             }
         );
 
-        watch(
-            () => [state.view, state.mode],
-            () => {
-                if (state.view != 'attn') {
-                    store.commit("setShowAttn", false);
-                    state.attnMsg = state.mode == "single"
-                        ? "click a point to explore its attention"
-                        : "click a plot to zoom in";
-                }
-            }
-        )
-
         return {
             ...toRefs(state),
-            clearAttn,
-            bertviz,
-            hideTokens,
-            resetAttn,
-            toggleWeightBy
+            hideShowAgg,
+            bertviz
         };
     },
 };

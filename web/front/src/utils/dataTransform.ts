@@ -96,15 +96,15 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     // compute msgs for each token
     const pos_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
+            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length - 1})`
     );
     const cat_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length}, pos % 5: ${td.pos_int % 5})`
+            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length - 1}, pos % 5: ${td.pos_int % 5})`
     );
     const length_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length}, length: ${td.value.length})`
+            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length - 1}, length: ${td.value.length})`
     );
 
     // for recording the x/y ranges
@@ -197,7 +197,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     
         const norm_msgs = data.map(
             (x, index) =>
-                `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, pos: ${tokenData[index].pos_int} of ${tokenData[index].length}, norm: ${Math.round(x.norm * 100) / 100})`
+                `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, pos: ${tokenData[index].pos_int} of ${tokenData[index].length - 1}, norm: ${Math.round(x.norm * 100) / 100})`
         );
 
         const image_path = tokenData.map(td => td.imagePath)
