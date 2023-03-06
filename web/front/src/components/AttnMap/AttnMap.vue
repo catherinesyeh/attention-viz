@@ -59,9 +59,7 @@
             <span class="subtitle">{{ attnMsg }}</span>
             <Transition>
                 <div v-show="showAttn">
-                    <p class="label">Hide</p>
-                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt'">first
-                        token</a-checkbox>
+                    <a-checkbox v-model:checked="hideFirst" @click="overlayAttnMap" v-show="model == 'vit-32' || model=='vit-16'">Show Overlaid Attn</a-checkbox>
                 </div>
             </Transition>
             <Transition>
@@ -128,6 +126,7 @@ export default {
             hideFirst: false,
             hideLast: false,
             weightByNorm: false,
+            overlayAttn: false,
             // attnIndex: computed(() => store.state.attnIndex),
             // attnSide: computed(() => store.state.attnSide)
         });
@@ -243,22 +242,28 @@ export default {
                         bounds: [-490, 67, -350, 88],
                         image: attentionByToken.token.originalImagePath
                     });
-                // const toOriginalImageLayer = new IconLayer(
-                //     {
-                //         id: 'icon-layer',
-                //         // iconAtlas and iconMapping are required
-                //         // getIcon: return a string
-                //         getIcon: d => attentionByToken.token.originalImagePath,
-                //         getSize: d => 50,
-                //         getPosition: d => [0, 0],
-                //     }
-                // )
 
-                const deckgl = new Deck({
+                const toOverlaidlImageLayer = new BitmapLayer({
+                        id: 'bertviz-image',
+                        bounds: [-490, -50, -350, 65],
+                        image: attentionByToken.token.originalPatchPath
+                });
+
+                if (state.overlayAttn) {
+                    const deckgl = new Deck({
                     canvas: "bertviz",
                     initialViewState: state.view,
-                    layers: [toOriginalImageLayer],
-                });
+                    layers:[toOriginalImageLayer, toOverlaidlImageLayer],
+                    });
+                }
+                else {
+                    const deckgl = new Deck({
+                    canvas: "bertviz",
+                    initialViewState: state.view,
+                    layers:[toOriginalImageLayer],
+                    });
+                }
+                
 
                 console.log(state.view)
 
@@ -790,6 +795,11 @@ export default {
             bertviz();
         }
 
+        const overlayAttnMap = () => {
+            state.overlayAttn = ! state.overlayAttn;
+            bertviz();
+        }
+
         const hideTokens = (type: string) => {
             // filter out first/cls/sep tokens
             const tokenContainers = d3.select("#main-svg #right .attentionBoxes + g");
@@ -830,7 +840,8 @@ export default {
             bertviz,
             hideTokens,
             resetAttn,
-            toggleWeightBy
+            toggleWeightBy,
+            overlayAttnMap,
         };
     },
 };

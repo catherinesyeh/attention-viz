@@ -112,6 +112,39 @@ def convert_np_image_to_dataurl64(np_image, compression_scheme="png"):
     return dataurl
 
 
+def overlay_image_with_attention(image, attention, patch_size, norm_attention=True):
+    image_h = image.shape[0]
+    image_w = image.shape[1]
+    attention = copy.copy(attention)
+    # add cls attention
+    if norm_attention:
+        attention.append(1 - sum(attention))
+        attention = np.array(attention)
+        if norm_attention:
+            attention -= attention.min()
+            attention /= attention.max()
+        # attention *= 6
+        attention = np.clip(attention, 0, 1)
+        attention = attention[:-1]
+    else:
+        attention = np.array(attention)
+
+    attention = attention.reshape(image_h // patch_size, image_w // patch_size)
+
+    image = image.astype("float")
+    for i in range(0, image_h, patch_size):
+        for j in range(0, image_w, patch_size):
+            if image.shape[-1] == 4:
+                image[i: i + patch_size, j: j+patch_size, :-1] *= attention[i // patch_size, j //patch_size]
+            elif image.shape[-1] == 3:
+                image[i: i + patch_size, j: j+patch_size] *= attention[i // patch_size, j //patch_size]
+
+    image = image.astype("uint8")
+
+    return image
+
+
+
 class DataService(object):
     def __init__(self):
         print('------inited------')
@@ -173,7 +206,6 @@ class DataService(object):
         if model == "bert":
             return self.token_data_bert
         elif model == "vit-16":
-            print(self.token_data_vit_16)
             return self.token_data_vit_16
         elif model == "vit-32":
             return self.token_data_vit_32
@@ -197,24 +229,24 @@ class DataService(object):
             start = index - (all_token_info['position'] * 7 + all_token_info['pos_int'])
             end = start + 49
             image = read_image_from_dataurl64(self.token_data_vit_32['tokens'][start]['originalImagePath']).copy()
-            # image = highlight_patches(image, patch_size=32)
-            print(self.token_data_vit_32['tokens'][index]['type'])
             if self.token_data_vit_32['tokens'][index]['type'] == "key":
                 color = [227, 55, 143]
+                start -= 49
+                end -= 49
             else:
                 color = [71, 222, 93]
-            image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'], 
+            highlighted_image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'], 
                                       32, width=3, c=color)
 
-            all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(image)
+            all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(highlighted_image )
+
         # elif model == "vit_16":
         #     start = index - (all_token_info['position'] * 14 + all_token_info['pos_int'])
         #     end = start + 196
+
         else:
             start = index - all_token_info['pos_int']
             end = start + all_token_info['length']
-
-        print(all_token_info)
 
         if model == "bert":
             attn_data = self.attention_data_bert
@@ -233,6 +265,20 @@ class DataService(object):
         attn = [t['attention'] for t in attns]
         norms = [] if model != "gpt" else [t['value_norm'] for t in attns]
         # norms = []
+
+        if model == "vit-32":
+            print(attn[index % 49])
+            # overlaid_image = overlay_image_with_attention(image.copy(), attn[index % 49], 32, 
+            #                                               norm_attention=True if self.token_data_vit_32['tokens'][index]['type'] == "query" else False)
+            overlaid_image = overlay_image_with_attention(image.copy(), attn[index % 49], 32)
+            overlaid_image = highlight_patches(overlaid_image, 32)
+            if self.token_data_vit_32['tokens'][index]['type'] == "key":
+                color = [227, 55, 143]
+            else:
+                color = [71, 222, 93]
+            overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position'], all_token_info['pos_int'], 
+                                               32, width=3, c=color)
+            all_token_info['originalPatchPath'] = convert_np_image_to_dataurl64(overlaid_image)
 
         return {
             'layer': layer,
