@@ -85,7 +85,7 @@ export const store = createStore<State>({
     weightByNorm: false,
     showAgg: true,
     // attentionByTokenLock: false,
-    modelType: 'bert',
+    modelType: 'gpt',
     projectionMethod: 'tsne',
     colorBy: 'type',
     highlightedTokenIndices: [],
