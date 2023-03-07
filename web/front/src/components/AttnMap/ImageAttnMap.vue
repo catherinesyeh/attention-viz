@@ -79,7 +79,7 @@ export default {
 
             const toOriginalImageLayer = new BitmapLayer({
                 id: 'bertviz-image',
-                bounds: [-70, 2.5, 70, 82.5],
+                bounds: [-70, 2.5, 70, 80],
                 // bounds: [-490, 67, -350, 88],
                 image: attentionByToken.token.originalImagePath,
                 pickable: false,
@@ -87,7 +87,7 @@ export default {
 
             const toOverlaidlImageLayer = new BitmapLayer({
                 id: 'bertviz-overlay',
-                bounds: [-70, -80.5, 70, -2.5],
+                bounds: [-70, -80, 70, -2.5],
                 // bounds: [-490, -50, -350, 65],
                 image: attentionByToken.token.originalPatchPath,
                 pickable: false,
