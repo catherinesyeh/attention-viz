@@ -237,7 +237,7 @@ class DataService(object):
             else:
                 color = [71, 222, 93]
             highlighted_image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'], 
-                                                  16, width=2, c=color)
+                                                  32, width=2, c=color)
 
             all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(highlighted_image)
         elif model == "vit-16":
