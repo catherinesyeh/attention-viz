@@ -136,7 +136,7 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom;
-            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.5) * 80;
+            var size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.8) * 90
             return size < 1 ? 1 : size;
         };
 
@@ -430,7 +430,6 @@ export default defineComponent({
                 // alphaCutoff: 0.05,
                 // billboard: true,
                 // getAngle: 0,
-                // getColor: d => [Math.sqrt(d.exits), 140, 0],
                 getIcon: d => ({
                     url: d.imagePath,
                     width: 128,
@@ -443,11 +442,51 @@ export default defineComponent({
                 sizeMaxPixels: getImageSize(),
                 sizeMinPixels: 1,
                 sizeUnits: "pixels",
-                opacity: 0.9,
-                updateTriggers: {
-                    getPosition: [state.projectionMethod, state.dimension]
+                getColor: (d: Typing.Point) => {
+                    if (state.highlightedTokenIndices.length === 0) return [0, 0, 0, 255];
+                    return state.highlightedTokenIndices.includes(d.index)
+                        ? [0, 0, 0, 255]
+                        : [0, 0, 0, 70];
                 },
-            })
+                onClick: (info, event) => {
+                    if (state.mode === 'matrix') {
+                        return;
+                    }
+                    console.log('onClick', info.object);
+                    store.commit("setView", 'attn');
+                    store.commit("updateAttentionLoading", true);
+
+                    let pt = info.object as Typing.Point;
+                    state.clickedPoint = pt;
+                    store.dispatch("setClickedPoint", pt);
+
+                    let pt_info = state.tokenData[pt.index];
+                    var offset = 0
+                    console.log(state.modelType)
+                    if (state.modelType == "vit-32") {
+                        offset = 49;
+                    }
+                    else {
+                        offset = 196;
+                    }
+                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset) + pt_info.pos_int);
+
+                    let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
+                    if (pt_info.type === "key") {
+                        start_index -= offset;
+                    } else {
+                        start_index += offset;
+                    }
+
+                    let opposite_indices = Array.from({ length: offset }, (x, i) => i + start_index);
+                    let tokenIndices = [...same_indices, ...opposite_indices];
+                    store.commit("setHighlightedTokenIndices", tokenIndices);
+                },
+                updateTriggers: {
+                    getPosition: [state.projectionMethod, state.dimension],
+                    getColor: [state.highlightedTokenIndices],
+            }
+        })
         };
 
         const toLabelOutlineLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
@@ -569,7 +608,12 @@ export default defineComponent({
                         ? [coord[0] + offset, coord[1]]
                         : [coord[0] + offset, coord[1], coord[2] + offset];
                 },
-                getText: (d: Typing.Point) => state.tokenData[d.index].pos_int + ":" + d.value,
+                getText: (d: Typing.Point) => {
+                    if (state.modelType == "bert" || state.modelType == "gpt") {
+                        return state.tokenData[d.index].pos_int + ":" + d.value
+                    } else{
+                        return " " + state.tokenData[d.index].value + "\n (" + state.tokenData[d.index].position + "," + state.tokenData[d.index].pos_int + ")"
+                    }},
                 getColor: (d: Typing.Point) => {
                     return d.type == "query"
                         ? state.userTheme == "light-theme"
@@ -642,6 +686,7 @@ export default defineComponent({
         // compute + render layers for current view
         const toLayers = () => {
             let { points, headings } = shallowData.value;
+
             if (state.curHead !== "" && state.curLayer !== "") { // single mode
                 // filter only points in this layer
                 const pointsPerHead = points.length / headings.length; // number points per attention head
