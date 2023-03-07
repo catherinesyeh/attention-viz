@@ -255,8 +255,6 @@ class DataService(object):
             all_token_info = self.token_data_bert['tokens'][index]
             offset = len(self.token_data_bert['tokens']) / 2
         elif model == "vit-32":
-            print(index)
-            print(len(self.token_data_vit_32['tokens']))
             all_token_info = self.token_data_vit_32['tokens'][index]
         elif model == "vit-16":
             all_token_info = self.token_data_vit_16['tokens'][index]
@@ -277,7 +275,7 @@ class DataService(object):
             else:
                 color = [71, 222, 93]
             highlighted_image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'],
-                                                  32, width=2, c=color)
+                                                  32, width=3, c=color)
 
             all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(
                 highlighted_image)
