@@ -44,7 +44,12 @@
   <div class="main">
     <div class="row">
       <div class="col-2" style="position:relative">
-        <AttnMapWrapper />
+        <div v-if="modelType == 'bert' || modelType == 'gpt'">
+          <AttnMapWrapper />
+        </div>
+        <div v-else>
+          <AttnMap />
+        </div>
       </div>
       <div class="col-10">
         <Projection ref="projection" />

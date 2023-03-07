@@ -59,7 +59,7 @@
             <span class="subtitle">{{ attnMsg }}</span>
             <Transition>
                 <div v-show="showAttn">
-                    <a-checkbox v-model:checked="hideFirst" @click="overlayAttnMap"
+                    <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap"
                         v-show="model == 'vit-32' || model == 'vit-16'">Show Overlaid Attn</a-checkbox>
                 </div>
             </Transition>
@@ -125,6 +125,7 @@ export default {
             hideLast: computed(() => store.state.hideLast),
             weightByNorm: computed(() => store.state.weightByNorm),
             attentionLoading: computed(() => store.state.attentionLoading),
+            overlayAttn: false,
             checkClick: false,
             // attnIndex: computed(() => store.state.attnIndex),
             // attnSide: computed(() => store.state.attnSide)
@@ -230,7 +231,7 @@ export default {
                     }
                     config.nLayers = config.attention[config.filter]["attn"].length;
                     config.nHeads = config.attention[config.filter]["attn"][0].length;
-                    
+
                     if (params["heads"]) {
                         config.headVis = new Array(config.nHeads).fill(false);
                         params["heads"].forEach((x) => (config.headVis[x] = true));
@@ -272,179 +273,179 @@ export default {
                         layers: [toOriginalImageLayer],
                     });
                 }
-                
+
                 console.log(state.view);
                 store.commit('updateAttentionLoading', false);
-                
+
             } else {
-              // parse info from data
-              let { attentionByToken } = state;
-              state.attn_vals = attentionByToken.attns;
-              const token_type: string = attentionByToken.token.type;
-              const token_pos: number = attentionByToken.token.pos_int;
-              const token_text: string[] = attentionByToken.token.sentence.split(" ");
+                // parse info from data
+                let { attentionByToken } = state;
+                state.attn_vals = attentionByToken.attns;
+                const token_type: string = attentionByToken.token.type;
+                const token_pos: number = attentionByToken.token.pos_int;
+                const token_text: string[] = attentionByToken.token.sentence.split(" ");
 
-              // if (token_type == "key") { // flip graph if key
-              //     state.attn_vals = transpose(state.attn_vals);
-              // }
+                // if (token_type == "key") { // flip graph if key
+                //     state.attn_vals = transpose(state.attn_vals);
+                // }
 
-              store.commit("setCurAttn", state.attn_vals);
-              state.hidden["left"] = [];
-              state.hidden["right"] = [];
+                store.commit("setCurAttn", state.attn_vals);
+                state.hidden["left"] = [];
+                state.hidden["right"] = [];
 
-              // hide first/last tokens if checkboxes selected
-              if (state.hideFirst) {
-                  store.commit("setCurAttn", hideKey(0));
-                  state.hidden["right"].push(0);
-              }
-              if (state.model == "bert" && state.hideLast) {
-                  // gpt doesn't have hide last option
-                  store.commit("setCurAttn", hideKey(token_text.length - 1));
-                  state.hidden["right"].push(token_text.length - 1);
-              }
-              
-              if (state.attentionByToken.norms.length > 0) {
+                // hide first/last tokens if checkboxes selected
+                if (state.hideFirst) {
+                    store.commit("setCurAttn", hideKey(0));
+                    state.hidden["right"].push(0);
+                }
+                if (state.model == "bert" && state.hideLast) {
+                    // gpt doesn't have hide last option
+                    store.commit("setCurAttn", hideKey(token_text.length - 1));
+                    state.hidden["right"].push(token_text.length - 1);
+                }
+
+                if (state.attentionByToken.norms.length > 0) {
                     // don't weight for bert
                     state.weighted_attn = weightAttn(state.attn_vals);
                     if (state.weightByNorm) {
                         store.commit("setCurAttn", weightAttn(state.cur_attn));
-              }
-              
-            if (state.attentionLoading) {
-                // set to false if still loading
-                store.commit('updateAttentionLoading', false);
+                    }
+                }
 
-            }
-            // const layer = attentionByToken.layer;
-            // const head = attentionByToken.head;
-            state.layerHead = "L" + state.curLayer + " H" + state.curHead;
+                if (state.attentionLoading) {
+                    // set to false if still loading
+                    store.commit('updateAttentionLoading', false);
 
-            const params = {
-                attention: [
-                    {
-                        name: null,
-                        attn: [[state.cur_attn]],
-                        left_text: token_text,
-                        right_text: token_text,
-                        layer: 0,
-                        head: 0,
-                    },
-                ],
-                default_filter: "0",
-                root_div_id: props.myID || "bertviz",
-                layer: 0,
-                heads: [0],
-                include_layers: [0],
-            };
+                }
+                // const layer = attentionByToken.layer;
+                // const head = attentionByToken.head;
+                state.layerHead = "L" + state.curLayer + " H" + state.curHead;
 
-            // let headColors = d3.scaleOrdinal(d3.schemePastel1);
-            let config: Config = initialize();
-            renderVis();
-
-            const visContain = document.querySelector(`#${config.rootDivId} #vis`);
-            visContain?.addEventListener("scroll", (e) => {
-                scrollFunction(e.currentTarget as Element);
-            })
-
-            function initialize() {
-                let config: Config = {
-                    attention: params["attention"],
-                    filter: params["default_filter"],
-                    rootDivId: params["root_div_id"],
-                    layers: params["include_layers"],
-                    nHeads: 0,
-                    nLayers: 0,
-                    headVis: [],
-                    initialTextLength: 0,
+                const params = {
+                    attention: [
+                        {
+                            name: null,
+                            attn: [[state.cur_attn]],
+                            left_text: token_text,
+                            right_text: token_text,
+                            layer: 0,
+                            head: 0,
+                        },
+                    ],
+                    default_filter: "0",
+                    root_div_id: props.myID || "bertviz",
                     layer: 0,
-                    layer_seq: 0
-             }
-             config.nLayers = config.attention[config.filter]["attn"].length;
-             config.nHeads = config.attention[config.filter]["attn"][0].length;
+                    heads: [0],
+                    include_layers: [0],
+                };
 
-              if (params["heads"]) {
-                  config.headVis = new Array(config.nHeads).fill(false);
-                  params["heads"].forEach((x) => (config.headVis[x] = true));
-              } else {
-                  config.headVis = new Array(config.nHeads).fill(true);
-              }
-              config.initialTextLength =
-                  config.attention[config.filter].right_text.length;
-              config.layer_seq =
-                  params["layer"] == null
-                      ? 0
-                      : config.layers.findIndex((layer) => params["layer"] === layer);
-              config.layer = config.layers[config.layer_seq];
-              return config
-          }
+                // let headColors = d3.scaleOrdinal(d3.schemePastel1);
+                let config: Config = initialize();
+                renderVis();
 
-            function renderVis() {
-                // Load parameters
-                const attnData = config.attention[config.filter];
-                const leftText = attnData.left_text;
-                const rightText = attnData.right_text;
+                const visContain = document.querySelector(`#${config.rootDivId} #vis`);
+                visContain?.addEventListener("scroll", (e) => {
+                    scrollFunction(e.currentTarget as Element);
+                })
 
-                // Clear vis
-                document.querySelector(`#${config.rootDivId} #vis`)!.innerHTML = "";
+                function initialize() {
+                    let config: Config = {
+                        attention: params["attention"],
+                        filter: params["default_filter"],
+                        rootDivId: params["root_div_id"],
+                        layers: params["include_layers"],
+                        nHeads: 0,
+                        nLayers: 0,
+                        headVis: [],
+                        initialTextLength: 0,
+                        layer: 0,
+                        layer_seq: 0
+                    }
+                    config.nLayers = config.attention[config.filter]["attn"].length;
+                    config.nHeads = config.attention[config.filter]["attn"][0].length;
 
-                // Select attention for given layer
-                const layerAttention = attnData.attn[config.layer_seq];
+                    if (params["heads"]) {
+                        config.headVis = new Array(config.nHeads).fill(false);
+                        params["heads"].forEach((x) => (config.headVis[x] = true));
+                    } else {
+                        config.headVis = new Array(config.nHeads).fill(true);
+                    }
+                    config.initialTextLength =
+                        config.attention[config.filter].right_text.length;
+                    config.layer_seq =
+                        params["layer"] == null
+                            ? 0
+                            : config.layers.findIndex((layer) => params["layer"] === layer);
+                    config.layer = config.layers[config.layer_seq];
+                    return config
+                }
 
-                // Determine size of visualization
-                const height =
-                    Math.max(leftText.length, rightText.length) * BOXHEIGHT + TEXT_TOP;
-                const svg = d3
-                    .select(`#${config.rootDivId} #vis`)
-                    .append("svg")
-                    .attr("id", "main-svg")
-                    .attr("width", "100%")
-                    .attr("height", height + "px");
+                function renderVis() {
+                    // Load parameters
+                    const attnData = config.attention[config.filter];
+                    const leftText = attnData.left_text;
+                    const rightText = attnData.right_text;
 
-                // set up gradient
-                const defs = svg.append("defs");
+                    // Clear vis
+                    document.querySelector(`#${config.rootDivId} #vis`)!.innerHTML = "";
 
-                const gradient = defs.append("linearGradient")
-                    .attr("id", "svgGradient")
-                    .attr("x1", "0%")
-                    .attr("x2", "100%")
-                    .attr("y1", "0%")
-                    .attr("y2", "100%")
-                    // .attr("gradientTransform", "rotate(-15)")
-                    .attr("gradientUnits", "userSpaceOnUse");
+                    // Select attention for given layer
+                    const layerAttention = attnData.attn[config.layer_seq];
 
-                gradient.append("stop")
-                    .attr('class', 'start')
-                    .attr("offset", "0%")
-                    .attr("stop-color", "#9dd887")
-                    .attr("stop-opacity", 1);
+                    // Determine size of visualization
+                    const height =
+                        Math.max(leftText.length, rightText.length) * BOXHEIGHT + TEXT_TOP;
+                    const svg = d3
+                        .select(`#${config.rootDivId} #vis`)
+                        .append("svg")
+                        .attr("id", "main-svg")
+                        .attr("width", "100%")
+                        .attr("height", height + "px");
 
-                gradient.append("stop")
-                    .attr('class', 'end')
-                    .attr("offset", "100%")
-                    .attr("stop-color", "#ea8aaa")
-                    .attr("stop-opacity", 1);
+                    // set up gradient
+                    const defs = svg.append("defs");
 
-                // Display tokens on left and right side of visualization
-                renderText(svg, leftText, true, layerAttention, 0);
-                renderText(
-                    svg,
-                    rightText,
-                    false,
-                    layerAttention,
-                    MATRIX_WIDTH + BOXWIDTH
-                );
+                    const gradient = defs.append("linearGradient")
+                        .attr("id", "svgGradient")
+                        .attr("x1", "0%")
+                        .attr("x2", "100%")
+                        .attr("y1", "0%")
+                        .attr("y2", "100%")
+                        // .attr("gradientTransform", "rotate(-15)")
+                        .attr("gradientUnits", "userSpaceOnUse");
 
-                // bold current selected token
-                const side = (token_type == 'query') ? "left" : "right";
-                let selected = document.querySelectorAll(`#${config.rootDivId} #` + side + " text")[token_pos + 1];
-                selected.classList.add("bold");
-                selected.classList.add(token_type);
+                    gradient.append("stop")
+                        .attr('class', 'start')
+                        .attr("offset", "0%")
+                        .attr("stop-color", "#9dd887")
+                        .attr("stop-opacity", 1);
 
-                // Render attention arcs
-                renderAttention(svg, layerAttention);
-            }
-            
-            
+                    gradient.append("stop")
+                        .attr('class', 'end')
+                        .attr("offset", "100%")
+                        .attr("stop-color", "#ea8aaa")
+                        .attr("stop-opacity", 1);
+
+                    // Display tokens on left and right side of visualization
+                    renderText(svg, leftText, true, layerAttention, 0);
+                    renderText(
+                        svg,
+                        rightText,
+                        false,
+                        layerAttention,
+                        MATRIX_WIDTH + BOXWIDTH
+                    );
+
+                    // bold current selected token
+                    const side = (token_type == 'query') ? "left" : "right";
+                    let selected = document.querySelectorAll(`#${config.rootDivId} #` + side + " text")[token_pos + 1];
+                    selected.classList.add("bold");
+                    selected.classList.add(token_type);
+
+                    // Render attention arcs
+                    renderAttention(svg, layerAttention);
+                }
+
                 function renderText(svg: any, text: string[], isLeft: boolean, attention: any, leftPos: number) {
                     const textContainer = svg
                         .append("svg:g")
@@ -471,166 +472,166 @@ export default {
                             .attr("dx", +0.5 * TEXT_SIZE)
                             .attr("dy", TEXT_SIZE);
                     }
-          
-                // Add attention highlights superimposed over words
-                textContainer
-                    .append("g")
-                    .classed("attentionBoxes", true)
-                    .selectAll("g")
-                    .data(attention)
-                    .enter()
-                    .append("g")
-                    .attr("head-index", (d: any, i: number) => i)
-                    .selectAll("rect")
-                    .data((d: any) => (isLeft ? d : transpose(d)))
-                    // if right text and query token OR right text and key token, transpose attention to get right-to-left / left-to-right weights
-                    .enter()
-                    .append("rect")
-                    .attr("x", function (this: any) {
-                        var headIndex = +this.parentNode.getAttribute("head-index");
-                        return leftPos + boxOffsets(headIndex);
-                    })
-                    .attr("y", +1 * BOXHEIGHT)
-                    .attr("width", BOXWIDTH / activeHeads())
-                    .attr("height", BOXHEIGHT)
-                    .attr("fill", function () {
-                        // return headColors(+this.parentNode.getAttribute("head-index"));
-                        return isLeft ? "rgb(157, 216, 135)" : "rgb(234, 138, 170)";
-                    })
-                    .style("opacity", 0.0);
 
-                const tokenContainer = textContainer
-                    .append("g")
-                    .selectAll("g")
-                    .data(text)
-                    .enter()
-                    .append("g")
-                    .attr("index", (d: any, i: number) => i);
+                    // Add attention highlights superimposed over words
+                    textContainer
+                        .append("g")
+                        .classed("attentionBoxes", true)
+                        .selectAll("g")
+                        .data(attention)
+                        .enter()
+                        .append("g")
+                        .attr("head-index", (d: any, i: number) => i)
+                        .selectAll("rect")
+                        .data((d: any) => (isLeft ? d : transpose(d)))
+                        // if right text and query token OR right text and key token, transpose attention to get right-to-left / left-to-right weights
+                        .enter()
+                        .append("rect")
+                        .attr("x", function (this: any) {
+                            var headIndex = +this.parentNode.getAttribute("head-index");
+                            return leftPos + boxOffsets(headIndex);
+                        })
+                        .attr("y", +1 * BOXHEIGHT)
+                        .attr("width", BOXWIDTH / activeHeads())
+                        .attr("height", BOXHEIGHT)
+                        .attr("fill", function () {
+                            // return headColors(+this.parentNode.getAttribute("head-index"));
+                            return isLeft ? "rgb(157, 216, 135)" : "rgb(234, 138, 170)";
+                        })
+                        .style("opacity", 0.0);
 
-                // Add gray background that appears when hovering over text
-                tokenContainer
-                    .append("rect")
-                    .classed("background", true)
-                    .style("opacity", 0.0)
-                    // .attr("fill", "lightgray")
-                    .attr("x", leftPos)
-                    .attr("y", (d: any, i: number) => TEXT_TOP + i * BOXHEIGHT)
-                    .attr("width", BOXWIDTH)
-                    .attr("height", BOXHEIGHT);
+                    const tokenContainer = textContainer
+                        .append("g")
+                        .selectAll("g")
+                        .data(text)
+                        .enter()
+                        .append("g")
+                        .attr("index", (d: any, i: number) => i);
 
-                // Add token text
-                const textEl = tokenContainer
-                    .append("text")
-                    .text((d: any) => d)
-                    .attr("font-size", TEXT_SIZE + "px")
-                    .style("cursor", "default")
-                    .style("-webkit-user-select", "none")
-                    .classed("token-text", true)
-                    .attr("x", leftPos)
-                    .attr("y", (d: any, i: number) => TEXT_TOP + i * BOXHEIGHT);
+                    // Add gray background that appears when hovering over text
+                    tokenContainer
+                        .append("rect")
+                        .classed("background", true)
+                        .style("opacity", 0.0)
+                        // .attr("fill", "lightgray")
+                        .attr("x", leftPos)
+                        .attr("y", (d: any, i: number) => TEXT_TOP + i * BOXHEIGHT)
+                        .attr("width", BOXWIDTH)
+                        .attr("height", BOXHEIGHT);
 
-                if (isLeft) {
-                    textEl
-                        .style("text-anchor", "end")
-                        .attr("dx", BOXWIDTH - 0.5 * TEXT_SIZE)
-                        .attr("dy", TEXT_SIZE);
-                } else {
-                    textEl
-                        .style("text-anchor", "start")
-                        .attr("dx", +0.5 * TEXT_SIZE)
-                        .attr("dy", TEXT_SIZE);
-                }
+                    // Add token text
+                    const textEl = tokenContainer
+                        .append("text")
+                        .text((d: any) => d)
+                        .attr("font-size", TEXT_SIZE + "px")
+                        .style("cursor", "default")
+                        .style("-webkit-user-select", "none")
+                        .classed("token-text", true)
+                        .attr("x", leftPos)
+                        .attr("y", (d: any, i: number) => TEXT_TOP + i * BOXHEIGHT);
 
-                tokenContainer.on("click", function (this: any, e: Event, d: any) {
-                    // toggle lines on and off on token click
-                    const select = tokenContainer.nodes();
-                    const ind = select.indexOf(this);
-                    // let hidden = d3.select(this).classed("clicked");
-                    // d3.select(this).classed("clicked", !hidden);
-                    let hidden, new_attn;
-                    if (isLeft) { // query
-                        let hid_index = state.hidden["left"].indexOf(ind);
-                        if (hid_index != -1) { // was hidden, now unhide
-                            hidden = true;
-                            state.hidden["left"].splice(hid_index, 1);
-                        } else { // was visible, now hide
-                            hidden = false;
-                            state.hidden["left"].push(ind);
-                        }
+                    if (isLeft) {
+                        textEl
+                            .style("text-anchor", "end")
+                            .attr("dx", BOXWIDTH - 0.5 * TEXT_SIZE)
+                            .attr("dy", TEXT_SIZE);
+                    } else {
+                        textEl
+                            .style("text-anchor", "start")
+                            .attr("dx", +0.5 * TEXT_SIZE)
+                            .attr("dy", TEXT_SIZE);
+                    }
 
-                        let sent_length = state.cur_attn[ind].length;
-                        let attn_copy = state.cur_attn.map((a) => a.slice());
-                        if (!hidden) { // hide
-                            attn_copy[ind] = new Array(sent_length).fill(0);
-                        } else { // show
-                            const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
-                            new_attn = state.cur_attn[ind].map((x, index) => {
-                                // reset to current state (account for any tokens that are hidden on right side)
-                                // if (!state.hidden["right"].includes(index)) {
-                                return reset_to[ind][index];
-                                // }
-                                // return 0;
-                            });
-                            attn_copy[ind] = new_attn;
-                        }
-                        store.commit("setCurAttn", attn_copy);
-                    } else { // key
-                        if (e.isTrusted || state.checkClick) {
-                            if (ind == 0) {
-                                store.commit("setHideFirst", !state.hideFirst);
-                            } else if (ind == select.length - 1) {
-                                store.commit("setHideLast", !state.hideLast);
+                    tokenContainer.on("click", function (this: any, e: Event, d: any) {
+                        // toggle lines on and off on token click
+                        const select = tokenContainer.nodes();
+                        const ind = select.indexOf(this);
+                        // let hidden = d3.select(this).classed("clicked");
+                        // d3.select(this).classed("clicked", !hidden);
+                        let hidden, new_attn;
+                        if (isLeft) { // query
+                            let hid_index = state.hidden["left"].indexOf(ind);
+                            if (hid_index != -1) { // was hidden, now unhide
+                                hidden = true;
+                                state.hidden["left"].splice(hid_index, 1);
+                            } else { // was visible, now hide
+                                hidden = false;
+                                state.hidden["left"].push(ind);
                             }
-                        }
-                        let hid_index = state.hidden["right"].indexOf(ind);
-                        if (hid_index != -1) { // was hidden, now unhide
-                            hidden = true;
-                            state.hidden["right"].splice(hid_index, 1);
-                        } else { // was visible, now hide
-                            hidden = false;
-                            state.hidden["right"].push(ind);
-                        }
-                        if (!hidden) { // hide
-                            // 0 out cells corresponding to clicked on token
-                            new_attn = hideKey(ind);
-                        } else { // show again
-                            // add back cells corresponding to clicked on token
-                            const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
-                            new_attn = state.cur_attn.map((row: number[], index: number) => {
-                                // let token_val = state.attn_vals[index][ind];
-                                let rem_attn = 1;
-                                let row_index = index;
-                                state.hidden["right"].forEach((x, index) => {
-                                    // account for other hidden keys too
-                                    rem_attn -= reset_to[row_index][x];
-                                })
-                                // let rem_attn = 1 - token_val;
-                                return row.map((cell: number, index: number) => {
-                                    // if (index != ind) {
-                                    //     return cell * rem_attn;
+
+                            let sent_length = state.cur_attn[ind].length;
+                            let attn_copy = state.cur_attn.map((a) => a.slice());
+                            if (!hidden) { // hide
+                                attn_copy[ind] = new Array(sent_length).fill(0);
+                            } else { // show
+                                const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
+                                new_attn = state.cur_attn[ind].map((x, index) => {
+                                    // reset to current state (account for any tokens that are hidden on right side)
+                                    // if (!state.hidden["right"].includes(index)) {
+                                    return reset_to[ind][index];
                                     // }
-                                    return rem_attn == 0 || state.hidden["right"].includes(index)
-                                        ? 0
-                                        : Math.min(1, reset_to[row_index][index] / rem_attn);
+                                    // return 0;
+                                });
+                                attn_copy[ind] = new_attn;
+                            }
+                            store.commit("setCurAttn", attn_copy);
+                        } else { // key
+                            if (e.isTrusted || state.checkClick) {
+                                if (ind == 0) {
+                                    store.commit("setHideFirst", !state.hideFirst);
+                                } else if (ind == select.length - 1) {
+                                    store.commit("setHideLast", !state.hideLast);
+                                }
+                            }
+                            let hid_index = state.hidden["right"].indexOf(ind);
+                            if (hid_index != -1) { // was hidden, now unhide
+                                hidden = true;
+                                state.hidden["right"].splice(hid_index, 1);
+                            } else { // was visible, now hide
+                                hidden = false;
+                                state.hidden["right"].push(ind);
+                            }
+                            if (!hidden) { // hide
+                                // 0 out cells corresponding to clicked on token
+                                new_attn = hideKey(ind);
+                            } else { // show again
+                                // add back cells corresponding to clicked on token
+                                const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
+                                new_attn = state.cur_attn.map((row: number[], index: number) => {
+                                    // let token_val = state.attn_vals[index][ind];
+                                    let rem_attn = 1;
+                                    let row_index = index;
+                                    state.hidden["right"].forEach((x, index) => {
+                                        // account for other hidden keys too
+                                        rem_attn -= reset_to[row_index][x];
+                                    })
+                                    // let rem_attn = 1 - token_val;
+                                    return row.map((cell: number, index: number) => {
+                                        // if (index != ind) {
+                                        //     return cell * rem_attn;
+                                        // }
+                                        return rem_attn == 0 || state.hidden["right"].includes(index)
+                                            ? 0
+                                            : Math.min(1, reset_to[row_index][index] / rem_attn);
+                                    })
                                 })
-                            })
+                            }
+
+                            store.commit("setCurAttn", new_attn);
                         }
-                        
-                         store.commit("setCurAttn", new_attn);
-                    }
-                    config.attention[config.filter].attn = [[state.cur_attn]];
-                    renderVis();
+                        config.attention[config.filter].attn = [[state.cur_attn]];
+                        renderVis();
 
-                    // update other vis too
-                    if (e.isTrusted || state.checkClick) {
-                        const sideId = isLeft ? "left" : "right";
-                        const selectedToken = d3.select(`#${props.otherID} #main-svg #${sideId} .attentionBoxes + g`).selectChild(`[index='${ind}']`);
-                        selectedToken.dispatch("click");
-                    }
+                        // update other vis too
+                        if (e.isTrusted || state.checkClick) {
+                            const sideId = isLeft ? "left" : "right";
+                            const selectedToken = d3.select(`#${props.otherID} #main-svg #${sideId} .attentionBoxes + g`).selectChild(`[index='${ind}']`);
+                            selectedToken.dispatch("click");
+                        }
 
-                    state.checkClick = false;
-                });
-                
+                        state.checkClick = false;
+                    });
+
                     tokenContainer.on("mouseover", function (this: any, e: Event, d: string) {
                         const select = tokenContainer.nodes();
                         const index = select.indexOf(this);
@@ -877,4 +878,15 @@ export default {
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+#bertviz.image-viz {
+    width: 200px !important;
+    transform: translateX(-50%);
+    left: 50%;
+    height: 405px !important;
+}
+
+#bertviz {
+    margin-top: 15px !important;
+}
+</style>
