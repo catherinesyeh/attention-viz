@@ -96,15 +96,15 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     // compute msgs for each token
     const pos_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length})`
+            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length - 1})`
     );
     const cat_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length}, pos % 5: ${td.pos_int % 5})`
+            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length - 1}, pos % 5: ${td.pos_int % 5})`
     );
     const length_msgs = tokenData.map(
         (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length}, length: ${td.value.length})`
+            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length - 1}, length: ${td.value.length})`
     );
 
     // for recording the x/y ranges
@@ -159,16 +159,16 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 .range([0, matrixCellHeight]);
 
             if (projectionMethod === "tsne" || projectionMethod === "umap" || projectionMethod === "pca") { // 2d case
-                return data.map(d => [+xScale(getX(d)).toFixed(6) + xoffset, +yScale(getY(d)).toFixed(6) + yoffset] as [number, number]);
+                return data.map(d => [+xScale(getX(d)).toFixed(3) + xoffset, +yScale(getY(d)).toFixed(3) + yoffset] as [number, number]);
             }
             // 3d case
             const zScale = d3
                 .scaleLinear()
                 .domain(d3.extent(data.map((x) => getZ(x))) as any)
                 .range([0, matrixCellHeight]);
-            return data.map(d => [+xScale(getX(d)).toFixed(6) + xoffset, 
-                +yScale(getY(d)).toFixed(6) + yoffset, 
-                +zScale(getZ(d)).toFixed(6)] as [number, number, number]);
+            return data.map(d => [+xScale(getX(d)).toFixed(3) + xoffset, 
+                +yScale(getY(d)).toFixed(3) + yoffset, 
+                +zScale(getZ(d)).toFixed(3)] as [number, number, number]);
         }
         const pointsCoordinates = {
             'tsne': computeCoordinate('tsne'),
@@ -197,7 +197,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     
         const norm_msgs = data.map(
             (x, index) =>
-                `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, pos: ${tokenData[index].pos_int} of ${tokenData[index].length}, norm: ${Math.round(x.norm * 100) / 100})`
+                `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, pos: ${tokenData[index].pos_int} of ${tokenData[index].length - 1}, norm: ${Math.round(x.norm * 100) / 100})`
         );
 
         const image_path = tokenData.map(td => td.imagePath)
@@ -206,10 +206,10 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         const min_norm = norm_range[0];
         const max_norm = norm_range[1];
         const range_norm = max_norm - min_norm;
-        // round to 6 decimal places
+        // round to 3 decimal places
         const norms_scaled = norms.map((x) => {
             let scaled = (x - min_norm) / range_norm;
-            return +scaled.toFixed(6);
+            return +scaled.toFixed(3);
         });
 
         // color simply by type (key vs. query)

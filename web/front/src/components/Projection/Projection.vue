@@ -30,12 +30,6 @@
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm"
                         :class="{ disabled: mode == 'matrix' }">scale by norm</a-checkbox>
 
-                <!-- <p class="label">Mode</p>
-                    <a-radio-group v-model:value="mode">
-                        <a-radio-button value="single">single</a-radio-button>
-                        <a-radio-button value="matrix">matrix</a-radio-button>
-                        </a-radio-group> -->
-
                     <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
@@ -90,7 +84,7 @@
                 <Legend />
             </div>
             <!-- <canvas id="matrix-canvas" /> -->
-            
+
             <MatrixView v-show="!renderState" ref="matrixView" />
         </div>
     </div>
@@ -120,6 +114,7 @@ export default defineComponent({
             showAll: computed(() => store.state.showAll),
             sizeByNorm: computed(() => store.state.sizeByNorm),
             showAttention: computed(() => store.state.showAttention),
+            attnLoading: computed(() => store.state.attentionLoading),
             // disableLabel: computed(() => store.state.disableLabel),
             colorBy: computed(() => store.state.colorBy),
             layer: computed(() => store.state.layer),
@@ -140,17 +135,27 @@ export default defineComponent({
         }
 
         const clearSearch = () => {
+            const oldSearch = state.searchToken;
             state.searchToken = "";
-            onSearch(state.searchToken);
+            if (!oldSearch.includes("(0 ") && oldSearch.includes("results)")) {
+                // actually need to clear search results from scatterplot
+                store.commit("setHighlightedTokenIndices", []);
+                // onSearch(state.searchToken);
+            } // else we just need to reset input box
         }
 
         const onSearch = (str: string) => {
-            store.commit("setView", "search");
+            if (str == "") { // don't search empty string
+                return;
+            }
+            if (state.view != "search") {
+                store.commit("setView", "search");
+            }
             let num_results = (matrixView.value as any).onSearch(str);
             // console.log(num_results);
-            if (str != "") { // display # search results
-                state.searchToken = str + " (" + num_results + " results)";
-            }
+            // if (str != "") { // display # search results
+            state.searchToken = str + " (" + num_results + " results)";
+            // }
         }
 
         const logViewport = () => {
@@ -208,6 +213,9 @@ export default defineComponent({
                 store.commit("setHighlightedTokenIndices", []);
                 if (state.searchToken.length > 0) {
                     state.searchToken = "";
+                }
+                if (state.attnLoading) {
+                    store.commit("updateAttentionLoading", false);
                 }
             })
 

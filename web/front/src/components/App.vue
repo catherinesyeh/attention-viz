@@ -43,8 +43,8 @@
   </nav>
   <div class="main">
     <div class="row">
-      <div class="col-2">
-        <AttnMap />
+      <div class="col-2" style="position:relative">
+        <AttnMapWrapper />
       </div>
       <div class="col-10">
         <Projection ref="projection" />
@@ -62,16 +62,13 @@ import { useStore } from "@/store/index";
 import UserPanel from "./UserPanel/UserPanel.vue";
 import Projection from "./Projection/Projection.vue";
 import AttnMap from "./AttnMap/AttnMap.vue";
+import AttnMapWrapper from "./AttnMap/AttnMapWrapper.vue";
 
 import { onMounted, computed, reactive, toRefs, h, watch, ref } from "vue";
-import { string } from "vue-types";
-import { SelectTypes } from "ant-design-vue/es/select";
-import { Typing } from "@/utils/typing";
-import { storeKey } from "vuex";
 
 export default defineComponent({
   name: "App",
-  components: { UserPanel, Projection, AttnMap },
+  components: { UserPanel, Projection, AttnMap, AttnMapWrapper },
   setup() {
     const store = useStore();
 
@@ -83,6 +80,7 @@ export default defineComponent({
       layernum: "" as string | number,
       headnum: "" as string | number,
       mode: computed(() => store.state.mode),
+      view: computed(() => store.state.view),
 
       modelType: computed({
         get: () => store.state.modelType,
