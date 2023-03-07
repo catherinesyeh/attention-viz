@@ -43,7 +43,7 @@
   </nav>
   <div class="main">
     <div class="row">
-      <div class="col-2">
+      <div class="col-2" style="position:relative">
         <AttnMap />
       </div>
       <div class="col-10">

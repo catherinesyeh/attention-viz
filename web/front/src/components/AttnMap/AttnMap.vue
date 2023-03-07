@@ -59,12 +59,13 @@
             <span class="subtitle">{{ attnMsg }}</span>
             <Transition>
                 <div v-show="showAttn">
-                    <a-checkbox v-model:checked="hideFirst" @click="overlayAttnMap" v-show="model == 'vit-32' || model=='vit-16'">Show Overlaid Attn</a-checkbox>
+                    <a-checkbox v-model:checked="hideFirst" @click="overlayAttnMap"
+                        v-show="model == 'vit-32' || model == 'vit-16'">Show Overlaid Attn</a-checkbox>
                 </div>
             </Transition>
             <Transition>
                 <div v-show="showAttn">
-                    <canvas id="bertviz" />
+                    <canvas id="bertviz" class="image-viz" />
                 </div>
             </Transition>
         </div>
@@ -80,7 +81,7 @@ import moment from "moment";
 import { getAttentionByToken } from "@/services/dataService";
 import { stat } from "fs";
 import { BitmapLayer, IconLayer } from "@deck.gl/layers/typed";
-import { Deck } from "@deck.gl/core/typed";
+import { COORDINATE_SYSTEM, Deck } from "@deck.gl/core/typed";
 
 
 type Config = {
@@ -238,32 +239,34 @@ export default {
                 }
 
                 const toOriginalImageLayer = new BitmapLayer({
-                        id: 'bertviz-image',
-                        bounds: [-490, 67, -350, 88],
-                        image: attentionByToken.token.originalImagePath
-                    });
+                    id: 'bertviz-image',
+                    bounds: [-70, 2.5, 70, 82.5],
+                    // bounds: [-490, 67, -350, 88],
+                    image: attentionByToken.token.originalImagePath
+                });
 
                 const toOverlaidlImageLayer = new BitmapLayer({
-                        id: 'bertviz-image',
-                        bounds: [-490, -50, -350, 65],
-                        image: attentionByToken.token.originalPatchPath
+                    id: 'bertviz-overlay',
+                    bounds: [-70, -80.5, 70, -2.5],
+                    // bounds: [-490, -50, -350, 65],
+                    image: attentionByToken.token.originalPatchPath
                 });
 
                 if (state.overlayAttn) {
                     const deckgl = new Deck({
-                    canvas: "bertviz",
-                    initialViewState: state.view,
-                    layers:[toOriginalImageLayer, toOverlaidlImageLayer],
+                        canvas: "bertviz",
+                        initialViewState: state.view,
+                        layers: [toOriginalImageLayer, toOverlaidlImageLayer],
                     });
                 }
                 else {
                     const deckgl = new Deck({
-                    canvas: "bertviz",
-                    initialViewState: state.view,
-                    layers:[toOriginalImageLayer],
+                        canvas: "bertviz",
+                        initialViewState: state.view,
+                        layers: [toOriginalImageLayer],
                     });
                 }
-                
+
 
                 console.log(state.view)
 
@@ -796,7 +799,7 @@ export default {
         }
 
         const overlayAttnMap = () => {
-            state.overlayAttn = ! state.overlayAttn;
+            state.overlayAttn = !state.overlayAttn;
             bertviz();
         }
 
@@ -883,6 +886,13 @@ export default {
 
 #bertviz {
     margin-top: 15px !important;
+}
+
+#bertviz.image-viz {
+    width: 200px !important;
+    transform: translateX(-50%);
+    left: 50%;
+    height: 405px !important;
 }
 
 #bertviz,
