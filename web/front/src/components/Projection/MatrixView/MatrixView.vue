@@ -1,6 +1,11 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
-    <canvas id="matrix-canvas" />
+    <div>
+        <Transition>
+            <Circle v-show="attentionLoading || transitionInProgress" />
+        </Transition>
+        <canvas id="matrix-canvas" />
+    </div>
 </template>
 
 <script lang="ts">
@@ -16,9 +21,7 @@ import {
     shallowRef,
 } from "vue";
 import * as _ from "underscore";
-import * as d3 from "d3";
 import { useStore } from "@/store/index";
-import { ScatterGL, Point2D } from "scatter-gl";
 import { IconLayer } from '@deck.gl/layers/typed';
 
 import { Typing } from "@/utils/typing";
@@ -26,15 +29,11 @@ import { Typing } from "@/utils/typing";
 import { Deck, OrbitView, OrthographicView, View } from "@deck.gl/core/typed";
 // import interface {Deck} from "@deck.gl/core/typed";
 import { PolygonLayer, ScatterplotLayer, TextLayer, LineLayer } from "@deck.gl/layers/typed";
-import { toTypeString } from "@vue/shared";
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
-import { computeVitMatrixProjection } from "@/utils/vitDataTransform"
-import { Line, StaticReadUsage, TubeBufferGeometry } from "three";
-import { head, initial } from "underscore";
-import { STATEMENT_TYPES, validate } from "@babel/types";
+import { computeVitMatrixProjection } from "@/utils/vitDataTransform";
+import Circle from './Circle.vue';
 import RBush from 'rbush';
-import { dragDisable } from "d3";
 
 // constants
 const matrixCellHeight = 100;
@@ -75,7 +74,7 @@ const defaultOpacity = 225,
     lightOpacity = 50;
 
 export default defineComponent({
-    components: {},
+    components: { Circle },
     setup(props, context) {
         const store = useStore();
 
@@ -136,12 +135,9 @@ export default defineComponent({
         };
 
         const getImageSize = () => {
-            const zoom = state.zoom
+            const zoom = state.zoom;
             var size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.8) * 90
-            if (size < 1) {
-                size = 1
-            }
-            return size
+            return size < 1 ? 1 : size;
         };
 
         const tree = new RBush(); // fast label overlap detection
@@ -315,6 +311,10 @@ export default defineComponent({
                     let defaultSize = 0.4,
                         highlightedSize = 2;
 
+                    if (state.mode === "matrix") {
+                        highlightedSize = 4;
+                    }
+
                     if (state.mode === "single" && state.sizeByNorm) {
                         // scale dot size by norm if checkbox on
                         // maybe still need adjustment for highlighted size?
@@ -388,7 +388,9 @@ export default defineComponent({
                         return;
                     }
                     console.log('onClick', info.object);
-                    store.commit("setView", 'attn');
+                    if (state.view != "attn") { // switch to attention view if not already
+                        store.commit("setView", 'attn');
+                    }
                     store.commit("updateAttentionLoading", true);
 
                     let pt = info.object as Typing.Point;
@@ -844,6 +846,7 @@ export default defineComponent({
         onwheel = (event: WheelEvent) => { // track cursor position on zoom
             if (state.transitionInProgress) {
                 event.preventDefault;
+                return;
             }
 
             if (state.mode === "matrix") {
@@ -890,6 +893,7 @@ export default defineComponent({
          * Reset the view state to matrix mode
          */
         const reset = (clicked: boolean) => {
+            state.transitionInProgress = true;
             if (state.mode !== "matrix") {
                 store.commit("setMode", "matrix");
                 store.commit("setLayer", "");
@@ -908,6 +912,7 @@ export default defineComponent({
                     initialViewState: state.viewState,
                 });
             }
+            state.transitionInProgress = false;
         };
 
         /* 
@@ -917,6 +922,7 @@ export default defineComponent({
             const curTarget = state.viewState.target;
             const center = deckgl.getViewports()[0].center;
             const zoom = deckgl.getViewports()[0].zoom;
+
             if (curTarget[0] == center[0] && curTarget[1] == center[1] && state.zoom == zoom && state.dimension === "2D") {
                 return; // no reset needed
             }
@@ -953,11 +959,16 @@ export default defineComponent({
          * @param str
          */
         const onSearch = (str: string) => {
+            state.transitionInProgress = true;
             str = str.toLowerCase(); // convert to lowercase first to match other tokens
-            let tokenIndices = state.tokenData
-                .map((x, idx) => (x.value === str ? idx : undefined))
-                .filter((x) => x) as number[];
+            let tokenIndices = [] as number[];
+            if (str != "") {
+                tokenIndices = state.tokenData
+                    .map((x, idx) => (x.value === str ? idx : undefined))
+                    .filter((x) => x) as number[];
+            }
             store.commit("setHighlightedTokenIndices", tokenIndices);
+            state.transitionInProgress = false;
             return tokenIndices.length;
         };
 
@@ -1013,6 +1024,7 @@ export default defineComponent({
             initMatrices();
         });
 
+        // this might still need some tweaking...
         watch(() => state.dimension, () => {
             // deal with 2D/3D transition
             deckgl.setProps({
@@ -1025,14 +1037,24 @@ export default defineComponent({
                     }),
             });
 
-            if (state.mode == "single") {
-                if (state.dimension === "3D") {
-                    resetZoom();
-                }
-                const curZoom = deckgl.getViewports()[0].zoom;
-                state.zoom = curZoom < zoomThreshold ? zoomThreshold : curZoom;
+            // if (state.mode == "single" || state.modelType == "vit-32" || state.modelType == "vit-16") {
+            // if (state.mode == "single" && state.dimension === "3D") {
+            //     resetZoom();
+            // }
+            const curZoom = deckgl.getViewports()[0].zoom;
+
+            let switchThreshold = zoomThreshold;
+            if (state.dimension === "3D") {
+                resetZoom();
+                switchThreshold = 1.5;
             }
 
+            if (state.mode == "single") {
+                state.zoom = Math.max(curZoom, switchThreshold);
+            } else { // matrix mode
+                state.zoom = Math.min(curZoom, switchThreshold - 0.1);
+            }
+            // }
             deckgl.setProps({ layers: [...toLayers()] });
         })
 
@@ -1055,9 +1077,9 @@ export default defineComponent({
             ],
             () => {
                 if (state.view === "attn" && state.attentionLoading) {
-                    // wait until attention info done loading
                     return;
                 }
+                // wait until attention info done loading
                 deckgl.setProps({ layers: [...toLayers()] });
             }
         );
@@ -1067,6 +1089,7 @@ export default defineComponent({
                 if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn" && state.clickedPoint != "") {
                     // fix attention view
                     // let ind = state.highlightedTokenIndices[state.highlightedTokenIndices.length - 1];
+                    store.commit("updateAttentionLoading", true);
                     let ind = state.clickedPoint.index;
                     let pt = state.activePoints[ind];
                     state.clickedPoint = pt;

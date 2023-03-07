@@ -34,7 +34,7 @@
                     <a-radio-group v-model:value="mode">
                         <a-radio-button value="single">single</a-radio-button>
                         <a-radio-button value="matrix">matrix</a-radio-button>
-                        </a-radio-group> -->
+                                                            </a-radio-group> -->
 
                     <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
@@ -90,7 +90,7 @@
                 <Legend />
             </div>
             <!-- <canvas id="matrix-canvas" /> -->
-            
+
             <MatrixView v-show="!renderState" ref="matrixView" />
         </div>
     </div>
@@ -140,17 +140,27 @@ export default defineComponent({
         }
 
         const clearSearch = () => {
+            const oldSearch = state.searchToken;
             state.searchToken = "";
-            onSearch(state.searchToken);
+            if (!oldSearch.includes("(0 ") && oldSearch.includes("results)")) {
+                // actually need to clear search results from scatterplot
+                store.commit("setHighlightedTokenIndices", []);
+                // onSearch(state.searchToken);
+            } // else we just need to reset input box
         }
 
         const onSearch = (str: string) => {
-            store.commit("setView", "search");
+            if (str == "") { // don't search empty string
+                return;
+            }
+            if (state.view != "search") {
+                store.commit("setView", "search");
+            }
             let num_results = (matrixView.value as any).onSearch(str);
             // console.log(num_results);
-            if (str != "") { // display # search results
-                state.searchToken = str + " (" + num_results + " results)";
-            }
+            // if (str != "") { // display # search results
+            state.searchToken = str + " (" + num_results + " results)";
+            // }
         }
 
         const logViewport = () => {
