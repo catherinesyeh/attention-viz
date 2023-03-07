@@ -159,16 +159,16 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 .range([0, matrixCellHeight]);
 
             if (projectionMethod === "tsne" || projectionMethod === "umap" || projectionMethod === "pca") { // 2d case
-                return data.map(d => [+xScale(getX(d)).toFixed(6) + xoffset, +yScale(getY(d)).toFixed(6) + yoffset] as [number, number]);
+                return data.map(d => [+xScale(getX(d)).toFixed(3) + xoffset, +yScale(getY(d)).toFixed(3) + yoffset] as [number, number]);
             }
             // 3d case
             const zScale = d3
                 .scaleLinear()
                 .domain(d3.extent(data.map((x) => getZ(x))) as any)
                 .range([0, matrixCellHeight]);
-            return data.map(d => [+xScale(getX(d)).toFixed(6) + xoffset, 
-                +yScale(getY(d)).toFixed(6) + yoffset, 
-                +zScale(getZ(d)).toFixed(6)] as [number, number, number]);
+            return data.map(d => [+xScale(getX(d)).toFixed(3) + xoffset, 
+                +yScale(getY(d)).toFixed(3) + yoffset, 
+                +zScale(getZ(d)).toFixed(3)] as [number, number, number]);
         }
         const pointsCoordinates = {
             'tsne': computeCoordinate('tsne'),

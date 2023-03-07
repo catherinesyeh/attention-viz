@@ -109,7 +109,9 @@ export default defineComponent({
             // attnSide: computed(() => store.state.attnSide)
         });
 
-        var shallowData = shallowRef({
+        let deckgl = {} as Deck;
+
+        let shallowData = shallowRef({
             points: [],
             headings: [],
             range: {
@@ -117,8 +119,6 @@ export default defineComponent({
                 y: [0, 0],
             },
         } as Typing.Projection);
-
-        var deckgl = {} as Deck;
 
         // helper functions for layers
         const getPointCoordinate = (d: Typing.Point) => {
@@ -136,7 +136,7 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom;
-            var size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.8) * 90
+            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.8) * 90
             return size < 1 ? 1 : size;
         };
 
@@ -178,9 +178,12 @@ export default defineComponent({
             return true;
         }
 
-        // helper when drawing attentino lines
+        // helper when drawing attention lines
         function get_k_attn(k: number) {
             let attention = state.curAttn;
+            if (state.modelType == "vit-16" || state.modelType == "vit-32") {
+                attention = state.attentionByToken.attns;
+            }
 
             let top_attn: any = [];
             // find top k attention weights for each query
@@ -302,7 +305,7 @@ export default defineComponent({
             // main scatterplot(s)
             return new ScatterplotLayer({
                 id: "point-layer",
-                pickable: state.mode == 'single',
+                pickable: state.mode == 'single' && state.modelType == "bert" || state.modelType == "gpt",
                 data: points,
                 radiusMaxPixels: 5,
                 stroked: state.mode == 'single',
@@ -384,10 +387,15 @@ export default defineComponent({
                     ) as any;
                 },
                 onClick: (info, event) => {
-                    if (state.mode === 'matrix') {
+                    if (state.mode === 'matrix' || state.attentionLoading) {
+                        // stop event propagation
                         return;
                     }
-                    console.log('onClick', info.object);
+                    // console.log("scatterplot");
+                    // if (deckgl['layerManager']) {
+                    //     console.log(deckgl['layerManager']['layers'].map((v) => v.id));
+                    // }
+                    // console.log('onClick', info.object);
                     if (state.view != "attn") { // switch to attention view if not already
                         store.commit("setView", 'attn');
                     }
@@ -423,7 +431,7 @@ export default defineComponent({
         const toImageLayer = (points: Typing.Point[]) => {
             return new IconLayer({
                 id: 'image-scatter-layer',
-                pickable: state.mode == 'single',
+                pickable: state.mode == 'single' && state.modelType == "vit-16" || state.modelType == "vit-32",
                 data: points,
                 radiusMaxPixels: 0,
                 stroked: state.mode == 'single',
@@ -449,20 +457,30 @@ export default defineComponent({
                         : [0, 0, 0, 70];
                 },
                 onClick: (info, event) => {
-                    if (state.mode === 'matrix') {
+                    if (state.mode === 'matrix' || state.attentionLoading) {
+                        // stop event propagation
                         return;
                     }
-                    console.log('onClick', info.object);
-                    store.commit("setView", 'attn');
+                    // console.log("image");
+                    // if (deckgl['layerManager']) {
+                    //     console.log(deckgl['layerManager']['layers'].map((v) => v.id));
+                    // }
+                    // console.log('onClick', info.object);
+                    if (state.view != "attn") {
+                        store.commit("setView", 'attn');
+                    }
                     store.commit("updateAttentionLoading", true);
 
                     let pt = info.object as Typing.Point;
+
+                    // console.log(pt.index);
+                    // console.log(points.length);
+
                     state.clickedPoint = pt;
                     store.dispatch("setClickedPoint", pt);
 
                     let pt_info = state.tokenData[pt.index];
-                    var offset = 0
-                    console.log(state.modelType)
+                    let offset = 0;
                     if (state.modelType == "vit-32") {
                         offset = 49;
                     }
@@ -485,8 +503,8 @@ export default defineComponent({
                 updateTriggers: {
                     getPosition: [state.projectionMethod, state.dimension],
                     getColor: [state.highlightedTokenIndices],
-            }
-        })
+                }
+            })
         };
 
         const toLabelOutlineLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
@@ -611,9 +629,10 @@ export default defineComponent({
                 getText: (d: Typing.Point) => {
                     if (state.modelType == "bert" || state.modelType == "gpt") {
                         return state.tokenData[d.index].pos_int + ":" + d.value
-                    } else{
+                    } else {
                         return " " + state.tokenData[d.index].value + "\n (" + state.tokenData[d.index].position + "," + state.tokenData[d.index].pos_int + ")"
-                    }},
+                    }
+                },
                 getColor: (d: Typing.Point) => {
                     return d.type == "query"
                         ? state.userTheme == "light-theme"
@@ -660,7 +679,7 @@ export default defineComponent({
             return new PolygonLayer({
                 id: "overlay-layer",
                 data: headings,
-                pickable: true,
+                pickable: state.mode == "matrix",
                 strokable: false,
                 filled: true,
                 extruded: state.dimension == "3D",
@@ -686,6 +705,9 @@ export default defineComponent({
         // compute + render layers for current view
         const toLayers = () => {
             let { points, headings } = shallowData.value;
+            if (!state.doneLoading) { // don't initialize until all data is loaded
+                return [];
+            }
 
             if (state.curHead !== "" && state.curLayer !== "") { // single mode
                 // filter only points in this layer
@@ -731,7 +753,7 @@ export default defineComponent({
                 }
                 layers.push(toPlotHeadLayer([layer_headings]));
 
-                if ((state.modelType == "bert" || state.modelType == "gpt") && state.view != "attn" && state.showAll) {
+                if (state.view != "attn" && state.showAll) {
                     if (state.dimension == "2D") {
                         // only white outline around labels in 2d view
                         layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
@@ -757,6 +779,9 @@ export default defineComponent({
             const { points, headings, range } = shallowData.value;
             console.log("initMatrices", points, headings);
             if (!points || !points.length) return;
+
+            // clear tooltips
+            document.querySelectorAll(".deck-tooltip").forEach((v) => v.remove());
 
             // put init view state in the centre
             canvasWidth = range.x[0] + range.x[1];

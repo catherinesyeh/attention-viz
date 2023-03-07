@@ -85,7 +85,7 @@ export const store = createStore<State>({
     weightByNorm: false,
     showAgg: true,
     // attentionByTokenLock: false,
-    modelType: 'vit-16',
+    modelType: 'vit-32',
     projectionMethod: 'tsne',
     colorBy: 'type',
     highlightedTokenIndices: [],

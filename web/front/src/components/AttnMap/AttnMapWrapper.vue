@@ -1,29 +1,36 @@
 <template>
-    <div class="row" :class="{ splitcol: showAgg }">
-        <AttnMap :myID="'sentAttn'" :otherID="'aggAttn'" />
-    </div>
-    <Transition>
-        <div class="row splitcol" v-show="showAgg && view == 'attn'">
-            <AggAttnMap :myID="'aggAttn'" :otherID="'sentAttn'" />
+    <div v-if="modelType == 'bert' || modelType == 'gpt'">
+        <!-- show bert/gpt attention -->
+        <div class="row" :class="{ splitcol: showAgg }">
+            <AttnMap :myID="'sentAttn'" :otherID="'aggAttn'" />
         </div>
-    </Transition>
-    <Transition>
-        <a-button id="show-agg" type="primary" @click="showAggAttention" v-show="!showAgg && view == 'attn'">
-            show aggregate attention
-        </a-button>
-    </Transition>
+        <Transition>
+            <div class="row splitcol" v-show="showAgg && view == 'attn'">
+                <AggAttnMap :myID="'aggAttn'" :otherID="'sentAttn'" />
+            </div>
+        </Transition>
+        <Transition>
+            <a-button id="show-agg" type="primary" @click="showAggAttention" v-show="!showAgg && view == 'attn'">
+                show aggregate attention
+            </a-button>
+        </Transition>
+    </div>
+    <div v-else>
+        <!-- show vit attention -->
+        <ImageAttnMap />
+    </div>
 </template>
 
 <script lang="ts">
 import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
 import * as _ from "underscore";
 import { useStore } from "@/store/index";
-import * as d3 from "d3";
 import AttnMap from "./AttnMap.vue";
 import AggAttnMap from "./AggAttnMap.vue";
+import ImageAttnMap from "./ImageAttnMap.vue";
 
 export default {
-    components: { AttnMap, AggAttnMap },
+    components: { AttnMap, AggAttnMap, ImageAttnMap },
     setup() {
         const store = useStore();
 
@@ -90,8 +97,16 @@ export default {
     font-size: small;
 }
 
-.bertviz {
+.bertviz,
+#bertviz {
     margin-top: 15px !important;
+}
+
+#bertviz.image-viz {
+    width: 200px !important;
+    transform: translateX(-50%);
+    left: 50%;
+    height: 405px !important;
 }
 
 .bertviz,

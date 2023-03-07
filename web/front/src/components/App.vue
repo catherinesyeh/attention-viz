@@ -44,12 +44,7 @@
   <div class="main">
     <div class="row">
       <div class="col-2" style="position:relative">
-        <div v-if="modelType == 'bert' || modelType == 'gpt'">
-          <AttnMapWrapper />
-        </div>
-        <div v-else>
-          <AttnMap />
-        </div>
+        <AttnMapWrapper />
       </div>
       <div class="col-10">
         <Projection ref="projection" />
@@ -70,10 +65,6 @@ import AttnMap from "./AttnMap/AttnMap.vue";
 import AttnMapWrapper from "./AttnMap/AttnMapWrapper.vue";
 
 import { onMounted, computed, reactive, toRefs, h, watch, ref } from "vue";
-import { string } from "vue-types";
-import { SelectTypes } from "ant-design-vue/es/select";
-import { Typing } from "@/utils/typing";
-import { storeKey } from "vuex";
 
 export default defineComponent({
   name: "App",

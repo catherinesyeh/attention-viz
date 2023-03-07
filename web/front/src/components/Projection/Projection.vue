@@ -30,12 +30,6 @@
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm"
                         :class="{ disabled: mode == 'matrix' }">scale by norm</a-checkbox>
 
-                <!-- <p class="label">Mode</p>
-                    <a-radio-group v-model:value="mode">
-                        <a-radio-button value="single">single</a-radio-button>
-                        <a-radio-button value="matrix">matrix</a-radio-button>
-                                                            </a-radio-group> -->
-
                     <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
@@ -120,6 +114,7 @@ export default defineComponent({
             showAll: computed(() => store.state.showAll),
             sizeByNorm: computed(() => store.state.sizeByNorm),
             showAttention: computed(() => store.state.showAttention),
+            attnLoading: computed(() => store.state.attentionLoading),
             // disableLabel: computed(() => store.state.disableLabel),
             colorBy: computed(() => store.state.colorBy),
             layer: computed(() => store.state.layer),
@@ -218,6 +213,9 @@ export default defineComponent({
                 store.commit("setHighlightedTokenIndices", []);
                 if (state.searchToken.length > 0) {
                     state.searchToken = "";
+                }
+                if (state.attnLoading) {
+                    store.commit("updateAttentionLoading", false);
                 }
             })
 
