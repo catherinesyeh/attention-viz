@@ -889,4 +889,113 @@ export default {
 #bertviz {
     margin-top: 15px !important;
 }
+
+.viewHead {
+    margin-left: 10px;
+    margin-top: 10px;
+    background-color: transparent !important;
+}
+
+#show-agg {
+    margin: auto;
+    position: relative;
+    display: block;
+}
+
+.align-top {
+    align-items: baseline;
+    display: flex;
+    justify-content: space-between;
+}
+
+.align-top p {
+    margin-bottom: 0 !important;
+}
+
+.attn-btns span {
+    margin: 0 2px;
+}
+
+#attn-clear,
+#attn-reset,
+#hide-agg {
+    position: relative;
+    padding: 0;
+    height: auto;
+    display: inline-block;
+}
+
+.subtitle {
+    font-family: monospace;
+    font-size: small;
+}
+
+.bertviz {
+    margin-top: 15px !important;
+}
+
+.bertviz,
+#vis {
+    width: fit-content !important;
+    display: inline-block;
+    background-color: transparent !important;
+}
+
+#vis {
+    overflow-y: scroll;
+    max-height: calc(90vh - 150px);
+    padding-bottom: 10px;
+}
+
+.splitcol #vis {
+    max-height: calc(50vh - 130px) !important;
+}
+
+// hide scrollbar but still allow scroll
+#vis::-webkit-scrollbar {
+    width: 0 !important;
+}
+
+#vis.element {
+    overflow: -moz-scrollbars-none;
+}
+
+#main-svg {
+    width: auto !important;
+}
+
+text.bold {
+    font-weight: bold;
+}
+
+text.bold.query {
+    fill: var(--query-label);
+}
+
+text.bold.key {
+    fill: var(--key-label);
+}
+
+.token-text {
+    fill: var(--text);
+}
+
+.background {
+    fill: var(--token-hover);
+}
+
+.hide {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.checkbox-contain {
+    display: flex;
+}
+
+.half {
+    width: 50%;
+    display: inline-block;
+}
 </style>
