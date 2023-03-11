@@ -54,8 +54,7 @@ export default {
             model: computed(() => store.state.modelType),
             attn_vals: [] as number[][],
             attentionLoading: computed(() => store.state.attentionLoading),
-            overlayAttn: false,
-            checkClick: false,
+            overlayAttn: true,
         });
 
         let deckgl2 = {} as Deck;
