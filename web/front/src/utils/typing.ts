@@ -62,6 +62,8 @@ export namespace Typing {
         punctuation: number[];
         norm: number[];
         length: number[];
+        row: number[];
+        column: number[];
     }
 
     export interface PointMsg {

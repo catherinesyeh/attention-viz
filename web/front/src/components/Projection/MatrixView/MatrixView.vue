@@ -136,7 +136,7 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom;
-            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2) * 90
+            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2.2) * 90
             return size < 1 ? 1 : size;
         };
 
@@ -353,12 +353,10 @@ export default defineComponent({
                         switch (state.colorBy) {
                             case 'type':
                                 return d.color.type
-                            case 'position':
+                            case 'row':
                                 return d.color.position
                             case 'categorical':
                                 return d.color.categorical
-                            case 'norm':
-                                return d.color.norm
                             case 'punctuation':
                                 return d.color.punctuation
                             case 'length':
@@ -450,7 +448,7 @@ export default defineComponent({
                 sizeMinPixels: 1,
                 sizeUnits: "pixels",
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
-                getSize: d => 35,
+                getSize: d => 55,
                 getColor: (d: Typing.Point) => {
                     const getColor = (d: Typing.Point) => {
                         switch (state.colorBy) {
@@ -514,7 +512,7 @@ export default defineComponent({
                 }),
                 // getPixelOffset: [0, 0],
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
-                getSize: d => 35,
+                getSize: d => 55,
                 sizeScale: 1,
                 sizeMaxPixels: getImageSize(),
                 sizeMinPixels: 1,

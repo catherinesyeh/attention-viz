@@ -17,7 +17,7 @@
         <span class="subtitle">{{ attnMsg }}</span>
         <Transition>
             <div v-show="showAttn">
-                <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap">Show Overlaid Attn</a-checkbox>
+                <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap">Show Attn Arrows</a-checkbox>
             </div>
         </Transition>
         <Transition>
@@ -93,12 +93,20 @@ export default {
                 pickable: false,
             });
 
+            const toArrowedlImageLayer = new BitmapLayer({
+                id: 'bertviz-arrowed',
+                bounds: [-70, -80.5, 70, -2.5],
+                // bounds: [-490, -50, -350, 65],
+                image: attentionByToken.token.sentence,
+                pickable: false,
+            });
+
             if (state.overlayAttn) {
                 // deckgl2.setProps({ layers: [toOriginalImageLayer, toOverlaidlImageLayer] });
                 deckgl2 = new Deck({
                     canvas: "bertviz",
                     // initialViewState: viewState,
-                    layers: [toOriginalImageLayer, toOverlaidlImageLayer]
+                    layers: [toOriginalImageLayer, toArrowedlImageLayer]
                 });
             }
             else {
@@ -106,7 +114,7 @@ export default {
                 deckgl2 = new Deck({
                     canvas: "bertviz",
                     // initialViewState: viewState,
-                    layers: [toOriginalImageLayer]
+                    layers: [toOriginalImageLayer, toOverlaidlImageLayer]
                 });
             }
 

@@ -66,6 +66,8 @@ import AttnMapWrapper from "./AttnMap/AttnMapWrapper.vue";
 
 import { onMounted, computed, reactive, toRefs, h, watch, ref } from "vue";
 
+
+
 export default defineComponent({
   name: "App",
   components: { UserPanel, Projection, AttnMap, AttnMapWrapper },

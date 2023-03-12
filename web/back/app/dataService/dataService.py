@@ -23,6 +23,8 @@ import time
 import base64
 import io
 import copy
+import cv2
+from scipy.stats import mode
 
 # get the /TableCharts
 # Alter: abspath('') is called from back/run.py
@@ -179,6 +181,90 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
     return image
 
 
+def hilo(a, b, c):
+    # Adopted from https://stackoverflow.com/questions/40233986/python-is-there-a-function-or-formula-to-find-the-complementary-colour-of-a-rgb
+    if c < b: b, c = c, b
+    if b < a: a, b = b, a
+    if c < b: b, c = c, b
+    return a + c
+
+
+def complement(r, g, b):
+    # Adopted from https://stackoverflow.com/questions/40233986/python-is-there-a-function-or-formula-to-find-the-complementary-colour-of-a-rgb
+    k = hilo(r, g, b)
+    return tuple(k - u for u in (r, g, b))
+
+
+def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[255, 240, 50], enhance_contrast=True):
+    image_h = image.shape[0]
+    image_w = image.shape[1]
+    
+    
+    # rgba_image = image.copy()
+    # image = image[..., :3].reshape(image_h, image_w, 3)
+
+    image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+    mean_rgb = np.median(image.reshape(-1, image.shape[-1]), axis=0)
+    print(mean_rgb)
+    complement_color = complement(mean_rgb[0], mean_rgb[1], mean_rgb[2])
+    if enhance_contrast:
+        color = np.array([int(c) for c in complement_color])
+        color = color * 1.3
+        color = np.clip(color, 0, 255).astype("uint8")
+
+    attentions = copy.copy(attentions)
+    attentions = np.array(attentions)
+
+    num_patches = len(attentions)
+    num_patches_per_row = int(num_patches ** (1/2))
+
+    for i in range(num_patches):
+        if max(attentions[i]) < 0.01:
+            continue
+        cur_patch_index = [i // num_patches_per_row, i % num_patches_per_row]
+        argmax_patch_index = np.argmax(attentions[i])
+        argmax_patch_index = [argmax_patch_index // num_patches_per_row, argmax_patch_index % num_patches_per_row]
+
+
+        if argmax_patch_index == cur_patch_index:
+            radius = int(patch_size * 0.7) // 2
+            image = cv2.circle(image, 
+                               center=[argmax_patch_index[1] * patch_size + patch_size // 2,
+                                       argmax_patch_index[0] * patch_size + patch_size // 2],
+                               radius=radius,
+                               thickness=thickness,
+                               color=color,
+                               lineType=cv2.LINE_AA)
+            
+            image = cv2.arrowedLine(image, 
+                                    pt1=[argmax_patch_index[1] * patch_size + patch_size // 2 + radius,
+                                         argmax_patch_index[0] * patch_size + patch_size // 2],
+                                    pt2=[argmax_patch_index[1] * patch_size + patch_size // 2 + radius,
+                                         argmax_patch_index[0] * patch_size + patch_size // 2 + 1],
+                                    thickness=2,
+                                    color=color,
+                                    line_type=cv2.LINE_AA,
+                                    tipLength=7)
+        else:
+            line_length = np.sqrt((cur_patch_index[1] - argmax_patch_index[1]) ** 2 + (cur_patch_index[0] - argmax_patch_index[0]) ** 2)
+            
+            cos = (cur_patch_index[1] - argmax_patch_index[1]) / line_length
+            sin = (cur_patch_index[0] - argmax_patch_index[0]) / line_length
+
+            image = cv2.arrowedLine(image, 
+                                    pt1=[cur_patch_index[1] * patch_size + patch_size // 2 - int(cos * 4),
+                                         cur_patch_index[0] * patch_size + patch_size // 2 - int(sin * 4)], 
+                                    pt2=[argmax_patch_index[1] * patch_size + patch_size // 2 + int(cos * 4),
+                                         argmax_patch_index[0] * patch_size + patch_size // 2 + int(sin * 4),],
+                                    thickness=thickness,
+                                    color=color,
+                                    line_type=cv2.LINE_AA,
+                                    tipLength=0.2 / line_length)
+            
+    return image
+
+
+
 class DataService(object):
     def __init__(self):
         print('------inited------')
@@ -275,7 +361,7 @@ class DataService(object):
                 end -= 49
             else:
                 color = [71, 222, 93]
-            highlighted_image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'], 
+            highlighted_image = highlight_a_patch(image.copy(), all_token_info['position'], all_token_info['pos_int'], 
                                                   32, width=3, c=color)
 
             all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(highlighted_image)
@@ -291,7 +377,7 @@ class DataService(object):
                 end -= 196
             else:
                 color = [71, 222, 93]
-            highlighted_image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'],
+            highlighted_image = highlight_a_patch(image.copy(), all_token_info['position'], all_token_info['pos_int'],
                                                   16, width=2, c=color)
 
             all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(highlighted_image)
@@ -342,6 +428,12 @@ class DataService(object):
                                                32, width=3, c=color)
             all_token_info['originalPatchPath'] = convert_np_image_to_dataurl64(
                 overlaid_image)
+            
+            arrowed_image = highlight_patches(image.copy(), 32)
+            arrowed_image = draw_arrow_on_image(arrowed_image, attn, 32, thickness=2)
+
+            all_token_info['sentence'] = convert_np_image_to_dataurl64(
+            arrowed_image)
         elif model == "vit-16":
             overlaid_image = overlay_image_with_attention(
                 image.copy(), attn[index % 196], 16)
@@ -354,6 +446,12 @@ class DataService(object):
                                                16, width=2, c=color)
             all_token_info['originalPatchPath'] = convert_np_image_to_dataurl64(
                 overlaid_image)
+            
+            arrowed_image = highlight_patches(image.copy(), 16)
+            arrowed_image = draw_arrow_on_image(arrowed_image, attn, 16, thickness=1)
+
+            all_token_info['sentence'] = convert_np_image_to_dataurl64(
+            arrowed_image)
 
         return {
             'layer': layer,
@@ -362,7 +460,7 @@ class DataService(object):
             'agg_attns': agg_attn,
             'norms': norms,
             'agg_norms': agg_norms,
-            'token': all_token_info
+            'token': all_token_info,
         }
 
 
