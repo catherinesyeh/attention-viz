@@ -136,7 +136,7 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom;
-            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.8) * 90
+            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.9) * 90
             return size < 1 ? 1 : size;
         };
 
@@ -428,6 +428,33 @@ export default defineComponent({
             });
         };
 
+
+        // const toColorLayer = (points: Typing.Point[]) => {
+        //     return new IconLayer({
+        //         id: 'coloring-layer',
+        //         data: points,
+        //         pickable: true,
+        //         // iconAtlas and iconMapping are required
+        //         // getIcon: return a string
+        //         iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
+        //         iconMapping: {
+        //             marker: {x: 0, 
+        //                      y: 0, 
+        //                      width: 128, 
+        //                      height: 128, 
+        //                      mask: true}
+        //         },
+        //         getIcon: d => 'marker',
+        //         sizeScale: 1,
+        //         sizeMaxPixels: getImageSize(),
+        //         sizeMinPixels: 1,
+        //         sizeUnits: "pixels",
+        //         getPosition: (d: Typing.Point) => getPointCoordinate(d),
+        //         getSize: d => 35,
+        //         getColor: d => [140, 140, 0]
+        //     });
+        // }
+
         const toImageLayer = (points: Typing.Point[]) => {
             return new IconLayer({
                 id: 'image-scatter-layer',
@@ -454,7 +481,7 @@ export default defineComponent({
                     if (state.highlightedTokenIndices.length === 0) return [0, 0, 0, 255];
                     return state.highlightedTokenIndices.includes(d.index)
                         ? [0, 0, 0, 255]
-                        : [0, 0, 0, 70];
+                        : [0, 0, 0, 30];
                 },
                 onClick: (info, event) => {
                     if (state.mode === 'matrix' || state.attentionLoading) {
@@ -526,7 +553,13 @@ export default defineComponent({
                             : state.zoom <= 8
                                 ? 0.08 / state.zoom
                                 : 0.05 / (1.5 * state.zoom);
+
+                    if (state.modelType == "vit-32" || state.modelType == "vit-16") {
+                        coord[0] += 1 / Math.pow(3, state.zoom);
+                    }
+
                     let offset = 1 / Math.pow(1.5, state.zoom) + whiteOffset;
+                    
                     return [coord[0] + offset, coord[1] + whiteOffset];
                 },
                 getText: (d: Typing.Point) => d.value,
@@ -734,7 +767,9 @@ export default defineComponent({
                         layers.push(toLineLayer(attn_points));
                     }
                     // add extra outline for clicked point
-                    layers.push(toPointOutlineLayer([state.clickedPoint]));
+                    if (state.modelType == "bert" || state.modelType == "gpt") {
+                        layers.push(toPointOutlineLayer([state.clickedPoint]));
+                    }
                 }
 
                 if (state.modelType == "bert" || state.modelType == "gpt") {
@@ -742,6 +777,7 @@ export default defineComponent({
                 }
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
                     layers.push(toImageLayer(layer_points));
+                    // layers.push(toColorLayer(layer_points));
                 }
 
                 if (state.view == "attn") {
@@ -768,6 +804,7 @@ export default defineComponent({
                 return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
             else {
+                // return [toImageLayer(points), toColorLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
                 return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
         };

@@ -144,7 +144,7 @@ def convert_np_image_to_dataurl64(np_image, compression_scheme="png"):
     return dataurl
 
 
-def overlay_image_with_attention(image, attention, patch_size, norm_attention=True):
+def overlay_image_with_attention(image, attention, patch_size, norm_attention=True, boost=True):
     image_h = image.shape[0]
     image_w = image.shape[1]
     attention = copy.copy(attention)
@@ -152,14 +152,16 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
     if norm_attention:
         attention.append(1 - sum(attention))
         attention = np.array(attention)
-        if norm_attention:
-            attention -= attention.min()
-            attention /= attention.max()
+        attention -= attention.min()
+        attention /= attention.max()
         # attention *= 6
         attention = np.clip(attention, 0, 1)
         attention = attention[:-1]
     else:
         attention = np.array(attention)
+
+    if boost:
+        attention = attention ** (1/2)
 
     attention = attention.reshape(image_h // patch_size, image_w // patch_size)
 
@@ -167,8 +169,7 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
     for i in range(0, image_h, patch_size):
         for j in range(0, image_w, patch_size):
             if image.shape[-1] == 4:
-                image[i: i + patch_size, j: j+patch_size, :-
-                      1] *= attention[i // patch_size, j // patch_size]
+                image[i: i + patch_size, j: j+patch_size, :-1] *= attention[i // patch_size, j // patch_size]
             elif image.shape[-1] == 3:
                 image[i: i + patch_size, j: j +
                       patch_size] *= attention[i // patch_size, j // patch_size]
@@ -196,13 +197,13 @@ class DataService(object):
         # bert
         self.matrix_data_bert = read_matrix_data("bert")
         self.attention_data_bert = read_attention_data("bert")
-        self.agg_att_data_bert = read_agg_attn_data("bert")
+        # self.agg_att_data_bert = read_agg_attn_data("bert")
         self.token_data_bert = read_token_data("bert")
 
         # gpt
         self.matrix_data_gpt = read_matrix_data("gpt")
         self.attention_data_gpt = read_attention_data("gpt")
-        self.agg_att_data_gpt = read_agg_attn_data("gpt")
+        # self.agg_att_data_gpt = read_agg_attn_data("gpt")
         self.token_data_gpt = read_token_data("gpt")
 
         # VIT-32
@@ -255,9 +256,9 @@ class DataService(object):
             all_token_info = self.token_data_bert['tokens'][index]
             offset = len(self.token_data_bert['tokens']) / 2
         elif model == "vit-32":
-            all_token_info = self.token_data_vit_32['tokens'][index]
+            all_token_info = copy.copy(self.token_data_vit_32['tokens'][index])
         elif model == "vit-16":
-            all_token_info = self.token_data_vit_16['tokens'][index]
+            all_token_info = copy.copy(self.token_data_vit_16['tokens'][index])
         else:
             all_token_info = self.token_data_gpt['tokens'][index]
             offset = len(self.token_data_gpt['tokens']) / 2
@@ -275,10 +276,9 @@ class DataService(object):
             else:
                 color = [71, 222, 93]
             highlighted_image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'], 
-                                                  32, width=2, c=color)
+                                                  32, width=3, c=color)
 
-            all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(
-                highlighted_image)
+            all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(highlighted_image)
         elif model == "vit-16":
             start = index - \
                 (all_token_info['position'] * 14 + all_token_info['pos_int'])
@@ -294,8 +294,7 @@ class DataService(object):
             highlighted_image = highlight_a_patch(image, all_token_info['position'], all_token_info['pos_int'],
                                                   16, width=2, c=color)
 
-            all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(
-                highlighted_image)
+            all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(highlighted_image)
         else:
             # find start/end position for sentence
             start = index - all_token_info['pos_int']
