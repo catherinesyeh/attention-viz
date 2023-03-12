@@ -136,7 +136,7 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom;
-            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 1.9) * 90
+            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2) * 90
             return size < 1 ? 1 : size;
         };
 
@@ -429,31 +429,73 @@ export default defineComponent({
         };
 
 
-        // const toColorLayer = (points: Typing.Point[]) => {
-        //     return new IconLayer({
-        //         id: 'coloring-layer',
-        //         data: points,
-        //         pickable: true,
-        //         // iconAtlas and iconMapping are required
-        //         // getIcon: return a string
-        //         iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
-        //         iconMapping: {
-        //             marker: {x: 0, 
-        //                      y: 0, 
-        //                      width: 128, 
-        //                      height: 128, 
-        //                      mask: true}
-        //         },
-        //         getIcon: d => 'marker',
-        //         sizeScale: 1,
-        //         sizeMaxPixels: getImageSize(),
-        //         sizeMinPixels: 1,
-        //         sizeUnits: "pixels",
-        //         getPosition: (d: Typing.Point) => getPointCoordinate(d),
-        //         getSize: d => 35,
-        //         getColor: d => [140, 140, 0]
-        //     });
-        // }
+        const toColorLayer = (points: Typing.Point[]) => {
+            return new IconLayer({
+                id: 'coloring-layer',
+                data: points,
+                pickable: true,
+                // iconAtlas and iconMapping are required
+                // getIcon: return a string
+                iconAtlas: 'https://raw.githubusercontent.com/catherinesyeh/attention-viz/VIT-vis/img/coloring_helper.png',
+                iconMapping: {
+                    border: {x: 64, 
+                             y: 0, 
+                             width: 64, 
+                             height: 64, 
+                             mask: true}
+                },
+                getIcon: d => 'border',
+                sizeScale: 1.25,
+                sizeMaxPixels: getImageSize() * 1.25,
+                sizeMinPixels: 1,
+                sizeUnits: "pixels",
+                getPosition: (d: Typing.Point) => getPointCoordinate(d),
+                getSize: d => 35,
+                getColor: (d: Typing.Point) => {
+                    const getColor = (d: Typing.Point) => {
+                        switch (state.colorBy) {
+                            case 'type':
+                                return d.color.type
+                            case 'position':
+                                return d.color.position
+                            case 'categorical':
+                                return d.color.categorical
+                            case 'norm':
+                                return d.color.norm
+                            case 'punctuation':
+                                return d.color.punctuation
+                            case 'length':
+                                return d.color.length
+                            default:
+                                throw Error('invalid color channel')
+                        }
+                    }
+
+                    const defaultColor = [...getColor(d), 255],
+                        highlightColorQuery = [84, 148, 61, 255],
+                        highlightColorQueryDark = [157, 216, 135, 255],
+                        highlightColorKey = [193, 91, 125, 225],
+                        highlightColorKeyDark = [234, 138, 170, 255],
+                        unactiveColor = [...getColor(d), 15];
+
+                    if (!state.highlightedTokenIndices.length) return defaultColor;
+                    return (
+                        state.highlightedTokenIndices.includes(d.index)
+                            ? d.type == "query"
+                                ? state.userTheme == "light-theme"
+                                    ? highlightColorQuery
+                                    : highlightColorQueryDark
+                                : state.userTheme == "light-theme"
+                                    ? highlightColorKey
+                                    : highlightColorKeyDark
+                            : unactiveColor
+                    ) as any;
+                },
+                updateTriggers: {
+                    getColor: [state.colorBy, state.highlightedTokenIndices, state.userTheme],
+                }
+            });
+        }
 
         const toImageLayer = (points: Typing.Point[]) => {
             return new IconLayer({
@@ -466,7 +508,7 @@ export default defineComponent({
                 // billboard: true,
                 // getAngle: 0,
                 getIcon: d => ({
-                    url: d.imagePath,
+                    url: d.originalPatchPath,
                     width: 128,
                     height: 128,
                 }),
@@ -776,8 +818,8 @@ export default defineComponent({
                     layers.push(toPointLayer(layer_points));
                 }
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
+                    layers.push(toColorLayer(layer_points));
                     layers.push(toImageLayer(layer_points));
-                    // layers.push(toColorLayer(layer_points));
                 }
 
                 if (state.view == "attn") {
@@ -804,8 +846,8 @@ export default defineComponent({
                 return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
             else {
-                // return [toImageLayer(points), toColorLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
-                return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
+                return [toColorLayer(points), toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
+                // return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
         };
 
@@ -1010,8 +1052,14 @@ export default defineComponent({
                     shallowData.value = projData;
                 }
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
-                    let projData = computeVitMatrixProjection(matrixData, tokenData);
-                    shallowData.value = projData;
+                    if (state.modelType == "vit-16") {
+                        let projData = computeVitMatrixProjection(matrixData, tokenData);
+                        shallowData.value = projData;
+                    }
+                    else {
+                        let projData = computeVitMatrixProjection(matrixData, tokenData);
+                        shallowData.value = projData;
+                    }
                 }
             }
         };

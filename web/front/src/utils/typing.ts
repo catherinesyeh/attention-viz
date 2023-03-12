@@ -82,6 +82,7 @@ export namespace Typing {
         type: string;
         normScaled: number;
         imagePath: string;
+        originalPatchPath: string;
     }
     
     export interface PlotHead {

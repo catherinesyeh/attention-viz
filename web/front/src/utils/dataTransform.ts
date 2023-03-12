@@ -201,6 +201,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         );
 
         const image_path = tokenData.map(td => td.imagePath)
+        const original_patch_path = tokenData.map(td => td.originalPatchPath)
         const norms = data.map((x) => x.norm);
         const norm_range = d3.extent(norms) as [number, number];
         const min_norm = norm_range[0];
@@ -257,6 +258,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             type: types[index],
             normScaled: norms_scaled[index],
             imagePath: image_path[index],
+            originalPatchPath: original_patch_path[index],
         }));
 
         xs.push(...[xoffset, matrixCellWidth + xoffset]);
