@@ -195,7 +195,7 @@ def complement(r, g, b):
     return tuple(k - u for u in (r, g, b))
 
 
-def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[255, 240, 50], enhance_contrast=True):
+def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[255, 240, 50], enhance_contrast=False):
     image_h = image.shape[0]
     image_w = image.shape[1]
     
@@ -204,13 +204,19 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[255, 
     # image = image[..., :3].reshape(image_h, image_w, 3)
 
     image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-    mean_rgb = np.median(image.reshape(-1, image.shape[-1]), axis=0)
-    print(mean_rgb)
-    complement_color = complement(mean_rgb[0], mean_rgb[1], mean_rgb[2])
+    median_rgb = np.median(image.reshape(-1, image.shape[-1]), axis=0)
+    print(median_rgb)
+    complement_color = complement(median_rgb[0], median_rgb[1], median_rgb[2])
     if enhance_contrast:
         color = np.array([int(c) for c in complement_color])
-        color = color * 1.3
+        pic_luminance = 0.2126 * median_rgb[0] + 0.7152 * median_rgb[1] + 0.0722 * median_rgb[2]
+        arrow_luminance = 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]
+        if pic_luminance < 140:
+            color = color * 235 / arrow_luminance 
+        else:
+            color = color * (100 /  arrow_luminance)
         color = np.clip(color, 0, 255).astype("uint8")
+        color = color.tolist()
 
     attentions = copy.copy(attentions)
     attentions = np.array(attentions)
