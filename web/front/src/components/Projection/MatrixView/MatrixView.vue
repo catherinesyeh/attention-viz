@@ -136,7 +136,7 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom;
-            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2) * 110
+            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2) * 115
             return size < 1 ? 1 : size;
         };
 
@@ -453,7 +453,7 @@ export default defineComponent({
                 getIcon: d => 'border',
                 sizeScale: 1,
                 sizeMaxPixels: getImageSize(),
-                sizeMinPixels: 1,
+                sizeMinPixels: 3.5,
                 sizeUnits: "pixels",
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getSize: d => 55,
@@ -481,7 +481,7 @@ export default defineComponent({
                         }
                     }
 
-                    const defaultColor = [...getColor(d), 195],
+                    const defaultColor = [...getColor(d), 185],
                         highlightColorQuery = [84, 148, 61, 0],
                         highlightColorQueryDark = [157, 216, 135, 0],
                         highlightColorKey = [193, 91, 125, 0],
@@ -572,13 +572,13 @@ export default defineComponent({
                 getSize: d => 55,
                 sizeScale: 1,
                 sizeMaxPixels: getImageSize(),
-                sizeMinPixels: 1,
+                sizeMinPixels: 3.5,
                 sizeUnits: "pixels",
                 getColor: (d: Typing.Point) => {
                     if (state.highlightedTokenIndices.length === 0) return [0, 0, 0, 255];
                     return state.highlightedTokenIndices.includes(d.index)
                         ? [0, 0, 0, 255]
-                        : [0, 0, 0, 30];
+                        : [0, 0, 0, 20];
                 },
                 onClick: (info, event) => {
                     if (state.mode === 'matrix' || state.attentionLoading) {

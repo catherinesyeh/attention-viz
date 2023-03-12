@@ -152,13 +152,13 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
     attention = copy.copy(attention)
     # add cls attention
     if norm_attention:
-        attention.append(1 - sum(attention))
+        # attention.append(1 - sum(attention))
         attention = np.array(attention)
         attention -= attention.min()
         attention /= attention.max()
         # attention *= 6
         attention = np.clip(attention, 0, 1)
-        attention = attention[:-1]
+        # attention = attention[:-1]
     else:
         attention = np.array(attention)
 
