@@ -136,9 +136,17 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom;
-            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2.2) * 90
+            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2.1) * 90
             return size < 1 ? 1 : size;
         };
+
+        const getImagePath = (d: Typing.Point) => {
+            if (state.colorBy == "type") {
+                return d.imagePath
+            } else{
+                return d.imagePath
+            }
+        }
 
         const tree = new RBush(); // fast label overlap detection
         const sizeMeasurer = (label: string, fontSize: number) => {
@@ -443,8 +451,8 @@ export default defineComponent({
                              mask: true}
                 },
                 getIcon: d => 'border',
-                sizeScale: 1.25,
-                sizeMaxPixels: getImageSize() * 1.25,
+                sizeScale: 1,
+                sizeMaxPixels: getImageSize(),
                 sizeMinPixels: 1,
                 sizeUnits: "pixels",
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
@@ -469,12 +477,12 @@ export default defineComponent({
                         }
                     }
 
-                    const defaultColor = [...getColor(d), 255],
-                        highlightColorQuery = [84, 148, 61, 255],
-                        highlightColorQueryDark = [157, 216, 135, 255],
-                        highlightColorKey = [193, 91, 125, 225],
-                        highlightColorKeyDark = [234, 138, 170, 255],
-                        unactiveColor = [...getColor(d), 15];
+                    const defaultColor = [...getColor(d), 175],
+                        highlightColorQuery = [84, 148, 61, 0],
+                        highlightColorQueryDark = [157, 216, 135, 0],
+                        highlightColorKey = [193, 91, 125, 0],
+                        highlightColorKeyDark = [234, 138, 170, 0],
+                        unactiveColor = [...getColor(d), 0];
 
                     if (!state.highlightedTokenIndices.length) return defaultColor;
                     return (
@@ -489,7 +497,52 @@ export default defineComponent({
                             : unactiveColor
                     ) as any;
                 },
+                onClick: (info, event) => {
+                    if (state.mode === 'matrix' || state.attentionLoading) {
+                        // stop event propagation
+                        return;
+                    }
+                    // console.log("image");
+                    // if (deckgl['layerManager']) {
+                    //     console.log(deckgl['layerManager']['layers'].map((v) => v.id));
+                    // }
+                    // console.log('onClick', info.object);
+                    if (state.view != "attn") {
+                        store.commit("setView", 'attn');
+                    }
+                    store.commit("updateAttentionLoading", true);
+
+                    let pt = info.object as Typing.Point;
+
+                    // console.log(pt.index);
+                    // console.log(points.length);
+
+                    state.clickedPoint = pt;
+                    store.dispatch("setClickedPoint", pt);
+
+                    let pt_info = state.tokenData[pt.index];
+                    let offset = 0;
+                    if (state.modelType == "vit-32") {
+                        offset = 49;
+                    }
+                    else {
+                        offset = 196;
+                    }
+                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset) + pt_info.pos_int);
+
+                    let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
+                    if (pt_info.type === "key") {
+                        start_index -= offset;
+                    } else {
+                        start_index += offset;
+                    }
+
+                    let opposite_indices = Array.from({ length: offset }, (x, i) => i + start_index);
+                    let tokenIndices = [...same_indices, ...opposite_indices];
+                    store.commit("setHighlightedTokenIndices", tokenIndices);
+                },
                 updateTriggers: {
+                    getPosition: [state.projectionMethod, state.dimension],
                     getColor: [state.colorBy, state.highlightedTokenIndices, state.userTheme],
                 }
             });
@@ -506,7 +559,7 @@ export default defineComponent({
                 // billboard: true,
                 // getAngle: 0,
                 getIcon: d => ({
-                    url: d.originalPatchPath,
+                    url: getImagePath(d),
                     width: 128,
                     height: 128,
                 }),
@@ -816,8 +869,12 @@ export default defineComponent({
                     layers.push(toPointLayer(layer_points));
                 }
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
-                    layers.push(toColorLayer(layer_points));
-                    layers.push(toImageLayer(layer_points));
+                    if (state.colorBy == "type") {
+                        layers.push(toImageLayer(layer_points));
+                    } else{
+                        layers.push(toImageLayer(layer_points));
+                        layers.push(toColorLayer(layer_points));
+                    }
                 }
 
                 if (state.view == "attn") {
@@ -844,7 +901,10 @@ export default defineComponent({
                 return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
             else {
-                return [toColorLayer(points), toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
+                if (state.colorBy == "type") {
+                    return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
+                }
+                return [toImageLayer(points), toColorLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
                 // return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
         };

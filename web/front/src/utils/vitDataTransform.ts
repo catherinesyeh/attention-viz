@@ -3,10 +3,14 @@ import * as d3 from "d3";
 import { image } from "d3";
 import * as _ from "underscore";
 
-const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20, num_tokens=7) => {
+const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20, num_tokens = 7) => {
     var results = [] as Typing.Point[];
     const types = tokenData.map(td => td.type);
     const values = tokenData.map(td => td.value);
+
+    const rows = tokenData.map(td => td.position);
+
+    num_tokens = Math.max(...rows)
 
     // compute msgs for each token
     const pos_msgs = tokenData.map(
@@ -227,7 +231,7 @@ const computeMatrixProjectionLabel = (matrixData: Typing.MatrixData[], matrixCel
     return results;
 };
 
-const computeVitMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20, num_tokens=7): Typing.Projection => {
+const computeVitMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20, num_tokens = 7): Typing.Projection => {
     const pts = computeMatrixProjectionPoint(matrixData, tokenData, matrixCellWidth, matrixCellHeight, matrixCellMargin, num_tokens)
     return {
         'points': pts.points,
