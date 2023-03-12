@@ -136,7 +136,7 @@ export default defineComponent({
 
         const getImageSize = () => {
             const zoom = state.zoom;
-            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2.1) * 90
+            let size = (((zoom + 1.5) / 10.5 + 0.0001) ** 2) * 110
             return size < 1 ? 1 : size;
         };
 
@@ -472,12 +472,16 @@ export default defineComponent({
                                 return d.color.punctuation
                             case 'length':
                                 return d.color.length
+                            case 'row':
+                                return d.color.row
+                            case 'column':
+                                return d.color.column
                             default:
                                 throw Error('invalid color channel')
                         }
                     }
 
-                    const defaultColor = [...getColor(d), 175],
+                    const defaultColor = [...getColor(d), 195],
                         highlightColorQuery = [84, 148, 61, 0],
                         highlightColorQueryDark = [157, 216, 135, 0],
                         highlightColorKey = [193, 91, 125, 0],
@@ -958,6 +962,10 @@ export default defineComponent({
                                 return d.msg.norm
                             case 'length':
                                 return d.msg.length
+                            case 'column':
+                                return d.msg.position
+                            case 'row':
+                                return d.msg.position
                             default:
                                 throw Error('invalid msg channel')
                         }
