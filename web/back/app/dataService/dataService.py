@@ -103,6 +103,8 @@ def read_image_from_dataurl64(dataurl):
 
 def highlight_a_patch(image, row, col, patch_size, width=3, c=[255, 230, 10]):
     c = copy.copy(c)
+    if col < 0:
+        return image
     if image.shape[-1] == 4:
         c.append(255)
     image[row * patch_size: (row + 1) * patch_size,
@@ -165,6 +167,8 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
     if boost:
         attention = attention ** (1/2)
 
+    attention = attention[1:]
+
     attention = attention.reshape(image_h // patch_size, image_w // patch_size)
 
     image = image.astype("float")
@@ -181,6 +185,44 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
     return image
 
 
+def append_cls(image, attention, color=[255, 255, 255, 255], border=4, norm_attention=True, boost=True):
+    pad = np.ones(shape=(50, 224, 4)) * 255
+    pad = pad.astype("uint8")
+
+    pad = cv2.putText(pad, "<CLS>", [15, 30], cv2.FONT_HERSHEY_DUPLEX, 0.8, [0, 0, 0, 255], 1, cv2.LINE_AA)
+
+    if norm_attention:
+        # attention.append(1 - sum(attention))
+        attention = np.array(attention)
+        attention -= attention.min()
+        attention /= attention.max()
+        # attention *= 6
+        attention = np.clip(attention, 0, 1)
+    if boost:
+        attention = attention ** (1/2)
+
+    pad = np.ones(shape=(50, 224, 4)) * 255
+    pad = pad.astype("uint8")
+
+    pad = cv2.putText(pad, "<CLS>", [35, 30], cv2.FONT_HERSHEY_DUPLEX, 0.6, [0, 0, 0, 255], 1, cv2.LINE_AA)
+
+    border_width = 4
+
+    pad[15 - border_width:15, 135:175, :3] = color
+    pad[35:35 + border_width, 135:175, :3] = color
+
+    pad[15: 35, 135:135 + border_width, :3] = color
+    pad[15: 35, 175 - border_width:175, :3] = color
+
+    pad[15: 35, 135 + border_width:175 - border_width] = [int(255 * attention[0]), int(255 * attention[0]), int(255 * attention[0]), 
+                                                          255]
+
+    if image.shape[-1] == 3:
+        image = np.concatenate([image, (np.ones(shape=(image.shape[0], image.shape[1], 1)) * 255).astype("uint8")], axis=-1)
+
+    return np.concatenate([image, pad], axis=0)
+
+
 def hilo(a, b, c):
     # Adopted from https://stackoverflow.com/questions/40233986/python-is-there-a-function-or-formula-to-find-the-complementary-colour-of-a-rgb
     if c < b: b, c = c, b
@@ -195,10 +237,9 @@ def complement(r, g, b):
     return tuple(k - u for u in (r, g, b))
 
 
-def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[255, 240, 50], enhance_contrast=False):
+def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 230, 50], enhance_contrast=False):
     image_h = image.shape[0]
     image_w = image.shape[1]
-    
     
     # rgba_image = image.copy()
     # image = image[..., :3].reshape(image_h, image_w, 3)
@@ -222,17 +263,16 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[255, 
     attentions = np.array(attentions)
 
     num_patches = len(attentions)
-    num_patches_per_row = int(num_patches ** (1/2))
+    num_patches_per_row = int((num_patches - 1) ** (1/2))
 
     for i in range(num_patches):
-        if max(attentions[i]) < 0.01:
+        if max(attentions[i]) < 0.05 or i == 0:
             continue
-        cur_patch_index = [i // num_patches_per_row, i % num_patches_per_row]
-        argmax_patch_index = np.argmax(attentions[i])
+        cur_patch_index = [(i - 1) // num_patches_per_row, (i - 1) % num_patches_per_row]
+        argmax_patch_index = np.argmax(attentions[i]) - 1
         argmax_patch_index = [argmax_patch_index // num_patches_per_row, argmax_patch_index % num_patches_per_row]
 
-
-        if argmax_patch_index == cur_patch_index:
+        if (argmax_patch_index == cur_patch_index) and (i != 0):
             radius = int(patch_size * 0.7) // 2
             image = cv2.circle(image, 
                                center=[argmax_patch_index[1] * patch_size + patch_size // 2,
@@ -251,6 +291,23 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[255, 
                                     color=color,
                                     line_type=cv2.LINE_AA,
                                     tipLength=7)
+        elif i == 0:
+            if argmax_patch_index[0] >= 0:
+                image = cv2.drawMarker(image, 
+                                    position=[argmax_patch_index[1] * patch_size + patch_size // 2,
+                                                argmax_patch_index[0] * patch_size + patch_size // 2],
+                                    markerType=cv2.MARKER_TRIANGLE_UP,
+                                    thickness=thickness,
+                                    color=color,
+                                    line_type=cv2.LINE_AA)
+        elif argmax_patch_index[0] == -1:
+            image = cv2.drawMarker(image, 
+                                   position=[cur_patch_index[1] * patch_size + patch_size // 2,
+                                             cur_patch_index[0] * patch_size + patch_size // 2],
+                                   markerType=cv2.MARKER_TRIANGLE_DOWN,
+                                   thickness=thickness,
+                                   color=color,
+                                   line_type=cv2.LINE_AA)
         else:
             line_length = np.sqrt((cur_patch_index[1] - argmax_patch_index[1]) ** 2 + (cur_patch_index[0] - argmax_patch_index[0]) ** 2)
             
@@ -356,34 +413,32 @@ class DataService(object):
             offset = len(self.token_data_gpt['tokens']) / 2
 
         if model == "vit-32":
-            start = index - \
-                (all_token_info['position'] * 7 + all_token_info['pos_int'])
-            end = start + 49
+            start = index - (all_token_info['position_row'] * 7 + all_token_info['position_col'] + 1)
+            end = start + 50
             image = read_image_from_dataurl64(
                 self.token_data_vit_32['tokens'][start]['originalImagePath']).copy()
             if self.token_data_vit_32['tokens'][index]['type'] == "key":
                 color = [227, 55, 143]
-                start -= 49
-                end -= 49
+                start -= 50
+                end -= 50
             else:
                 color = [71, 222, 93]
-            highlighted_image = highlight_a_patch(image.copy(), all_token_info['position'], all_token_info['pos_int'], 
+            highlighted_image = highlight_a_patch(image.copy(), all_token_info['position_row'], all_token_info['position_col'], 
                                                   32, width=3, c=color)
 
             all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(highlighted_image)
         elif model == "vit-16":
-            start = index - \
-                (all_token_info['position'] * 14 + all_token_info['pos_int'])
-            end = start + 196
+            start = index - (all_token_info['position_row'] * 14 + all_token_info['position_col'] + 1)
+            end = start + 197
             image = read_image_from_dataurl64(
                 self.token_data_vit_16['tokens'][start]['originalImagePath']).copy()
             if self.token_data_vit_16['tokens'][index]['type'] == "key":
                 color = [227, 55, 143]
-                start -= 196
-                end -= 196
+                start -= 197
+                end -= 197
             else:
                 color = [71, 222, 93]
-            highlighted_image = highlight_a_patch(image.copy(), all_token_info['position'], all_token_info['pos_int'],
+            highlighted_image = highlight_a_patch(image.copy(), all_token_info['position_row'], all_token_info['position_col'],
                                                   16, width=2, c=color)
 
             all_token_info['originalImagePath'] = convert_np_image_to_dataurl64(highlighted_image)
@@ -423,14 +478,20 @@ class DataService(object):
         if model == "vit-32":
             # overlaid_image = overlay_image_with_attention(image.copy(), attn[index % 49], 32,
             #                                               norm_attention=True if self.token_data_vit_32['tokens'][index]['type'] == "query" else False)
-            overlaid_image = overlay_image_with_attention(
-                image.copy(), attn[index % 49], 32)
+            overlaid_image = overlay_image_with_attention(image.copy(), attn[index % 50], 32)
             overlaid_image = highlight_patches(overlaid_image, 32)
+            
             if self.token_data_vit_32['tokens'][index]['type'] == "key":
                 color = [227, 55, 143]
             else:
                 color = [71, 222, 93]
-            overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position'], all_token_info['pos_int'],
+
+            if index % offset == 0:
+                cls_color = color
+            else:
+                cls_color = [255, 255, 255, 255]
+            overlaid_image = append_cls(overlaid_image, attn[index % 50], color, )
+            overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position_row'], all_token_info['position_col'],
                                                32, width=3, c=color)
             all_token_info['originalPatchPath'] = convert_np_image_to_dataurl64(
                 overlaid_image)
@@ -442,13 +503,15 @@ class DataService(object):
             arrowed_image)
         elif model == "vit-16":
             overlaid_image = overlay_image_with_attention(
-                image.copy(), attn[index % 196], 16)
+                image.copy(), attn[index % 197], 16)
             overlaid_image = highlight_patches(overlaid_image, 16)
             if self.token_data_vit_16['tokens'][index]['type'] == "key":
                 color = [227, 55, 143]
             else:
                 color = [71, 222, 93]
-            overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position'], all_token_info['pos_int'],
+
+            overlaid_image = append_cls(overlaid_image, attn[index % 50], color, )
+            overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position_row'], all_token_info['position_col'],
                                                16, width=2, c=color)
             all_token_info['originalPatchPath'] = convert_np_image_to_dataurl64(
                 overlaid_image)

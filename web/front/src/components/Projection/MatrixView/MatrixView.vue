@@ -527,12 +527,12 @@ export default defineComponent({
                     let pt_info = state.tokenData[pt.index];
                     let offset = 0;
                     if (state.modelType == "vit-32") {
-                        offset = 49;
+                        offset = 50;
                     }
                     else {
-                        offset = 196;
+                        offset = 197;
                     }
-                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset) + pt_info.pos_int);
+                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
 
                     let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
                     if (pt_info.type === "key") {
@@ -606,12 +606,12 @@ export default defineComponent({
                     let pt_info = state.tokenData[pt.index];
                     let offset = 0;
                     if (state.modelType == "vit-32") {
-                        offset = 49;
+                        offset = 50;
                     }
                     else {
-                        offset = 196;
+                        offset = 197;
                     }
-                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset) + pt_info.pos_int);
+                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
 
                     let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
                     if (pt_info.type === "key") {
