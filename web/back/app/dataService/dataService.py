@@ -152,13 +152,12 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
     image_h = image.shape[0]
     image_w = image.shape[1]
     attention = copy.copy(attention)
-    # add cls attention
     if norm_attention:
         # attention.append(1 - sum(attention))
         attention = np.array(attention)
-        attention -= attention.min()
+        attention -= (attention.min() * 0.25)
         attention /= attention.max()
-        # attention *= 6
+        # attention *= 3
         attention = np.clip(attention, 0, 1)
         # attention = attention[:-1]
     else:
@@ -185,28 +184,22 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
     return image
 
 
-def append_cls(image, attention, color=[255, 255, 255, 255], border=4, norm_attention=True, boost=True):
-    pad = np.ones(shape=(50, 224, 4)) * 255
-    pad = pad.astype("uint8")
-
-    pad = cv2.putText(pad, "<CLS>", [15, 30], cv2.FONT_HERSHEY_DUPLEX, 0.8, [0, 0, 0, 255], 1, cv2.LINE_AA)
-
+def append_cls(image, attention, color=[255, 255, 255, 255], border_width=4, norm_attention=True, boost=True):
     if norm_attention:
         # attention.append(1 - sum(attention))
         attention = np.array(attention)
-        attention -= attention.min()
+        attention -= (attention.min() * 0.25)
         attention /= attention.max()
-        # attention *= 6
+        # attention *= 3
         attention = np.clip(attention, 0, 1)
     if boost:
         attention = attention ** (1/2)
 
     pad = np.ones(shape=(50, 224, 4)) * 255
+    pad[..., :3] = [245, 245, 247]
     pad = pad.astype("uint8")
 
     pad = cv2.putText(pad, "<CLS>", [35, 30], cv2.FONT_HERSHEY_DUPLEX, 0.6, [0, 0, 0, 255], 1, cv2.LINE_AA)
-
-    border_width = 4
 
     pad[15 - border_width:15, 135:175, :3] = color
     pad[35:35 + border_width, 135:175, :3] = color
@@ -266,7 +259,7 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
     num_patches_per_row = int((num_patches - 1) ** (1/2))
 
     for i in range(num_patches):
-        if max(attentions[i]) < 0.05 or i == 0:
+        if max(attentions[i]) < 0.05:
             continue
         cur_patch_index = [(i - 1) // num_patches_per_row, (i - 1) % num_patches_per_row]
         argmax_patch_index = np.argmax(attentions[i]) - 1
@@ -294,17 +287,19 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
         elif i == 0:
             if argmax_patch_index[0] >= 0:
                 image = cv2.drawMarker(image, 
-                                    position=[argmax_patch_index[1] * patch_size + patch_size // 2,
-                                                argmax_patch_index[0] * patch_size + patch_size // 2],
-                                    markerType=cv2.MARKER_TRIANGLE_UP,
-                                    thickness=thickness,
-                                    color=color,
-                                    line_type=cv2.LINE_AA)
+                                       position=[argmax_patch_index[1] * patch_size + patch_size // 2,
+                                                 argmax_patch_index[0] * patch_size + patch_size // 2],
+                                       markerType=cv2.MARKER_STAR,
+                                       markerSize=thickness * 10,
+                                       thickness=thickness,
+                                       color=color,
+                                       line_type=cv2.LINE_AA)
         elif argmax_patch_index[0] == -1:
             image = cv2.drawMarker(image, 
                                    position=[cur_patch_index[1] * patch_size + patch_size // 2,
                                              cur_patch_index[0] * patch_size + patch_size // 2],
                                    markerType=cv2.MARKER_TRIANGLE_DOWN,
+                                   markerSize=thickness * 10,
                                    thickness=thickness,
                                    color=color,
                                    line_type=cv2.LINE_AA)
@@ -322,7 +317,7 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
                                     thickness=thickness,
                                     color=color,
                                     line_type=cv2.LINE_AA,
-                                    tipLength=0.2 / line_length)
+                                    tipLength=0.25 / line_length)
             
     return image
 
@@ -447,6 +442,7 @@ class DataService(object):
             start = index - all_token_info['pos_int']
             if all_token_info['type'] == "key":  # pass same attn info for key
                 start -= int(offset)
+                # pass
             num_tokens = all_token_info['length']
             end = start + num_tokens
 
@@ -489,7 +485,7 @@ class DataService(object):
             if index % 50 == 0:
                 cls_color = color
             else:
-                cls_color = [255, 255, 255, 255]
+                cls_color = [0, 0, 0]
             overlaid_image = append_cls(overlaid_image, attn[index % 50], cls_color, )
             overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position_row'], all_token_info['position_col'],
                                                32, width=3, c=color)
@@ -513,7 +509,7 @@ class DataService(object):
             if index % 197 == 0:
                 cls_color = color
             else:
-                cls_color = [255, 255, 255, 255]
+                cls_color = [0, 0, 0]
             overlaid_image = append_cls(overlaid_image, attn[index % 50], cls_color, )
             overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position_row'], all_token_info['position_col'],
                                                16, width=2, c=color)

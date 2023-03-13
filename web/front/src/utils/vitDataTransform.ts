@@ -179,6 +179,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 length: colorsByType[index],
                 row: colorsByRow[index],
                 column: colorsByCol[index],
+                strong: colorsByType[index],
             },
             msg: {
                 position: pos_msgs[index],

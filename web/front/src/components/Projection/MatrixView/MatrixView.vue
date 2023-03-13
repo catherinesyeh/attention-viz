@@ -476,6 +476,8 @@ export default defineComponent({
                                 return d.color.row
                             case 'column':
                                 return d.color.column
+                            case 'strong':
+                                return d.color.strong
                             default:
                                 throw Error('invalid color channel')
                         }
@@ -965,6 +967,8 @@ export default defineComponent({
                             case 'column':
                                 return d.msg.position
                             case 'row':
+                                return d.msg.position
+                            case 'strong':
                                 return d.msg.position
                             default:
                                 throw Error('invalid msg channel')

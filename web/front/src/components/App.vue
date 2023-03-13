@@ -98,7 +98,7 @@ export default defineComponent({
         get: () => store.state.colorBy,
         set: (v) => store.commit("setColorBy", v),
       }),
-      colorByOptions: ["type", "position", "categorical", "punctuation", "norm", "length", "row", "column"].map((x) => ({ value: x, label: x })),
+      colorByOptions: ["type", "row", "column", "strong"].map((x) => ({ value: x, label: x })),
       // colorByOptions: ["type", "row", "column"].map((x) => ({ value: x, label: x })),
       userTheme: computed(() => store.state.userTheme)
     });
@@ -172,6 +172,16 @@ export default defineComponent({
       }
 
     );
+
+    watch([() => state.modelType],
+      () => {
+        if (state.modelType == "bert" || state.modelType == "gpt"){
+          state.colorByOptions = ["type", "position", "categorical", "punctuation", "norm", "length"].map((x) => ({ value: x, label: x }))
+        } else {
+          state.colorByOptions = ["type", "row", "column", "strong_type"].map((x) => ({value: x, label: x}))
+        }
+      }
+    )
 
     return {
       ...toRefs(state),
