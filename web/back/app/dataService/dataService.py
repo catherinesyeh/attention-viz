@@ -486,11 +486,11 @@ class DataService(object):
             else:
                 color = [71, 222, 93]
 
-            if index % offset == 0:
+            if index % 50 == 0:
                 cls_color = color
             else:
                 cls_color = [255, 255, 255, 255]
-            overlaid_image = append_cls(overlaid_image, attn[index % 50], color, )
+            overlaid_image = append_cls(overlaid_image, attn[index % 50], cls_color, )
             overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position_row'], all_token_info['position_col'],
                                                32, width=3, c=color)
             all_token_info['originalPatchPath'] = convert_np_image_to_dataurl64(
@@ -510,7 +510,11 @@ class DataService(object):
             else:
                 color = [71, 222, 93]
 
-            overlaid_image = append_cls(overlaid_image, attn[index % 50], color, )
+            if index % 197 == 0:
+                cls_color = color
+            else:
+                cls_color = [255, 255, 255, 255]
+            overlaid_image = append_cls(overlaid_image, attn[index % 50], cls_color, )
             overlaid_image = highlight_a_patch(overlaid_image, all_token_info['position_row'], all_token_info['position_col'],
                                                16, width=2, c=color)
             all_token_info['originalPatchPath'] = convert_np_image_to_dataurl64(
