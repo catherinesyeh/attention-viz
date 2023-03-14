@@ -62,6 +62,9 @@ export namespace Typing {
         punctuation: number[];
         norm: number[];
         length: number[];
+        row: number[];
+        column: number[];
+        strong: number[];
     }
 
     export interface PointMsg {
@@ -82,6 +85,7 @@ export namespace Typing {
         type: string;
         normScaled: number;
         imagePath: string;
+        originalPatchPath: string;
     }
     
     export interface PlotHead {

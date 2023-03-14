@@ -1,7 +1,7 @@
 <template>
     <div id="legend" v-show="!renderState">
         <div class="bar-contain" :class="{
-            pos: colorBy == 'position' || colorBy == 'norm' || colorBy == 'length', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
+            pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'norm' || colorBy == 'length', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
         }">
             <span>q</span>
             <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="bar-contain k" :class="{
-            pos: colorBy == 'position' || colorBy == 'norm' || colorBy == 'length', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
+            pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'norm' || colorBy == 'length', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
         }">
             <span>k</span>
             <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">

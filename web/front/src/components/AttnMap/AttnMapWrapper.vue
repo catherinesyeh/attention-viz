@@ -106,7 +106,7 @@ export default {
     width: 200px !important;
     transform: translateX(-50%);
     left: 50%;
-    height: 405px !important;
+    height: 495px !important;
 }
 
 .bertviz,

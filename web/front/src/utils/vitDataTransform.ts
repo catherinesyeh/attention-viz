@@ -3,10 +3,14 @@ import * as d3 from "d3";
 import { image } from "d3";
 import * as _ from "underscore";
 
-const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20) => {
+const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20, num_tokens = 7) => {
     var results = [] as Typing.Point[];
     const types = tokenData.map(td => td.type);
     const values = tokenData.map(td => td.value);
+
+    const rows = tokenData.map(td => td.position);
+
+    num_tokens = Math.max(...rows)
 
     // compute msgs for each token
     const pos_msgs = tokenData.map(
@@ -98,6 +102,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         );
 
         const image_path = tokenData.map(td => td.imagePath)
+        const original_patch_path = tokenData.map(td => td.originalPatchPath)
         const norms = data.map((x) => x.norm);
         const norm_range = d3.extent(norms) as [number, number];
         const min_norm = norm_range[0];
@@ -122,6 +127,40 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             return [color.r, color.g, color.b];
         })
 
+
+        const queryColor = d3.scaleSequential(function (t) {
+            return d3.interpolateYlGn(t / num_tokens * 0.75 + 0.25);
+        }).domain([0, 1]);
+        const keyColor = d3.scaleSequential(function (t) {
+            return d3.interpolatePuRd(t / num_tokens * 0.75 + 0.25);
+        }).domain([0, 1]);
+
+        const getRowColor = (td: Typing.TokenData) => {
+            var colorstr = "rgb()";
+            if (td.type === "query") {
+                colorstr = queryColor(td.position);
+            } else if (td.type === "key") {
+                colorstr = keyColor(td.position);
+            }
+            const color = d3.color(colorstr)?.rgb();
+            if (!color) return [0, 0, 0];
+            return [color.r, color.g, color.b];
+        };
+        const colorsByRow = tokenData.map((td) => getRowColor(td));
+
+        const getColColor = (td: Typing.TokenData) => {
+            var colorstr = "rgb()";
+            if (td.type === "query") {
+                colorstr = queryColor(td.pos_int);
+            } else if (td.type === "key") {
+                colorstr = keyColor(td.pos_int);
+            }
+            const color = d3.color(colorstr)?.rgb();
+            if (!color) return [0, 0, 0];
+            return [color.r, color.g, color.b];
+        };
+        const colorsByCol = tokenData.map((td) => getColColor(td));
+
         const points = data.map((d, index) => ({
             coordinate: {
                 tsne: pointsCoordinates.tsne[index] as [number, number],
@@ -133,11 +172,14 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             },
             color: {
                 type: colorsByType[index],
-                position: colorsByType[index],
+                position: colorsByRow[index],
                 categorical: colorsByType[index],
-                punctuation: colorsByType[index],
+                punctuation: colorsByCol[index],
                 norm: colorsByType[index],
-                length: colorsByType[index]
+                length: colorsByType[index],
+                row: colorsByRow[index],
+                column: colorsByCol[index],
+                strong: colorsByType[index],
             },
             msg: {
                 position: pos_msgs[index],
@@ -152,6 +194,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             type: types[index],
             normScaled: norms_scaled[index],
             imagePath: image_path[index],
+            originalPatchPath: original_patch_path[index],
         }));
 
         xs.push(...[xoffset, matrixCellWidth + xoffset]);
@@ -189,8 +232,8 @@ const computeMatrixProjectionLabel = (matrixData: Typing.MatrixData[], matrixCel
     return results;
 };
 
-const computeVitMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20): Typing.Projection => {
-    const pts = computeMatrixProjectionPoint(matrixData, tokenData, matrixCellWidth, matrixCellHeight, matrixCellMargin)
+const computeVitMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20, num_tokens = 7): Typing.Projection => {
+    const pts = computeMatrixProjectionPoint(matrixData, tokenData, matrixCellWidth, matrixCellHeight, matrixCellMargin, num_tokens)
     return {
         'points': pts.points,
         'range': pts.range,
