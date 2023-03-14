@@ -143,7 +143,7 @@ export default defineComponent({
         const getImagePath = (d: Typing.Point) => {
             if (state.colorBy == "original") {
                 return d.originalPatchPath
-            } else{
+            } else {
                 return d.imagePath
             }
         }
@@ -361,11 +361,13 @@ export default defineComponent({
                         switch (state.colorBy) {
                             case 'type':
                                 return d.color.type
-                            case 'row':
+                            case 'position':
                                 return d.color.position
                             case 'categorical':
                                 return d.color.categorical
                             case 'punctuation':
+                                return d.color.punctuation
+                            case 'norm':
                                 return d.color.punctuation
                             case 'length':
                                 return d.color.length
@@ -444,11 +446,13 @@ export default defineComponent({
                 // getIcon: return a string
                 iconAtlas: 'https://raw.githubusercontent.com/catherinesyeh/attention-viz/VIT-vis/img/coloring_helper.png',
                 iconMapping: {
-                    border: {x: 64, 
-                             y: 0, 
-                             width: 64, 
-                             height: 64, 
-                             mask: true}
+                    border: {
+                        x: 64,
+                        y: 0,
+                        width: 64,
+                        height: 64,
+                        mask: true
+                    }
                 },
                 getIcon: d => 'border',
                 sizeScale: 1,
@@ -673,7 +677,7 @@ export default defineComponent({
                     }
 
                     let offset = 1 / Math.pow(1.5, state.zoom) + whiteOffset;
-                    
+
                     return [coord[0] + offset, coord[1] + whiteOffset];
                 },
                 getText: (d: Typing.Point) => d.value,
@@ -892,7 +896,7 @@ export default defineComponent({
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
                     if (state.colorBy == "type" || state.colorBy == "original") {
                         layers.push(toImageLayer(layer_points));
-                    } else{
+                    } else {
                         layers.push(toImageLayer(layer_points));
                         layers.push(toColorLayer(layer_points));
                     }

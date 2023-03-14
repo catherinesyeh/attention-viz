@@ -27,13 +27,15 @@
                         :class="{ disabled: mode == 'matrix' || view != 'attn' }">show</a-checkbox>
 
                     <p class="label">Dot Size</p>
-                    <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm"
-                        :class="{ disabled: mode == 'matrix' }">scale by norm</a-checkbox>
+                    <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm" :class="{
+                        disabled: mode == 'matrix' || modelType == 'vit-16' || modelType == 'vit-32'
+                    }">scale by
+                        norm</a-checkbox>
 
-                    <p class="label">Developer Tool</p>
+                <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                    </a-button>
+                            </a-button> -->
 
                     <div>
                         <p class="label">Mode</p>
