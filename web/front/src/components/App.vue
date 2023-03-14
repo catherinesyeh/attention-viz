@@ -98,8 +98,7 @@ export default defineComponent({
         get: () => store.state.colorBy,
         set: (v) => store.commit("setColorBy", v),
       }),
-      colorByOptions: ["type", "type_map", "row", "column", "original"].map((x) => ({ value: x, label: x })),
-      // colorByOptions: ["type", "row", "column"].map((x) => ({ value: x, label: x })),
+      colorByOptions: [] as any,
       userTheme: computed(() => store.state.userTheme)
     });
 
@@ -108,6 +107,7 @@ export default defineComponent({
       await store.dispatch("init");
       const initUserTheme = getTheme() || getMediaPreference();
       setTheme(initUserTheme);
+      switchColorOptions();
     });
 
     // update graph settings based on dropdown option selected
@@ -165,6 +165,22 @@ export default defineComponent({
       }
     };
 
+    const switchColorOptions = () => {
+      // reset color options depending on model selected
+      const curColorBy = state.colorBy;
+      let color_opts = [];
+      if (state.modelType == "bert" || state.modelType == "gpt") {
+        color_opts = ["type", "position", "categorical", "punctuation", "norm", "length"];
+        state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
+      } else {
+        color_opts = ["type", "type_map", "row", "column", "original"];
+        state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
+      }
+      if (!color_opts.includes(curColorBy)) {
+        store.commit("setColorBy", "type");
+      }
+    }
+
     watch([() => state.storeHead, () => state.storeLayer],
       () => {
         state.layernum = state.storeLayer;
@@ -175,11 +191,7 @@ export default defineComponent({
 
     watch([() => state.modelType],
       () => {
-        if (state.modelType == "bert" || state.modelType == "gpt"){
-          state.colorByOptions = ["type", "position", "categorical", "punctuation", "norm", "length"].map((x) => ({ value: x, label: x }))
-        } else {
-          state.colorByOptions = ["type", "type_map", "row", "column", "original"].map((x) => ({value: x, label: x}))
-        }
+        switchColorOptions()
       }
     )
 

@@ -546,7 +546,7 @@ export default defineComponent({
                     } else {
                         start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
                     }
-                    
+
 
                     let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
                     if (pt_info.type === "key") {
@@ -1143,14 +1143,8 @@ export default defineComponent({
                     shallowData.value = projData;
                 }
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
-                    if (state.modelType == "vit-16") {
-                        let projData = computeVitMatrixProjection(matrixData, tokenData);
-                        shallowData.value = projData;
-                    }
-                    else {
-                        let projData = computeVitMatrixProjection(matrixData, tokenData);
-                        shallowData.value = projData;
-                    }
+                    let projData = computeVitMatrixProjection(matrixData, tokenData);
+                    shallowData.value = projData;
                 }
             }
         };

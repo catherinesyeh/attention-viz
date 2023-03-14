@@ -5,8 +5,8 @@
         }">
             <span>q</span>
             <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
-                <span class="low">{{ lowLabel(colorBy) }}</span>
-                <span class="high">{{ highLabel(colorBy) }}</span>
+                <span class="low">{{ lowLabel() }}</span>
+                <span class="high">{{ highLabel() }}</span>
             </div>
         </div>
         <div class="bar-contain k" :class="{
@@ -14,8 +14,8 @@
         }">
             <span>k</span>
             <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
-                <span class="low">{{ lowLabel(colorBy) }}</span>
-                <span class="high">{{ highLabel(colorBy) }}</span>
+                <span class="low">{{ lowLabel() }}</span>
+                <span class="high">{{ highLabel() }}</span>
             </div>
         </div>
     </div>
@@ -31,19 +31,17 @@ export default defineComponent({
 
         const state = reactive({
             colorBy: computed(() => store.state.colorBy),
-            renderState: computed(() => store.state.renderState)
+            renderState: computed(() => store.state.renderState),
+            modelType: computed(() => store.state.modelType)
         });
 
-        return {
-            ...toRefs(state),
-        };
-    },
-    methods: {
-        lowLabel(colorBy: string) {
-            switch (colorBy) {
+        const lowLabel = () => {
+            switch (state.colorBy) {
                 case 'position':
                 case 'categorical':
                 case 'length':
+                case 'row':
+                case 'column':
                     return "0"
                 case 'norm':
                     return "low"
@@ -52,12 +50,15 @@ export default defineComponent({
                 default:
                     ""
             }
-        },
-        highLabel(colorBy: string) {
-            switch (colorBy) {
+        }
+        const highLabel = () => {
+            switch (state.colorBy) {
                 case 'position':
                 case 'length':
                     return "1"
+                case 'row':
+                case 'column':
+                    return state.modelType == "vit-16" ? 13 : 6
                 case 'categorical':
                     return "4"
                 case 'norm':
@@ -68,7 +69,13 @@ export default defineComponent({
                     ""
             }
         }
-    },
+
+        return {
+            ...toRefs(state),
+            highLabel,
+            lowLabel
+        };
+    }
 })
 
 </script>
