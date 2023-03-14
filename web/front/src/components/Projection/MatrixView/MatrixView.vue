@@ -141,8 +141,8 @@ export default defineComponent({
         };
 
         const getImagePath = (d: Typing.Point) => {
-            if (state.colorBy == "type") {
-                return d.imagePath
+            if (state.colorBy == "original") {
+                return d.originalPatchPath
             } else {
                 return d.imagePath
             }
@@ -480,8 +480,8 @@ export default defineComponent({
                                 return d.color.row
                             case 'column':
                                 return d.color.column
-                            case 'strong':
-                                return d.color.strong
+                            case 'type_map':
+                                return d.color.type_map
                             default:
                                 throw Error('invalid color channel')
                         }
@@ -538,7 +538,15 @@ export default defineComponent({
                     else {
                         offset = 197;
                     }
-                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
+
+                    let start_index = 0
+                    if (pt.value == "CLS") {
+                        console.log("CLS Token")
+                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int);
+                    } else {
+                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
+                    }
+                    
 
                     let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
                     if (pt_info.type === "key") {
@@ -563,15 +571,14 @@ export default defineComponent({
                 id: 'image-scatter-layer',
                 pickable: state.mode == 'single' && state.modelType == "vit-16" || state.modelType == "vit-32",
                 data: points,
-                radiusMaxPixels: 0,
                 stroked: state.mode == 'single',
                 // alphaCutoff: 0.05,
                 // billboard: true,
                 // getAngle: 0,
                 getIcon: d => ({
                     url: getImagePath(d),
-                    width: 128,
-                    height: 128,
+                    width: 40,
+                    height: 40,
                 }),
                 // getPixelOffset: [0, 0],
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
@@ -617,7 +624,14 @@ export default defineComponent({
                     else {
                         offset = 197;
                     }
-                    let start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
+
+                    let start_index = 0
+                    if (pt.value == "CLS") {
+                        console.log("CLS Token")
+                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int);
+                    } else {
+                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
+                    }
 
                     let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
                     if (pt_info.type === "key") {
@@ -633,6 +647,7 @@ export default defineComponent({
                 updateTriggers: {
                     getPosition: [state.projectionMethod, state.dimension],
                     getColor: [state.highlightedTokenIndices],
+                    getIcon: [state.colorBy]
                 }
             })
         };
@@ -879,7 +894,7 @@ export default defineComponent({
                     layers.push(toPointLayer(layer_points));
                 }
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
-                    if (state.colorBy == "type") {
+                    if (state.colorBy == "type" || state.colorBy == "original") {
                         layers.push(toImageLayer(layer_points));
                     } else {
                         layers.push(toImageLayer(layer_points));
@@ -911,7 +926,7 @@ export default defineComponent({
                 return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
             else {
-                if (state.colorBy == "type") {
+                if (state.colorBy == "type" || state.colorBy == "original") {
                     return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
                 }
                 return [toImageLayer(points), toColorLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
@@ -972,7 +987,9 @@ export default defineComponent({
                                 return d.msg.position
                             case 'row':
                                 return d.msg.position
-                            case 'strong':
+                            case 'type_map':
+                                return d.msg.position
+                            case 'original':
                                 return d.msg.position
                             default:
                                 throw Error('invalid msg channel')
