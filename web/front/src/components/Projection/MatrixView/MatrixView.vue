@@ -368,7 +368,7 @@ export default defineComponent({
                             case 'punctuation':
                                 return d.color.punctuation
                             case 'norm':
-                                return d.color.punctuation
+                                return d.color.norm
                             case 'length':
                                 return d.color.length
                             default:
