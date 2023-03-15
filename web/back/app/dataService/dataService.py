@@ -299,7 +299,7 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
                 image = cv2.drawMarker(image,
                                        position=[argmax_patch_index[1] * patch_size + patch_size // 2,
                                                  argmax_patch_index[0] * patch_size + patch_size // 2],
-                                       markerType=cv2.MARKER_STAR,
+                                       markerType=cv2.MARKER_DIAMOND,
                                        markerSize=thickness * 10,
                                        thickness=thickness,
                                        color=color,
@@ -458,7 +458,6 @@ class DataService(object):
             start = index - all_token_info['pos_int']
             if all_token_info['type'] == "key":  # pass same attn info for key
                 start -= int(offset)
-                # pass
             num_tokens = all_token_info['length']
             end = start + num_tokens
 
@@ -479,9 +478,16 @@ class DataService(object):
         for plot in attn_data:
             if plot['layer'] == layer and plot['head'] == head:
                 attns = plot['tokens'][start:end]
+                if model == "vit-32" and all_token_info['type'] == "key":
+                    attns_vis = plot['tokens'][start + 50:end + 50]
+                elif model == "vit-16"and all_token_info['type'] == "key":
+                    attns_vis = plot['tokens'][start + 197:end + 197]
+                else:
+                    attns_vis = plot['tokens'][start:end]
                 break
 
         attn = [t['attention'] for t in attns]
+        attns_vis = [t['attention'] for t in attns_vis]
         agg_attn = [] if model not in ["bert", "gpt"] else normalize_attn([t['attention'][:num_tokens]
                                                                            for t in agg_attns])
         norms = [] if model != "gpt" else [t['value_norm'] for t in attns]
@@ -491,7 +497,7 @@ class DataService(object):
             # overlaid_image = overlay_image_with_attention(image.copy(), attn[index % 49], 32,
             #                                               norm_attention=True if self.token_data_vit_32['tokens'][index]['type'] == "query" else False)
             overlaid_image = overlay_image_with_attention(
-                image.copy(), attn[index % 50], 32)
+                image.copy(), attns_vis[index % 50], 32)
             overlaid_image = highlight_patches(overlaid_image, 32)
 
             if self.token_data_vit_32['tokens'][index]['type'] == "key":
@@ -518,7 +524,7 @@ class DataService(object):
                 arrowed_image)
         elif model == "vit-16":
             overlaid_image = overlay_image_with_attention(
-                image.copy(), attn[index % 197], 16)
+                image.copy(), attns_vis[index % 197], 16)
             overlaid_image = highlight_patches(overlaid_image, 16)
             if self.token_data_vit_16['tokens'][index]['type'] == "key":
                 color = [227, 55, 143]
