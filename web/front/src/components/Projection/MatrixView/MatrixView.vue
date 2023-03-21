@@ -371,6 +371,8 @@ export default defineComponent({
                                 return d.color.norm
                             case 'length':
                                 return d.color.length
+                            case 'sent_length':
+                                return d.color.sent_length
                             default:
                                 throw Error('invalid color channel')
                         }
@@ -466,16 +468,6 @@ export default defineComponent({
                         switch (state.colorBy) {
                             case 'type':
                                 return d.color.type
-                            case 'position':
-                                return d.color.position
-                            case 'categorical':
-                                return d.color.categorical
-                            case 'norm':
-                                return d.color.norm
-                            case 'punctuation':
-                                return d.color.punctuation
-                            case 'length':
-                                return d.color.length
                             case 'row':
                                 return d.color.row
                             case 'column':
@@ -976,6 +968,11 @@ export default defineComponent({
                             case 'type':
                             case 'position':
                             case 'punctuation':
+                            case 'sent_length':
+                            case 'column':
+                            case 'row':
+                            case 'type_map':
+                            case 'original':
                                 return d.msg.position
                             case 'categorical':
                                 return d.msg.categorical
@@ -983,14 +980,6 @@ export default defineComponent({
                                 return d.msg.norm
                             case 'length':
                                 return d.msg.length
-                            case 'column':
-                                return d.msg.position
-                            case 'row':
-                                return d.msg.position
-                            case 'type_map':
-                                return d.msg.position
-                            case 'original':
-                                return d.msg.position
                             default:
                                 throw Error('invalid msg channel')
                         }

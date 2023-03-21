@@ -62,6 +62,7 @@ export namespace Typing {
         punctuation: number[];
         norm: number[];
         length: number[];
+        sent_length: number[];
         row: number[];
         column: number[];
         type_map: number[];

@@ -9,6 +9,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     var results = [] as Typing.Point[];
     const values = tokenData.map(td => td.value);
     const types = tokenData.map(td => td.type);
+    const lengths = tokenData.map(td => td.length);
 
     const longestString = (arr: string[]) => { 
         // find longest string for later
@@ -16,7 +17,20 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
              return name.length > max.length? name: max
          }, arr[0])
      }
+
+     const shortestString = (arr: string[]) => { 
+        // find shortest string for later
+        return arr.reduce((max,name) => {
+             return name.length < max.length? name: max
+         }, arr[0])
+     }
+
     const maxStringLength = longestString(values).length;
+    const minStringLength = shortestString(values).length;
+    const rangeStringLength = maxStringLength - minStringLength;
+    const maxSentLength = lengths.reduce((a, b) => Math.max(a, b), -Infinity);
+    const minSentLength = lengths.reduce((a, b) => Math.min(a, b), Infinity);
+    const rangeSentLength = maxSentLength - minSentLength;
 
     // compute colors for each token
     // by position
@@ -43,15 +57,29 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     const getLengthColor = (td: Typing.TokenData) => {
         var colorstr = "rgb()";
         if (td.type === "query") {
-            colorstr = queryColor(td.value.length / maxStringLength);
+            colorstr = queryColor((td.value.length - minStringLength) / rangeStringLength);
         } else if (td.type === "key") {
-            colorstr = keyColor(td.value.length / maxStringLength);
+            colorstr = keyColor((td.value.length - minStringLength) / rangeStringLength);
         }
         const color = d3.color(colorstr)?.rgb();
         if (!color) return [0, 0, 0];
         return [color.r, color.g, color.b];
     };
     const colorsByLength = tokenData.map((td) => getLengthColor(td));
+
+    // by sentence length
+    const getSentColor = (td: Typing.TokenData) => {
+        var colorstr = "rgb()";
+        if (td.type === "query") {
+            colorstr = queryColor((td.length - minSentLength) / rangeSentLength);
+        } else if (td.type === "key") {
+            colorstr = keyColor((td.length - minSentLength) / rangeSentLength);
+        }
+        const color = d3.color(colorstr)?.rgb();
+        if (!color) return [0, 0, 0];
+        return [color.r, color.g, color.b];
+    };
+    const colorsBySentLength = tokenData.map((td) => getSentColor(td));
 
     // by categorical position
     // const discreteColors =  ["#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#b2df8a","#33a02c","#a6cee3","#1f78b4","#cab2d6","#6a3d9a"];
@@ -244,6 +272,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 punctuation: colorsByPunctuation[index],
                 norm: colorsByNorm[index],
                 length: colorsByLength[index],
+                sent_length: colorsBySentLength[index],
                 row: colorsByPosition[index],
                 column: colorsByPosition[index],
                 type_map: colorsByPosition[index],

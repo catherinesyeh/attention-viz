@@ -170,7 +170,7 @@ export default defineComponent({
       const curColorBy = state.colorBy;
       let color_opts = [];
       if (state.modelType == "bert" || state.modelType == "gpt") {
-        color_opts = ["type", "position", "categorical", "punctuation", "norm", "length"];
+        color_opts = ["type", "position", "categorical", "punctuation", "norm", "length", "sent_length"];
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
       } else {
         color_opts = ["type", "type_map", "row", "column", "original"];
