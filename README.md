@@ -11,7 +11,7 @@ cd attention-viz
 ```
 
 2. Ask Catherine for ```data``` folder. It should be included in the ```web``` folder like so:
-<img width="415" alt="image" src="https://user-images.githubusercontent.com/43099514/219905589-17dc4aa1-1785-4d48-aabe-794f777b2dd9.png">
+<img width="465" alt="image" src="https://user-images.githubusercontent.com/43099514/227403285-dc4345d2-4ee6-44dd-8d83-32f5c5ea4050.png"> 
 
 3. Navigate to back end:
 ```
