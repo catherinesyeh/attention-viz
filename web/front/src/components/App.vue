@@ -89,16 +89,19 @@ export default defineComponent({
         set: (v) => store.dispatch("switchModel", v)
       }),
       modelOptions: ["vit-16", "vit-32", "bert", "gpt"].map((x) => ({ value: x, label: x })),
+
       projectionMethod: computed({
         get: () => store.state.projectionMethod,
         set: (v) => store.commit("setProjectionMethod", v),
       }),
       projectionMethods: ["tsne", "umap", "pca"].map((x) => ({ value: x, label: x })),
+
       colorBy: computed({
         get: () => store.state.colorBy,
         set: (v) => store.commit("setColorBy", v),
       }),
       colorByOptions: [] as any,
+
       userTheme: computed(() => store.state.userTheme)
     });
 
@@ -290,6 +293,9 @@ body {
   animation: loading 2s infinite;
   line-height: 50vh;
   transition: 0.5s;
+  text-align: center;
+  width: 100%;
+  display: block;
 }
 
 .hide {

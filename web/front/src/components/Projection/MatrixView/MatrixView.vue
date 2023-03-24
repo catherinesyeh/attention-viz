@@ -4,7 +4,8 @@
         <Transition>
             <Circle v-show="attentionLoading || transitionInProgress" />
         </Transition>
-        <canvas id="matrix-canvas" />
+        <span id="loading" v-show="renderState">Loading...</span>
+        <canvas id="matrix-canvas" v-show="!renderState" />
     </div>
 </template>
 
@@ -79,6 +80,7 @@ export default defineComponent({
         const store = useStore();
 
         const state = reactive({
+            renderState: computed(() => store.state.renderState),
             matrixData: computed(() => store.state.matrixData),
             tokenData: computed(() => store.state.tokenData),
             viewState: nullInitialView,

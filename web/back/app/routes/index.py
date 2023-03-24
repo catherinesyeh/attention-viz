@@ -40,6 +40,21 @@ def _index():
 #     data = dataService.get_matrix_data(post_data["model"])  # return a list
 #     return json.dumps({'data': data})  # a response cannot be a list
 
+@app.route('/getDatasetOptions/<dataType>', methods=['GET'])
+def _get_dataset_options(dataType):
+    data = dataService.get_folders(dataType)
+    return json.dumps({'data': data})
+
+
+@app.route('/changeDataset/<dataType>', methods=['POST'])
+def _change_dataset(dataType):
+    dataset = json.loads(request.data.decode())['dataset']
+    if dataType == "image":
+        dataService.read_image_data(dataset)
+    else:
+        dataService.read_text_data(dataset)
+    return json.dumps({'data': "done loading"})
+
 
 @app.route('/getMatrixData/<model>', methods=['GET'])
 def _matrix_data_by_method(model):

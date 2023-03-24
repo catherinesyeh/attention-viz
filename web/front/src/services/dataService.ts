@@ -45,9 +45,17 @@ function post(field: string, payload: any): Promise<any> {
 //     return get(`get_raw_data`);
 // }
 
+export async function getDataOptions(dataType: string) {
+  return get("getDatasetOptions/" + dataType);
+}
+
+export async function getNewDataset(dataType: string, dataset: string) {
+  return post("changeDataset/" + dataType, {"dataset": dataset});
+}
+
 export async function getMatrixData(model: string) {
   // return post(`getMatrixData`, {"model": model});
-  return get("getMatrixData/" + model)
+  return get("getMatrixData/" + model);
 }
 
 // export async function getAttentionData() {

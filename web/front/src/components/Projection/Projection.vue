@@ -4,8 +4,7 @@
         <!-- Matrix View -->
         <div id="matrix-wrapper">
             <div id="label-wrapper">
-                <span id="loading" v-show="renderState">Loading...</span>
-                <div id="matrix-labels" v-show="!renderState">
+                <div id="matrix-labels">
                     <p class="axis-label">
                         <span class="head-axis">head →</span>
                         <span class="layer-axis">layer ↓</span>
@@ -35,7 +34,7 @@
                 <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                            </a-button> -->
+                                                                                                                                            </a-button> -->
 
                     <div>
                         <p class="label">Mode</p>
@@ -43,6 +42,24 @@
                             <a-radio-button value="2D">2D</a-radio-button>
                             <a-radio-button value="3D">3D</a-radio-button>
                         </a-radio-group>
+                    </div>
+
+                    <div class="dropdown">
+                        <Transition>
+                            <div v-show="modelType == 'vit-32' || modelType == 'vit-16'">
+                                <p class="label">Image Dataset:</p>
+                                <a-select v-model:value="vitDataset" style="width: 150px" :options="vitDataOptions">
+                                </a-select>
+                            </div>
+                        </Transition>
+
+                        <Transition>
+                            <div v-show="modelType == 'bert' || modelType == 'gpt'">
+                                <p class="label">Text Dataset:</p>
+                                <a-select v-model:value="llmDataset" style="width: 150px" :options="llmDataOptions">
+                                </a-select>
+                            </div>
+                        </Transition>
                     </div>
 
                     <Transition>
@@ -87,7 +104,7 @@
             </div>
             <!-- <canvas id="matrix-canvas" /> -->
 
-            <MatrixView v-show="!renderState" ref="matrixView" />
+            <MatrixView ref="matrixView" />
         </div>
     </div>
 </template>
@@ -126,6 +143,16 @@ export default defineComponent({
                 get: () => store.state.dimension,
                 set: (v) => store.commit("setDimension", v)
             }),
+            vitDataset: computed({
+                get: () => store.state.vitDataset,
+                set: (v) => store.dispatch("changeVitDataset", v)
+            }),
+            vitDataOptions: computed(() => store.state.vitOptions),
+            llmDataset: computed({
+                get: () => store.state.llmDataset,
+                set: (v) => store.dispatch("changeLLMDataset", v)
+            }),
+            llmDataOptions: computed(() => store.state.llmOptions),
         });
 
         const onClickReset = () => {

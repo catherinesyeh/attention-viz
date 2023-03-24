@@ -42,7 +42,11 @@ export interface State {
   showAgg: boolean;
   // attentionByTokenLock: boolean; 
 
-  modelType: string; // bert or gpt
+  vitDataset: string; // current vit dataset
+  vitOptions: string[];
+  llmDataset: string; // current bert/gpt dataset
+  llmOptions: string[];
+  modelType: string; // bert/gpt/vit-16/vit-32
   projectionMethod: keyof Typing.PointCoordinate; // tsne or umap
   colorBy: keyof Typing.PointColor; // different colorings (e.g., type, position, norm, etc.)
 
@@ -85,6 +89,10 @@ export const store = createStore<State>({
     weightByNorm: false,
     showAgg: true,
     // attentionByTokenLock: false,
+    vitDataset: 'color_vit',
+    vitOptions: [],
+    llmDataset: 'math',
+    llmOptions: [],
     modelType: 'vit-32',
     projectionMethod: 'tsne',
     colorBy: 'type',
@@ -163,12 +171,32 @@ export const store = createStore<State>({
     // setAttentionByTokenLock(state, attentionByTokenLock) {
     //   state.attentionByTokenLock = attentionByTokenLock;
     // },
+    setVitDataset(state, vitData) {
+      if (state.vitDataset != vitData) {
+        state.vitDataset = vitData;
+        console.log("setVitDataset", vitData);
+      }
+    },
+    setVitOptions(state, vitOptions) {
+      state.vitOptions = vitOptions;
+      console.log("setVitOptions", vitOptions);
+    },
+    setLLMDataset(state, llmData) {
+      if (state.llmDataset != llmData) {
+        state.llmDataset = llmData;
+        console.log("setLLMDataset", llmData);
+      }
+    },
+    setLLMOptions(state, llmOptions) {
+      state.llmOptions = llmOptions;
+      console.log("setllmOptions", llmOptions);
+    },
     setModelType(state, modelType) {
-      state.modelType = modelType
+      state.modelType = modelType;
       console.log('setModelType', modelType);
     },
     setProjectionMethod(state, projectionMethod) {
-      state.projectionMethod = projectionMethod
+      state.projectionMethod = projectionMethod;
       console.log('setProjectionMethod', projectionMethod);
     },
     setColorBy(state, colorBy) {
@@ -213,10 +241,35 @@ export const store = createStore<State>({
   },
   actions: { // actions commit mutations
     async init({ state, dispatch }) {
-      dispatch('computeData');
+      await dispatch('getDataOptions');
+      await dispatch('computeData');
     },
-    async computeData({state, commit}) {
-      commit("updateRenderState", true);
+    async getDataOptions({state, commit}) {
+      // load in dataset options
+      const img_datasets: string[] = (await dataService.getDataOptions("image")).data;
+      const text_datasets: string[] = (await dataService.getDataOptions("text")).data;
+
+      // reset dataset if original option doesn't exist
+      if (!text_datasets.includes(state.llmDataset)) {
+          commit("setLLMDataset", text_datasets[0]);
+      }
+
+      if (!img_datasets.includes(state.vitDataset)) {
+          commit("setVitDataset", img_datasets[0]);
+      }
+
+      // read in data
+      await dataService.getNewDataset("image", state.vitDataset);
+      await dataService.getNewDataset("text", state.llmDataset);
+
+      commit("setLLMOptions", text_datasets.map((x) => ({ value: x, label: x })));
+      commit("setVitOptions", img_datasets.map((x) => ({ value: x, label: x })));
+  },
+    async computeData({state, dispatch, commit}) {
+      if (!state.renderState) {
+        commit("updateRenderState", true);
+      }
+
       // console.log("computing data!");
       const matrixData = (await dataService.getMatrixData(state.modelType)).data;
       commit('setMatrixData', Object.freeze(matrixData));
@@ -227,6 +280,34 @@ export const store = createStore<State>({
       // console.log('setTokenData', Object.freeze(tokenData));
 
       commit('updateDoneLoading', true);
+    },
+    async changeVitDataset({state, commit, dispatch}, dataset: string) {
+      commit('updateDoneLoading', false);
+      if (state.modelType == "vit-32" || state.modelType == "vit-16") {
+        commit("updateRenderState", true);
+      }
+
+      commit('setVitDataset', dataset);
+      await dataService.getNewDataset("image", state.vitDataset);
+      if (state.modelType == "vit-32" || state.modelType == "vit-16") {
+        dispatch('computeData');
+      } else {
+        commit('updateDoneLoading', true);
+      }
+    },
+    async changeLLMDataset({state, commit, dispatch}, dataset: string) {
+      commit('updateDoneLoading', false);
+      if (state.modelType == "gpt" || state.modelType == "bert") {
+        commit("updateRenderState", true);
+      }
+
+      commit('setLLMDataset', dataset);
+      await dataService.getNewDataset("text", state.llmDataset);
+      if (state.modelType == "gpt" || state.modelType == "bert") {
+        dispatch('computeData');
+      } else {
+        commit('updateDoneLoading', true);
+      }
     },
     async switchModel({state, commit, dispatch}, model: string) {
       commit('setModelType', model);

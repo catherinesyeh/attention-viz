@@ -29,16 +29,17 @@ from scipy.stats import mode
 # get the /TableCharts
 # Alter: abspath('') is called from back/run.py
 rootDir = dirname(abspath(''))
+# rootDir = dirname(dirname(dirname(abspath(''))))
 print(rootDir)
 
 # data unique to each layer/head (e.g., tsne/umap coordinates + norms)
 
 
-def read_matrix_data(model):
+def read_matrix_data(model, datatype, dataset):
     matrix_data = []
     time_start = time.time()
 
-    for f in sorted(glob(join(rootDir, 'data', model, 'byLayerHead', '*.json'))):
+    for f in sorted(glob(join(rootDir, 'data', datatype, dataset, model, 'byLayerHead', '*.json'))):
         d = json.load(open(f, 'r'))
         matrix_data.append(d)
 
@@ -49,11 +50,11 @@ def read_matrix_data(model):
 # attention info for each layer/head
 
 
-def read_attention_data(model):
+def read_attention_data(model, datatype, dataset):
     time_start = time.time()
     attention_data = []
 
-    for f in sorted(glob(join(rootDir, 'data', model, 'attention', '*.json'))):
+    for f in sorted(glob(join(rootDir, 'data', datatype, dataset, model, 'attention', '*.json'))):
         d = json.load(open(f, 'r'))
         attention_data.append(d)
 
@@ -64,9 +65,10 @@ def read_attention_data(model):
 # data shared across attention heads (e.g., token value, type, sentence)
 
 
-def read_token_data(model):
+def read_token_data(model, datatype, dataset):
     time_start = time.time()
-    d = json.load(open(join(rootDir, 'data', model, 'tokens.json')))
+    d = json.load(
+        open(join(rootDir, 'data', datatype, dataset, model, 'tokens.json')))
     print('{} TokenData Done! Time elapsed: {} seconds'.format(
         model, time.time()-time_start))
     return d
@@ -74,12 +76,26 @@ def read_token_data(model):
 # aggregate attention info for each head
 
 
-def read_agg_attn_data(model):
+def read_agg_attn_data(model, datatype, dataset):
     time_start = time.time()
-    d = json.load(open(join(rootDir, 'data', model, 'agg_attn.json')))
+    d = json.load(
+        open(join(rootDir, 'data', datatype, dataset, model, 'agg_attn.json')))
     print('{} AggAttnData Done! Time elapsed: {} seconds'.format(
         model, time.time()-time_start))
     return d
+
+# get list of datasets from user's local data folder
+
+
+def get_dataset_list(data_type):
+    # image data should be in "data/image/" folder; text should be in "data/text/"
+    datasets = []
+    dataset_folder = join(rootDir, 'data', data_type)
+
+    for folder in os.listdir(dataset_folder):
+        if os.path.isdir(join(dataset_folder, folder)):
+            datasets.append(folder)
+    return datasets
 
 # helper function for normalizing aggregate attn data
 
@@ -92,6 +108,8 @@ def normalize_attn(data):
             (r / row_sum), 3) for r in row]
         normalized_data.append(normalized_row)
     return normalized_data
+
+# image manipulation functions
 
 
 def read_image_from_dataurl64(dataurl):
@@ -245,7 +263,7 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
 
     image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
     median_rgb = np.median(image.reshape(-1, image.shape[-1]), axis=0)
-    print(median_rgb)
+    # print(median_rgb)
     complement_color = complement(median_rgb[0], median_rgb[1], median_rgb[2])
     if enhance_contrast:
         color = np.array([int(c) for c in complement_color])
@@ -348,33 +366,84 @@ class DataService(object):
         #     self.all_data[model]["attention"] = read_attention_data(model)
         #     self.all_data[model]["token"] = read_token_data(model)
 
+        # DON'T READ IN DATA UNTIL DATASET CHOSEN
+
+        # datasets
+        # self.cur_img_dataset = "color_vit"
+        self.image_datasets = get_dataset_list("image")
+        print("image datasets:", self.image_datasets)
+        # self.cur_text_dataset = "text_vit"
+        self.text_datasets = get_dataset_list("text")
+        print("text datasets", self.text_datasets)
+
         # bert
-        self.matrix_data_bert = read_matrix_data("bert")
-        self.attention_data_bert = read_attention_data("bert")
-        self.agg_att_data_bert = read_agg_attn_data("bert")
-        self.token_data_bert = read_token_data("bert")
+        self.matrix_data_bert = []
+        self.attention_data_bert = []
+        self.agg_att_data_bert = []
+        self.token_data_bert = []
 
         # gpt
-        self.matrix_data_gpt = read_matrix_data("gpt")
-        self.attention_data_gpt = read_attention_data("gpt")
-        self.agg_att_data_gpt = read_agg_attn_data("gpt")
-        self.token_data_gpt = read_token_data("gpt")
+        self.matrix_data_gpt = []
+        self.attention_data_gpt = []
+        self.agg_att_data_gpt = []
+        self.token_data_gpt = []
 
         # VIT-32
-        self.matrix_data_vit_32 = read_matrix_data("vit_32")
-        self.attention_data_vit_32 = read_attention_data("vit_32")
-        self.token_data_vit_32 = read_token_data("vit_32")
+        self.matrix_data_vit_32 = []
+        self.attention_data_vit_32 = []
+        self.token_data_vit_32 = []
 
         # VIT-16
-        self.matrix_data_vit_16 = read_matrix_data("vit_16")
-        self.attention_data_vit_16 = read_attention_data("vit_16")
-        self.token_data_vit_16 = read_token_data("vit_16")
+        self.matrix_data_vit_16 = []
+        self.attention_data_vit_16 = []
+        self.token_data_vit_16 = []
 
         return None
 
     # def get_raw_data(self):
     #     # return data to the front end
     #     return self.data
+
+    def get_folders(self, data_type):
+        if data_type == "image":
+            return self.image_datasets
+        return self.text_datasets
+
+    def read_text_data(self, dataset):
+        print(dataset)
+        # bert
+        self.matrix_data_bert = read_matrix_data("bert", "text", dataset)
+        self.attention_data_bert = read_attention_data("bert", "text", dataset)
+        self.agg_att_data_bert = read_agg_attn_data("bert", "text", dataset)
+        self.token_data_bert = read_token_data("bert", "text", dataset)
+
+        # gpt
+        self.matrix_data_gpt = read_matrix_data("gpt", "text", dataset)
+        self.attention_data_gpt = read_attention_data("gpt", "text", dataset)
+        self.agg_att_data_gpt = read_agg_attn_data("gpt", "text", dataset)
+        self.token_data_gpt = read_token_data("gpt", "text", dataset)
+
+    def read_image_data(self, dataset):
+        print(dataset)
+        # VIT-32
+        self.matrix_data_vit_32 = read_matrix_data("vit_32", "image", dataset)
+        self.attention_data_vit_32 = read_attention_data(
+            "vit_32", "image", dataset)
+        self.token_data_vit_32 = read_token_data("vit_32", "image", dataset)
+
+        # VIT-16
+        self.matrix_data_vit_16 = read_matrix_data("vit_16", "image", dataset)
+        self.attention_data_vit_16 = read_attention_data(
+            "vit_16", "image", dataset)
+        self.token_data_vit_16 = read_token_data("vit_16", "image", dataset)
+
+    # def change_dataset(self, data_type, dataset):
+    #     if data_type == "image":
+    #         self.cur_img_dataset = dataset
+    #     else:
+    #         self.cur_text_dataset = dataset
+    #     print(dataset)
+    #     return True
 
     def get_matrix_data(self, model):
         if model == "bert":
@@ -400,7 +469,7 @@ class DataService(object):
         return self.token_data_gpt
 
     def get_attention_by_token(self, token, model):
-        print(model)
+        # print(model)
         layer = token['layer']
         head = token['head']
         index = token['index']
@@ -480,7 +549,7 @@ class DataService(object):
                 attns = plot['tokens'][start:end]
                 if model == "vit-32" and all_token_info['type'] == "key":
                     attns_vis = plot['tokens'][start + 50:end + 50]
-                elif model == "vit-16"and all_token_info['type'] == "key":
+                elif model == "vit-16" and all_token_info['type'] == "key":
                     attns_vis = plot['tokens'][start + 197:end + 197]
                 else:
                     attns_vis = plot['tokens'][start:end]
