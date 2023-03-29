@@ -22,7 +22,7 @@
         </Transition>
         <Transition>
             <div v-show="overlayAttn">
-                <a-checkbox v-model:checked="lineOnly" @click="lineOnlyAttnMap">Bipartie Graph</a-checkbox>
+                <a-checkbox v-model:checked="lineOnly" @click="lineOnlyAttnMap">Attn Flow Only</a-checkbox>
             </div>
         </Transition>
         <Transition>
