@@ -487,7 +487,7 @@ export default defineComponent({
                         }
                     }
 
-                    const defaultColor = [...getColor(d), 185],
+                    const defaultColor = [...getColor(d), 145],
                         highlightColorQuery = [84, 148, 61, 0],
                         highlightColorQueryDark = [157, 216, 135, 0],
                         highlightColorKey = [193, 91, 125, 0],
