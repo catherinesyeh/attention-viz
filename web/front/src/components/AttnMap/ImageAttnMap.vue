@@ -21,7 +21,7 @@
             </div>
         </Transition>
         <Transition>
-            <div v-show="overlayAttn">
+            <div v-show="overlayAttn && showAttn">
                 <a-checkbox v-model:checked="lineOnly" @click="lineOnlyAttnMap">Attn Flow Only</a-checkbox>
             </div>
         </Transition>
