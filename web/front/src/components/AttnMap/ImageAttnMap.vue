@@ -16,13 +16,15 @@
         </div>
         <span class="subtitle">{{ attnMsg }}</span>
         <Transition>
-            <div v-show="showAttn">
-                <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap">Show Attn Arrows</a-checkbox>
-            </div>
-        </Transition>
-        <Transition>
-            <div v-show="overlayAttn && showAttn">
-                <a-checkbox v-model:checked="lineOnly" @click="lineOnlyAttnMap">Attn Flow Only</a-checkbox>
+            <div v-show="showAttn" class="checkbox-contain">
+                <div class="half">
+                    <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap">Show Attn Arrows</a-checkbox>
+                </div>
+                <div class="half">
+                    <a-checkbox :class="{ disabled: !overlayAttn }" v-model:checked="lineOnly" @click="lineOnlyAttnMap">Attn
+                        Flow
+                        Only</a-checkbox>
+                </div>
             </div>
         </Transition>
         <Transition>
@@ -131,7 +133,7 @@ export default {
                 });
             }
             else if (state.overlayAttn) {
-                
+
                 deckgl2 = new Deck({
                     canvas: "bertviz",
                     // initialViewState: viewState,
