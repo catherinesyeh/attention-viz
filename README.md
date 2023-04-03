@@ -1,5 +1,5 @@
 # attention-viz
-Interactive TSNE plots of query + key vectors generated from BERT and GPT
+Visualizing query-key interactions in language + vision transformers
 
 Old version: [https://catherinesyeh.github.io/attention-viz/](https://catherinesyeh.github.io/attention-viz/)
 
