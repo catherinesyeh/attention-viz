@@ -21,6 +21,11 @@
             </div>
         </Transition>
         <Transition>
+            <div v-show="overlayAttn && showAttn">
+                <a-checkbox v-model:checked="lineOnly" @click="lineOnlyAttnMap">Attn Flow Only</a-checkbox>
+            </div>
+        </Transition>
+        <Transition>
             <div v-show="showAttn">
                 <canvas id="bertviz" class="image-viz" />
             </div>
@@ -54,7 +59,8 @@ export default {
             model: computed(() => store.state.modelType),
             attn_vals: [] as number[][],
             attentionLoading: computed(() => store.state.attentionLoading),
-            overlayAttn: true,
+            overlayAttn: false,
+            lineOnly: false,
         });
 
         let deckgl2 = {} as Deck;
@@ -100,15 +106,38 @@ export default {
                 pickable: false,
             });
 
-            if (state.overlayAttn) {
+            const toPatchedImageLayer = new BitmapLayer({
+                id: 'patched-image',
+                bounds: [-70, 2.5, 70, 80.5],
+                // bounds: [-490, -50, -350, 65],
+                image: attentionByToken.token.value,
+                pickable: false,
+            });
+
+            const toArrowedLayer = new BitmapLayer({
+                id: 'bertviz-pure',
+                bounds: [-70, -80.5, 70, -2.5],
+                // bounds: [-490, -50, -350, 65],
+                image: attentionByToken.token.length,
+                pickable: false,
+            });
+
+            if (state.overlayAttn && state.lineOnly) {
                 // deckgl2.setProps({ layers: [toOriginalImageLayer, toOverlaidlImageLayer] });
+                deckgl2 = new Deck({
+                    canvas: "bertviz",
+                    // initialViewState: viewState,
+                    layers: [toPatchedImageLayer, toArrowedLayer]
+                });
+            }
+            else if (state.overlayAttn) {
+                
                 deckgl2 = new Deck({
                     canvas: "bertviz",
                     // initialViewState: viewState,
                     layers: [toOriginalImageLayer, toArrowedlImageLayer]
                 });
-            }
-            else {
+            } else {
                 // deckgl2.setProps({ layers: [toOriginalImageLayer] });
                 deckgl2 = new Deck({
                     canvas: "bertviz",
@@ -142,6 +171,11 @@ export default {
             bertviz();
         }
 
+        const lineOnlyAttnMap = () => {
+            state.lineOnly = !state.lineOnly;
+            bertviz();
+        }
+
         watch(
             () => [state.attentionByToken],
             () => {
@@ -170,6 +204,7 @@ export default {
             bertviz,
             resetAttn,
             overlayAttnMap,
+            lineOnlyAttnMap,
         };
     },
 };

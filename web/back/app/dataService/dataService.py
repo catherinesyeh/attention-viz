@@ -25,10 +25,12 @@ import io
 import copy
 import cv2
 from scipy.stats import mode
+import matplotlib.pyplot as plt
 
 # get the /TableCharts
 # Alter: abspath('') is called from back/run.py
-rootDir = dirname(abspath(''))
+# rootDir = dirname(abspath(''))
+rootDir = "E:\\attention-viz\\web\\"
 print(rootDir)
 
 # data unique to each layer/head (e.g., tsne/umap coordinates + norms)
@@ -197,10 +199,11 @@ def append_cls(image, attention, color=[255, 255, 255, 255], border_width=4, nor
         attention = attention ** (1/2)
 
     pad = np.ones(shape=(50, 224, 4)) * 255
-    pad[..., :3] = [245, 245, 247]
+    # pad[..., :3] = [245, 245, 247]
+    pad[..., :3] = [255, 255, 255]
     pad = pad.astype("uint8")
 
-    pad = cv2.putText(pad, "<CLS>", [35, 30], cv2.FONT_HERSHEY_DUPLEX, 0.6, [
+    pad = cv2.putText(pad, "<CLS>", (35, 30), cv2.FONT_HERSHEY_DUPLEX, 0.6, [
                       0, 0, 0, 255], 1, cv2.LINE_AA)
 
     pad[15 - border_width:15, 135:175, :3] = color
@@ -278,18 +281,18 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
         if (argmax_patch_index == cur_patch_index) and (i != 0):
             radius = int(patch_size * 0.7) // 2
             image = cv2.circle(image,
-                               center=[argmax_patch_index[1] * patch_size + patch_size // 2,
-                                       argmax_patch_index[0] * patch_size + patch_size // 2],
+                               center=(argmax_patch_index[1] * patch_size + patch_size // 2,
+                                       argmax_patch_index[0] * patch_size + patch_size // 2),
                                radius=radius,
                                thickness=thickness,
                                color=color,
                                lineType=cv2.LINE_AA)
 
             image = cv2.arrowedLine(image,
-                                    pt1=[argmax_patch_index[1] * patch_size + patch_size // 2 + radius,
-                                         argmax_patch_index[0] * patch_size + patch_size // 2],
-                                    pt2=[argmax_patch_index[1] * patch_size + patch_size // 2 + radius,
-                                         argmax_patch_index[0] * patch_size + patch_size // 2 + 1],
+                                    pt1=(argmax_patch_index[1] * patch_size + patch_size // 2 + radius,
+                                         argmax_patch_index[0] * patch_size + patch_size // 2),
+                                    pt2=(argmax_patch_index[1] * patch_size + patch_size // 2 + radius,
+                                         argmax_patch_index[0] * patch_size + patch_size // 2 + 1),
                                     thickness=thickness,
                                     color=color,
                                     line_type=cv2.LINE_AA,
@@ -297,19 +300,19 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
         elif i == 0:
             if argmax_patch_index[0] >= 0:
                 image = cv2.drawMarker(image,
-                                       position=[argmax_patch_index[1] * patch_size + patch_size // 2,
-                                                 argmax_patch_index[0] * patch_size + patch_size // 2],
-                                       markerType=cv2.MARKER_DIAMOND,
-                                       markerSize=thickness * 10,
+                                       position=(argmax_patch_index[1] * patch_size + patch_size // 2,
+                                                 argmax_patch_index[0] * patch_size + patch_size // 2),
+                                       markerType=cv2.MARKER_SQUARE,
+                                       markerSize=thickness * 12,
                                        thickness=thickness,
                                        color=color,
                                        line_type=cv2.LINE_AA)
         elif argmax_patch_index[0] == -1:
             image = cv2.drawMarker(image,
-                                   position=[cur_patch_index[1] * patch_size + patch_size // 2,
-                                             cur_patch_index[0] * patch_size + patch_size // 2],
-                                   markerType=cv2.MARKER_TRIANGLE_DOWN,
-                                   markerSize=thickness * 10,
+                                   position=(cur_patch_index[1] * patch_size + patch_size // 2,
+                                             cur_patch_index[0] * patch_size + patch_size // 2),
+                                   markerType=cv2.MARKER_SQUARE,
+                                   markerSize=thickness * 12,
                                    thickness=thickness,
                                    color=color,
                                    line_type=cv2.LINE_AA)
@@ -321,14 +324,135 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
             sin = (cur_patch_index[0] - argmax_patch_index[0]) / line_length
 
             image = cv2.arrowedLine(image,
-                                    pt1=[cur_patch_index[1] * patch_size + patch_size // 2 - int(cos * patch_size // 8),
-                                         cur_patch_index[0] * patch_size + patch_size // 2 - int(sin * patch_size // 8)],
-                                    pt2=[argmax_patch_index[1] * patch_size + patch_size // 2 + int(cos * patch_size // 8),
-                                         argmax_patch_index[0] * patch_size + patch_size // 2 + int(sin * patch_size // 8), ],
+                                    pt1=(cur_patch_index[1] * patch_size + patch_size // 2 - int(cos * patch_size // 8),
+                                         cur_patch_index[0] * patch_size + patch_size // 2 - int(sin * patch_size // 8)),
+                                    pt2=(argmax_patch_index[1] * patch_size + patch_size // 2 + int(cos * patch_size // 8),
+                                         argmax_patch_index[0] * patch_size + patch_size // 2 + int(sin * patch_size // 8),),
                                     thickness=thickness,
                                     color=color,
                                     line_type=cv2.LINE_AA,
                                     tipLength=0.25 / line_length)
+
+    return image
+
+
+
+def resize_image(image, factor=1, interp_method=cv2.INTER_NEAREST):
+    image = cv2.resize(image, (0, 0), fx=factor, fy=factor, interpolation=interp_method)
+    return image
+
+
+def draw_arrow(image, pt1, pt2, color, thickness=1, lineType=cv2.LINE_AA):
+    start_point = pt1
+    end_point = pt2
+    arrow_color = color
+    
+    cv2.line(image, start_point, end_point, arrow_color, thickness, lineType=lineType)
+    return image
+
+
+def draw_arrow_only(image, attentions, patch_size, thickness=1, color=[245, 230, 50], enhance_contrast=True,
+                resize_factor=1):
+    hoffset = list(range(-75, 76, 25))
+    voffset = list(range(-75, 76, 25))
+
+    if resize_factor != 1:
+        image = resize_image(image, factor=resize_factor)
+    
+    median_rgb = np.median(image.reshape(-1, image.shape[-1]), axis=0)
+    complement_color = complement(median_rgb[0], median_rgb[1], median_rgb[2])
+    if enhance_contrast:
+        color = np.array([int(c) for c in complement_color])
+        pic_luminance = 0.2126 * \
+            median_rgb[0] + 0.7152 * median_rgb[1] + 0.0722 * median_rgb[2]
+        arrow_luminance = 0.2126 * color[0] + \
+            0.7152 * color[1] + 0.0722 * color[2]
+        if pic_luminance < 140:
+            color = color * 245 / arrow_luminance
+        else:
+            color = color * (50 / arrow_luminance)
+        color = np.clip(color, 0, 255).astype("uint8")
+        color = color.tolist() 
+#     print(color)
+    color = color + [255]
+
+    attentions = copy.copy(attentions)
+    attentions = np.array(attentions)
+
+    num_patches = len(attentions)
+    num_patches_per_row = int((num_patches - 1) ** (1/2))
+
+    for i in range(num_patches):
+        offset_offset = 3 - np.sum(np.array(attentions[i]) * thickness >= 3) // 2
+        if max(attentions[i]) < 0.05:
+            continue
+        cur_patch_index = [(i - 1) // num_patches_per_row,
+                           (i - 1) % num_patches_per_row]
+        
+        for argmax_patch_index in range(0, len(attentions[i])):
+            attention_score = attentions[i][argmax_patch_index]
+            argmax_patch_index -= 1
+            if attention_score * thickness < 3:
+                continue
+            argmax_patch_index = [argmax_patch_index // num_patches_per_row, argmax_patch_index % num_patches_per_row]
+            if (argmax_patch_index == cur_patch_index) and (i != 0):
+                radius = int(patch_size * 0.7 * attention_score) // 2 
+                image = cv2.circle(image,
+                                   center=(argmax_patch_index[1] * patch_size + patch_size // 2,
+                                           argmax_patch_index[0] * patch_size + patch_size // 2),
+                                   radius=radius,
+                                   thickness=int(thickness * attention_score) + 1,
+                                   color=color[:3] + [int(color[3] * (attention_score ** (1/4)))],
+                                   lineType=cv2.LINE_AA)
+
+                image = cv2.arrowedLine(image,
+                                        pt1=(argmax_patch_index[1] * patch_size + patch_size // 2 + radius,
+                                             argmax_patch_index[0] * patch_size + patch_size // 2),
+                                        pt2=(argmax_patch_index[1] * patch_size + patch_size // 2 + radius,
+                                             argmax_patch_index[0] * patch_size + patch_size // 2 + 1),
+                                        thickness=int(thickness * attention_score)  + 1,
+                                        color=color[:3] + [int(color[3] * (attention_score ** (1/4)))],
+                                        line_type=cv2.LINE_AA,
+                                        tipLength=50 * attention_score)
+            elif i == 0:
+                if argmax_patch_index[0] >= 0:
+                    image = cv2.drawMarker(image,
+                                           position=(argmax_patch_index[1] * patch_size + patch_size // 2,
+                                                     argmax_patch_index[0] * patch_size + patch_size // 2),
+                                           markerType=cv2.MARKER_SQUARE,
+                                           markerSize=thickness * 10,
+                                           thickness=int(thickness * attention_score)  + 1,
+                                           color=color[:3] + [int(color[3] * (attention_score ** (1/4)))],
+                                           line_type=cv2.LINE_AA)
+            elif argmax_patch_index[0] == -1:
+                image = cv2.drawMarker(image,
+                                       position=(cur_patch_index[1] * patch_size + patch_size // 2,
+                                                 cur_patch_index[0] * patch_size + patch_size // 2),
+                                       markerType=cv2.MARKER_SQUARE,
+                                       markerSize=int(thickness * 7 * attention_score),
+                                       thickness=int(thickness * attention_score) + 1,
+                                       color=color[:3] + [int(color[3] * (attention_score ** (1/4)))],
+                                       line_type=cv2.LINE_AA)
+            else:
+                line_length = np.sqrt((cur_patch_index[1] - argmax_patch_index[1]) ** 2 + (
+                    cur_patch_index[0] - argmax_patch_index[0]) ** 2)
+
+                cos = (cur_patch_index[1] - argmax_patch_index[1]) / line_length
+                sin = (cur_patch_index[0] - argmax_patch_index[0]) / line_length
+                
+                image = draw_arrow(image,
+                                    pt1=(cur_patch_index[1] * patch_size + patch_size // 2 - int(cos * patch_size // 8) 
+                                         + hoffset[abs(argmax_patch_index[0] - cur_patch_index[0] + offset_offset) % 7],
+                                         cur_patch_index[0] * patch_size + patch_size // 2 - int(sin * patch_size // 8)
+                                         + voffset[abs(argmax_patch_index[1] - cur_patch_index[1] + offset_offset) % 7]),
+                                    pt2=(argmax_patch_index[1] * patch_size + patch_size // 2 + int(cos * patch_size // 8)
+                                         + hoffset[abs(argmax_patch_index[0] - cur_patch_index[0] + offset_offset) % 7],
+                                         argmax_patch_index[0] * patch_size + patch_size // 2 + int(sin * patch_size // 8) 
+                                         + voffset[abs(argmax_patch_index[1] - cur_patch_index[1] + offset_offset) % 7],),
+                                    thickness=int(thickness * attention_score)  + 2,
+                                    color=color[:3] + [int(color[3] * (attention_score ** (1/4)))],
+                                    lineType=cv2.LINE_AA
+                                    )
 
     return image
 
@@ -522,6 +646,25 @@ class DataService(object):
 
             all_token_info['sentence'] = convert_np_image_to_dataurl64(
                 arrowed_image)
+            
+
+            resize_factor = 8
+            arrowed_image = draw_arrow_only(np.zeros(shape=image.shape, dtype="uint8"), attn, 
+                                        32 * resize_factor, 
+                                        thickness=30, 
+                                        resize_factor=resize_factor,
+                                        enhance_contrast=False,
+                                        color=[0, 0, 0])
+            arrowed_image = resize_image(arrowed_image, factor=2 / resize_factor)
+            all_token_info['length'] = convert_np_image_to_dataurl64(
+                arrowed_image)
+            
+            
+            
+            arrowed_image = highlight_patches(image.copy(), 32)
+            all_token_info['value'] = convert_np_image_to_dataurl64(
+                arrowed_image)            
+
         elif model == "vit-16":
             overlaid_image = overlay_image_with_attention(
                 image.copy(), attns_vis[index % 197], 16)
@@ -547,6 +690,21 @@ class DataService(object):
                 arrowed_image, attn, 16, thickness=1)
 
             all_token_info['sentence'] = convert_np_image_to_dataurl64(
+                arrowed_image)
+            
+            resize_factor = 8
+            arrowed_image = draw_arrow_only(np.zeros(shape=image.shape, dtype="uint8"), attn, 
+                                        16 * resize_factor, 
+                                        thickness=30, 
+                                        resize_factor=resize_factor,
+                                        enhance_contrast=False,
+                                        color=[0, 0, 0])
+            arrowed_image = resize_image(arrowed_image, factor=1 / resize_factor)
+            all_token_info['length'] = convert_np_image_to_dataurl64(
+                arrowed_image)
+            
+            arrowed_image = highlight_patches(image.copy(), 16)
+            all_token_info['value'] = convert_np_image_to_dataurl64(
                 arrowed_image)
 
         return {
