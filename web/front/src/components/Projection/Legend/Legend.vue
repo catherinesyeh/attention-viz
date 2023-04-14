@@ -1,20 +1,20 @@
 <template>
     <Transition>
-        <div id="legend" v-show="!renderState && (colorBy != 'original')">
+        <div id="legend" v-show="!renderState && (colorBy != 'no_outline')">
             <div class="bar-contain" :class="{
-                pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'norm' || colorBy == 'length' || colorBy == 'sent_length', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
+                pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
             }">
                 <span>q</span>
-                <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
+                <div class="bar" :class="{ smaller: colorBy == 'embed_norm' || colorBy == 'punctuation' }">
                     <span class="low">{{ lowLabel() }}</span>
                     <span class="high">{{ highLabel() }}</span>
                 </div>
             </div>
             <div class="bar-contain k" :class="{
-                pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'norm' || colorBy == 'length' || colorBy == 'sent_length', cat: colorBy == 'categorical', pun: colorBy == 'punctuation'
+                pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
             }">
                 <span>k</span>
-                <div class="bar" :class="{ smaller: colorBy == 'norm' || colorBy == 'punctuation' }">
+                <div class="bar" :class="{ smaller: colorBy == 'embed_norm' || colorBy == 'punctuation' }">
                     <span class="low">{{ lowLabel() }}</span>
                     <span class="high">{{ highLabel() }}</span>
                 </div>
@@ -40,13 +40,13 @@ export default defineComponent({
         const lowLabel = () => {
             switch (state.colorBy) {
                 case 'position':
-                case 'categorical':
-                case 'length':
+                case 'pos_mod_5':
+                case 'token_length':
                 case 'row':
                 case 'column':
                 case 'sent_length':
                     return "0"
-                case 'norm':
+                case 'embed_norm':
                     return "low"
                 case 'punctuation':
                     return ".?!"
@@ -57,15 +57,15 @@ export default defineComponent({
         const highLabel = () => {
             switch (state.colorBy) {
                 case 'position':
-                case 'length':
+                case 'token_length':
                 case 'sent_length':
                     return "1"
                 case 'row':
                 case 'column':
                     return state.modelType == "vit-16" ? 13 : 6
-                case 'categorical':
+                case 'pos_mod_5':
                     return "4"
-                case 'norm':
+                case 'embed_norm':
                     return "high"
                 case 'punctuation':
                     return "abc"
@@ -90,6 +90,10 @@ export default defineComponent({
     justify-content: flex-end;
     margin-right: 10px;
     transition: 0.5s;
+    // position: absolute;
+    // top: 45%;
+    // right: 10px;
+    // transform: translateY(-50%);
 }
 
 .bar-contain {
@@ -100,6 +104,7 @@ export default defineComponent({
 /* default: type */
 .bar {
     height: calc(100vh - 120px);
+    max-height: 400px;
     width: calc(20px + 0.2vw);
     background: rgb(95, 185, 108);
     margin-top: 10px;

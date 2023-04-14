@@ -8,8 +8,6 @@
             </p>
             <Transition>
                 <div class="attn-btns" v-show="showAttn">
-                    <a-button id="attn-reset" class="clear" type="link" @click="resetAttn">reset</a-button>
-                    <span>|</span>
                     <a-button id="attn-clear" class="clear" type="link" @click="clearAttn">clear</a-button>
                 </div>
             </Transition>
@@ -163,11 +161,6 @@ export default {
             store.commit("setHighlightedTokenIndices", []);
         }
 
-        const resetAttn = () => {
-            store.commit("setResetAttn", true);
-            bertviz();
-        }
-
         const overlayAttnMap = () => {
             state.overlayAttn = !state.overlayAttn;
             bertviz();
@@ -204,7 +197,6 @@ export default {
             ...toRefs(state),
             clearAttn,
             bertviz,
-            resetAttn,
             overlayAttnMap,
             lineOnlyAttnMap,
         };

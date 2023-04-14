@@ -6,6 +6,7 @@ import { Typing } from "@/utils/typing";
 // Assume the port of the data Server is 5000, for test only
 // const dataServerUrl = "http://vastback.s44.hkustvis.org";
 const dataServerUrl = "http://localhost:8500";
+// const dataServerUrl = "http://18.219.70.154:8500";
 
 // const $http = (Vue as any).http;
 

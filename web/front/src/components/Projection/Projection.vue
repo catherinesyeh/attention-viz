@@ -18,13 +18,11 @@
                         <a-button class="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
                     </Transition>
 
-                    <p class="label">Labels</p>
+                    <p class="label">Show</p>
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
-                        :class="{ disabled: mode == 'matrix' || view == 'attn' }">show</a-checkbox>
-
-                    <p class="label">Attention Lines</p>
+                        :class="{ disabled: mode == 'matrix' || view == 'attn' }">labels</a-checkbox>
                     <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
-                        :class="{ disabled: mode == 'matrix' || view != 'attn' }">show</a-checkbox>
+                        :class="{ disabled: mode == 'matrix' || view != 'attn' }">attention lines</a-checkbox>
 
                     <p class="label">Dot Size</p>
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm" :class="{
@@ -35,7 +33,7 @@
                 <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                            </a-button> -->
+                                </a-button> -->
 
                     <div>
                         <p class="label">Mode</p>

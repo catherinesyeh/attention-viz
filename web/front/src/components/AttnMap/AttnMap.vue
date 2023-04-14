@@ -17,16 +17,16 @@
         <span class="subtitle">{{ attnMsg }}</span>
         <Transition>
             <div v-show="showAttn" class="checkbox-contain">
-                <div :class="{ half: model == 'gpt' }">
+                <div :class="{ half: model == 'gpt-2' }">
                     <p class="label">Hide</p>
-                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt'">first
+                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt-2'">first
                         token</a-checkbox>
                     <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
                         v-show="model == 'bert'">[cls]</a-checkbox>
                     <a-checkbox v-model:checked="hideLast" @click="hideTokens('last')"
                         v-show="model == 'bert'">[sep]</a-checkbox>
                 </div>
-                <div class="half" v-show="model == 'gpt'">
+                <div class="half" v-show="model == 'gpt-2'">
                     <p class="label">Weight by</p>
                     <a-checkbox v-model:checked="weightByNorm" @click="toggleWeightBy">value norm</a-checkbox>
                 </div>

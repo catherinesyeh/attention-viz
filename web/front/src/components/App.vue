@@ -33,7 +33,7 @@
         </a-select>
 
         <label for="color-by">Color By:</label>
-        <a-select v-model:value="colorBy" style="width: 120px" :options="colorByOptions">
+        <a-select v-model:value="colorBy" style="width: 130px" :options="colorByOptions">
         </a-select>
         <Transition>
           <font-awesome-icon :icon="icon" @click="toggleTheme" />
@@ -88,7 +88,9 @@ export default defineComponent({
         get: () => store.state.modelType,
         set: (v) => store.dispatch("switchModel", v)
       }),
-      modelOptions: ["vit-16", "vit-32", "bert", "gpt"].map((x) => ({ value: x, label: x })),
+      modelOptions: ["vit-16", "vit-32", "bert", "gpt-2"].map((x) => (
+        { value: x, label: x }
+      )),
       projectionMethod: computed({
         get: () => store.state.projectionMethod,
         set: (v) => store.commit("setProjectionMethod", v),
@@ -169,11 +171,11 @@ export default defineComponent({
       // reset color options depending on model selected
       const curColorBy = state.colorBy;
       let color_opts = [];
-      if (state.modelType == "bert" || state.modelType == "gpt") {
-        color_opts = ["type", "position", "categorical", "punctuation", "norm", "length", "sent_length"];
+      if (state.modelType == "bert" || state.modelType == "gpt-2") {
+        color_opts = ["type", "position", "pos_mod_5", "punctuation", "embed_norm", "token_length", "sent_length"];
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
       } else {
-        color_opts = ["type", "type_map", "row", "column", "original"];
+        color_opts = ["type", "type_map", "row", "column", "no_outline"];
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
       }
       if (!color_opts.includes(curColorBy)) {

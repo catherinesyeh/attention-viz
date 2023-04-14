@@ -632,10 +632,10 @@ class DataService(object):
 
         attn = [t['attention'] for t in attns]
         attns_vis = [t['attention'] for t in attns_vis]
-        agg_attn = [] if model not in ["bert", "gpt"] else normalize_attn([t['attention'][:num_tokens]
+        agg_attn = [] if model not in ["bert", "gpt-2"] else normalize_attn([t['attention'][:num_tokens]
                                                                            for t in agg_attns])
-        norms = [] if model != "gpt" else [t['value_norm'] for t in attns]
-        agg_norms = [] if model != "gpt" else [t['value_norm'] for t in agg_attns]
+        norms = [] if model != "gpt-2" else [t['value_norm'] for t in attns]
+        agg_norms = [] if model != "gpt-2" else [t['value_norm'] for t in agg_attns]
 
         if model == "vit-32":
             # overlaid_image = overlay_image_with_attention(image.copy(), attn[index % 49], 32,

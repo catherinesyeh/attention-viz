@@ -173,15 +173,15 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             color: {
                 type: colorsByType[index],
                 position: colorsByRow[index],
-                categorical: colorsByType[index],
+                pos_mod_5: colorsByType[index],
                 punctuation: colorsByCol[index],
-                norm: colorsByType[index],
-                length: colorsByType[index],
+                embed_norm: colorsByType[index],
+                token_length: colorsByType[index],
                 sent_length: colorsByType[index],
                 row: colorsByRow[index],
                 column: colorsByCol[index],
                 type_map: colorsByType[index],
-                original: colorsByType[index],
+                no_outline: colorsByType[index],
             },
             msg: {
                 position: pos_msgs[index],
@@ -224,7 +224,7 @@ const computeMatrixProjectionLabel = (matrixData: Typing.MatrixData[], matrixCel
         results.push({
             layer: md.layer,
             head: md.head,
-            title: `L${md.layer} H${md.head}`,
+            title: [`L${md.layer} H${md.head}`, `Layer ${md.layer} Head ${md.head}`],
             coordinate: [
                 md.head * (matrixCellWidth + matrixCellMargin),
                 -md.layer * (matrixCellHeight + matrixCellMargin),

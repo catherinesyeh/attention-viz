@@ -58,15 +58,15 @@ export namespace Typing {
     export interface PointColor {
         type: number[];
         position: number[];
-        categorical: number[];
+        pos_mod_5: number[];
         punctuation: number[];
-        norm: number[];
-        length: number[];
+        embed_norm: number[];
+        token_length: number[];
         sent_length: number[];
         row: number[];
         column: number[];
         type_map: number[];
-        original: number[];
+        no_outline: number[];
     }
 
     export interface PointMsg {
@@ -93,7 +93,7 @@ export namespace Typing {
     export interface PlotHead {
         layer: number;
         head: number;
-        title: string;
+        title: [string, string];
         coordinate: [number, number];
     }
     export interface Projection {

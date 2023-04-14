@@ -141,7 +141,7 @@ export default defineComponent({
         };
 
         const getImagePath = (d: Typing.Point) => {
-            if (state.colorBy == "original") {
+            if (state.colorBy == "no_outline") {
                 return d.originalPatchPath
             } else {
                 return d.imagePath
@@ -313,7 +313,7 @@ export default defineComponent({
             // main scatterplot(s)
             return new ScatterplotLayer({
                 id: "point-layer",
-                pickable: state.mode == 'single' && state.modelType == "bert" || state.modelType == "gpt",
+                pickable: state.mode == 'single' && state.modelType == "bert" || state.modelType == "gpt-2",
                 data: points,
                 radiusMaxPixels: 5,
                 stroked: state.mode == 'single',
@@ -363,14 +363,14 @@ export default defineComponent({
                                 return d.color.type
                             case 'position':
                                 return d.color.position
-                            case 'categorical':
-                                return d.color.categorical
+                            case 'pos_mod_5':
+                                return d.color.pos_mod_5
                             case 'punctuation':
                                 return d.color.punctuation
-                            case 'norm':
-                                return d.color.norm
-                            case 'length':
-                                return d.color.length
+                            case 'embed_norm':
+                                return d.color.embed_norm
+                            case 'token_length':
+                                return d.color.token_length
                             case 'sent_length':
                                 return d.color.sent_length
                             default:
@@ -770,7 +770,7 @@ export default defineComponent({
                         : [coord[0] + offset, coord[1], coord[2] + offset];
                 },
                 getText: (d: Typing.Point) => {
-                    if (state.modelType == "bert" || state.modelType == "gpt") {
+                    if (state.modelType == "bert" || state.modelType == "gpt-2") {
                         return state.tokenData[d.index].pos_int + ":" + d.value
                     } else {
                         return " " + state.tokenData[d.index].value + "\n (" + state.tokenData[d.index].position + "," + state.tokenData[d.index].pos_int + ")"
@@ -803,8 +803,8 @@ export default defineComponent({
                 data: headings,
                 pickable: false,
                 getPosition: (d: Typing.PlotHead) => d.coordinate,
-                getText: (d: Typing.PlotHead) => d.title,
-                getSize: state.mode == 'single' ? 24 : 20,
+                getText: (d: Typing.PlotHead) => state.mode == 'single' ? d.title[1] : d.title[0],
+                getSize: 20,
                 sizeMaxPixels: 24,
                 getAngle: 0,
                 getColor: state.userTheme == 'light-theme' ? [0, 0, 0] : [255, 255, 255],
@@ -877,16 +877,16 @@ export default defineComponent({
                         layers.push(toLineLayer(attn_points));
                     }
                     // add extra outline for clicked point
-                    if (state.modelType == "bert" || state.modelType == "gpt") {
+                    if (state.modelType == "bert" || state.modelType == "gpt-2") {
                         layers.push(toPointOutlineLayer([state.clickedPoint]));
                     }
                 }
 
-                if (state.modelType == "bert" || state.modelType == "gpt") {
+                if (state.modelType == "bert" || state.modelType == "gpt-2") {
                     layers.push(toPointLayer(layer_points));
                 }
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
-                    if (state.colorBy == "type" || state.colorBy == "original") {
+                    if (state.colorBy == "type" || state.colorBy == "no_outline") {
                         layers.push(toImageLayer(layer_points));
                     } else {
                         layers.push(toImageLayer(layer_points));
@@ -914,11 +914,11 @@ export default defineComponent({
                 return layers;
             }
             // else: return matrix view
-            if (state.modelType == "bert" || state.modelType == "gpt") {
+            if (state.modelType == "bert" || state.modelType == "gpt-2") {
                 return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
             else {
-                if (state.colorBy == "type" || state.colorBy == "original") {
+                if (state.colorBy == "type" || state.colorBy == "no_outline") {
                     return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
                 }
                 return [toImageLayer(points), toColorLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
@@ -972,20 +972,20 @@ export default defineComponent({
                             case 'column':
                             case 'row':
                             case 'type_map':
-                            case 'original':
+                            case 'no_outline':
                                 return d.msg.position
-                            case 'categorical':
+                            case 'pos_mod_5':
                                 return d.msg.categorical
-                            case 'norm':
+                            case 'embed_norm':
                                 return d.msg.norm
-                            case 'length':
+                            case 'token_length':
                                 return d.msg.length
                             default:
                                 throw Error('invalid msg channel')
                         }
                     }
                     return object && {
-                        html: state.mode === 'matrix' ? object.title : getMsg(object),
+                        html: state.mode === 'matrix' ? object.title[0] : getMsg(object),
                         style: {
                             color: "#fff",
                             background: "#222"
@@ -1127,7 +1127,7 @@ export default defineComponent({
         const computedProjection = () => {
             let { matrixData, tokenData } = state;
             if (matrixData.length && tokenData.length) {
-                if (state.modelType == "gpt" || state.modelType == "bert") {
+                if (state.modelType == "gpt-2" || state.modelType == "bert") {
                     let projData = computeMatrixProjection(matrixData, tokenData);
                     shallowData.value = projData;
                 }
