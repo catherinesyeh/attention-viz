@@ -152,12 +152,12 @@ export default defineComponent({
         const sizeMeasurer = (label: string, fontSize: number) => {
             let threshold =
                 state.zoom <= 5
-                    ? 2
+                    ? 2.5
                     : state.zoom <= 7
-                        ? 2.25
+                        ? 3
                         : state.zoom <= 8.5
-                            ? 2.5
-                            : 4;
+                            ? 3.5
+                            : 4.5;
             if (state.zoom > 3.5 && state.zoom <= 8.5 && state.dimension === "3D") {
                 threshold *= 1.5;
             }
@@ -440,10 +440,16 @@ export default defineComponent({
 
 
         const toColorLayer = (points: Typing.Point[]) => {
+            const minSize = state.mode == "single" ? 15 : 1.5;
+            const maxSize = state.mode == "single"
+                ? 25
+                : state.zoom < 1
+                    ? 7
+                    : 15;
             return new IconLayer({
                 id: 'coloring-layer',
                 data: points,
-                pickable: true,
+                pickable: false,
                 // iconAtlas and iconMapping are required
                 // getIcon: return a string
                 iconAtlas: 'https://raw.githubusercontent.com/catherinesyeh/attention-viz/VIT-vis/img/coloring_helper.png',
@@ -457,12 +463,22 @@ export default defineComponent({
                     }
                 },
                 getIcon: d => 'border',
+                getSize: (d: Typing.Point) => {
+                    const size = getImageSize();
+                    const defaultSize = size,
+                        highlightedSize = state.mode == 'single'
+                            ? size
+                            : size * 4;
+                    if (state.highlightedTokenIndices.length === 0) return defaultSize;
+                    return state.highlightedTokenIndices.includes(d.index)
+                        ? highlightedSize
+                        : defaultSize;
+                },
                 sizeScale: 1,
-                sizeMaxPixels: getImageSize(),
-                sizeMinPixels: 3.5,
+                sizeMaxPixels: maxSize,
+                sizeMinPixels: minSize,
                 sizeUnits: "pixels",
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
-                getSize: d => 55,
                 getColor: (d: Typing.Point) => {
                     const getColor = (d: Typing.Point) => {
                         switch (state.colorBy) {
@@ -499,59 +515,8 @@ export default defineComponent({
                             : unactiveColor
                     ) as any;
                 },
-                onClick: (info, event) => {
-                    if (state.mode === 'matrix' || state.attentionLoading) {
-                        // stop event propagation
-                        return;
-                    }
-                    // console.log("image");
-                    // if (deckgl['layerManager']) {
-                    //     console.log(deckgl['layerManager']['layers'].map((v) => v.id));
-                    // }
-                    // console.log('onClick', info.object);
-                    if (state.view != "attn") {
-                        store.commit("setView", 'attn');
-                    }
-                    store.commit("updateAttentionLoading", true);
-
-                    let pt = info.object as Typing.Point;
-
-                    // console.log(pt.index);
-                    // console.log(points.length);
-
-                    state.clickedPoint = pt;
-                    store.dispatch("setClickedPoint", pt);
-
-                    let pt_info = state.tokenData[pt.index];
-                    let offset = 0;
-                    if (state.modelType == "vit-32") {
-                        offset = 50;
-                    }
-                    else {
-                        offset = 197;
-                    }
-
-                    let start_index = 0
-                    if (pt.value == "CLS") {
-                        console.log("CLS Token")
-                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int);
-                    } else {
-                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
-                    }
-
-
-                    let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
-                    if (pt_info.type === "key") {
-                        start_index -= offset;
-                    } else {
-                        start_index += offset;
-                    }
-
-                    let opposite_indices = Array.from({ length: offset }, (x, i) => i + start_index);
-                    let tokenIndices = [...same_indices, ...opposite_indices];
-                    store.commit("setHighlightedTokenIndices", tokenIndices);
-                },
                 updateTriggers: {
+                    getSize: [state.zoom, state.highlightedTokenIndices, state.mode, state.dimension],
                     getPosition: [state.projectionMethod, state.dimension],
                     getColor: [state.colorBy, state.highlightedTokenIndices, state.userTheme],
                 }
@@ -559,6 +524,12 @@ export default defineComponent({
         }
 
         const toImageLayer = (points: Typing.Point[]) => {
+            const minSize = state.mode == "single" ? 15 : 1.5;
+            const maxSize = state.mode == "single"
+                ? 25
+                : state.zoom < 1
+                    ? 7
+                    : 15;
             return new IconLayer({
                 id: 'image-scatter-layer',
                 pickable: state.mode == 'single' && state.modelType == "vit-16" || state.modelType == "vit-32",
@@ -574,10 +545,20 @@ export default defineComponent({
                 }),
                 // getPixelOffset: [0, 0],
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
-                getSize: d => 55,
+                getSize: (d: Typing.Point) => {
+                    const size = getImageSize();
+                    const defaultSize = size,
+                        highlightedSize = state.mode == 'single'
+                            ? size
+                            : size * 4;
+                    if (state.highlightedTokenIndices.length === 0) return defaultSize;
+                    return state.highlightedTokenIndices.includes(d.index)
+                        ? highlightedSize
+                        : defaultSize;
+                },
                 sizeScale: 1,
-                sizeMaxPixels: getImageSize(),
-                sizeMinPixels: 3.5,
+                sizeMaxPixels: maxSize,
+                sizeMinPixels: minSize,
                 sizeUnits: "pixels",
                 getColor: (d: Typing.Point) => {
                     if (state.highlightedTokenIndices.length === 0) return [0, 0, 0, 255];
@@ -637,6 +618,7 @@ export default defineComponent({
                     store.commit("setHighlightedTokenIndices", tokenIndices);
                 },
                 updateTriggers: {
+                    getSize: [state.zoom, state.highlightedTokenIndices, state.mode, state.dimension],
                     getPosition: [state.projectionMethod, state.dimension],
                     getColor: [state.highlightedTokenIndices],
                     getIcon: [state.colorBy]
@@ -1069,7 +1051,6 @@ export default defineComponent({
                 // if single mode
                 reset(false);
             }
-
             state.transitionInProgress = false;
         };
 
@@ -1136,6 +1117,15 @@ export default defineComponent({
                     shallowData.value = projData;
                 }
             }
+
+            // switch on labels if bert/gpt
+            if ((state.modelType == "bert" || state.modelType == "gpt-2") && !state.showAll) {
+                store.commit("setShowAll", true);
+            }
+
+            if (state.mode == "single") {
+                state.zoom = zoomThreshold; // reset zoom threshold
+            }
         };
 
         /**
@@ -1191,7 +1181,9 @@ export default defineComponent({
 
         onMounted(() => {
             console.log("onMounted");
-            computedProjection();
+            if (state.doneLoading) {
+                computedProjection();
+            }
         });
 
         // watchers
@@ -1205,7 +1197,9 @@ export default defineComponent({
 
         watch([shallowData], () => {
             // redraw matrices if data changes
-            initMatrices();
+            if (state.doneLoading) {
+                initMatrices();
+            }
         });
 
         // this might still need some tweaking...
@@ -1286,8 +1280,10 @@ export default defineComponent({
             () => {
                 if (state.highlightedTokenIndices.length == 0) {
                     // reset highlighted token indices
-                    store.commit("setView", "none");
-                    state.clickedPoint = "";
+                    if (state.view != "none") {
+                        store.commit("setView", "none");
+                        state.clickedPoint = "";
+                    }
                 }
             })
 

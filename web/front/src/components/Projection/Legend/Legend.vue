@@ -88,12 +88,12 @@ export default defineComponent({
 #legend {
     display: flex;
     justify-content: flex-end;
-    margin-right: 10px;
+    // margin-right: 10px;
     transition: 0.5s;
-    // position: absolute;
-    // top: 45%;
-    // right: 10px;
-    // transform: translateY(-50%);
+    position: absolute;
+    top: 45%;
+    right: 10px;
+    transform: translateY(-50%);
 }
 
 .bar-contain {

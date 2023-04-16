@@ -3,6 +3,12 @@
     <div>
         <!-- Matrix View -->
         <div id="matrix-wrapper">
+            <p id="num-msg" class="subtitle" v-show="!renderState">Based on {{ num_message }}</p>
+            <Transition>
+                <a-button type="default" id="clear-attn" v-show="!renderState && view == 'attn'" @click="clearSelection">
+                    clear selection
+                </a-button>
+            </Transition>
             <div id="label-wrapper">
                 <span id="loading" v-show="renderState">Loading...</span>
                 <div id="matrix-labels" v-show="!renderState">
@@ -12,7 +18,7 @@
                     </p>
 
                     <p class="label">Search</p>
-                    <a-input-search v-model:value="searchToken" placeholder="Search tokens" enter-button
+                    <a-input-search v-model:value="searchToken" :placeholder="placeholder" enter-button
                         @search="onSearch(searchToken)" spellcheck="false" />
                     <Transition>
                         <a-button class="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
@@ -33,7 +39,7 @@
                 <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                                </a-button> -->
+                                                                                                                                                        </a-button> -->
 
                     <div>
                         <p class="label">Mode</p>
@@ -41,11 +47,16 @@
                             <a-radio-button value="2D">2D</a-radio-button>
                             <a-radio-button value="3D">3D</a-radio-button>
                         </a-radio-group>
+                        <Transition>
+                            <p class="label italic" v-show="dimension === '3D' && mode === 'matrix'">click a head to see
+                                full
+                                3D</p>
+                        </Transition>
                     </div>
 
                     <Transition>
                         <div v-show="mode === 'single'">
-                            <p class="label">Controls</p>
+                            <p class="label">Move</p>
                             <div id="control-buttons">
                                 <a-button class="center" type="default" size="small" :class="{ disabled: layer < 1 }"
                                     @click="moveToPlot('up')" :disabled="layer < 1">
@@ -124,7 +135,13 @@ export default defineComponent({
                 get: () => store.state.dimension,
                 set: (v) => store.commit("setDimension", v)
             }),
+            placeholder: "",
+            num_message: "",
         });
+
+        onMounted(() => {
+            switchPlaceholder();
+        })
 
         const onClickReset = () => {
             (matrixView.value as any).resetZoom();
@@ -201,6 +218,22 @@ export default defineComponent({
             }
         }
 
+        // switch placeholder text
+        const switchPlaceholder = () => {
+            if (state.modelType == 'vit-32' || state.modelType == 'vit-16') {
+                state.placeholder = "e.g., person, bg";
+                state.num_message = state.modelType == 'vit-32' ? "8 images" : "6 images";
+            } else {
+                state.placeholder = "e.g., cat, april";
+                state.num_message = state.modelType == "bert" ? "84 sentences" : "87 sentences";
+            }
+        }
+
+        // clear attention
+        const clearSelection = () => {
+            store.commit("setShowAttn", false);
+        }
+
         watch(() => state.view,
             () => {
                 if (state.view == "attn") {
@@ -217,6 +250,8 @@ export default defineComponent({
                 if (state.attnLoading) {
                     store.commit("updateAttentionLoading", false);
                 }
+
+                switchPlaceholder();
             })
 
         return {
@@ -231,7 +266,9 @@ export default defineComponent({
             moveToPlot,
             toggleCheckbox,
             toggleCheckboxNorm,
-            toggleCheckboxAttention
+            toggleCheckboxAttention,
+            switchPlaceholder,
+            clearSelection
         };
     }
 });
@@ -265,6 +302,13 @@ p.label {
     margin-top: 15px;
     margin-bottom: 0;
     font-size: smaller;
+    transition: 0.5s;
+}
+
+p.label.italic {
+    font-style: italic;
+    opacity: 0.7;
+    margin-top: 5px;
 }
 
 #control-buttons {
@@ -320,5 +364,23 @@ div.matrix-cell {
     padding: 0;
     font-size: small;
     color: #888 !important;
+}
+
+// img/sentence info
+#num-msg {
+    position: absolute;
+    top: 15px;
+    right: 10px;
+    margin-bottom: 0;
+    z-index: 10;
+}
+
+// clear attn bttn
+#clear-attn {
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    transform: translate(-50%);
+    z-index: 10;
 }
 </style>

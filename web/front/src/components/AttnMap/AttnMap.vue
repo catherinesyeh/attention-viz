@@ -9,8 +9,6 @@
             <Transition>
                 <div class="attn-btns" v-show="showAttn">
                     <a-button id="attn-reset" class="clear" type="link" @click="resetAttn">reset</a-button>
-                    <span>|</span>
-                    <a-button id="attn-clear" class="clear" type="link" @click="clearAttn">clear</a-button>
                 </div>
             </Transition>
         </div>
@@ -681,7 +679,6 @@ export default {
         }
 
         const clearAttn = () => {
-            store.commit("setShowAttn", false);
             state.attnMsg = state.mode == "single"
                 ? "click a point to explore its attention"
                 : "click a plot to zoom in";
@@ -729,6 +726,15 @@ export default {
                     state.attnMsg = state.mode == "single"
                         ? "click a point to explore its attention"
                         : "click a plot to zoom in";
+                }
+            }
+        )
+
+        watch(
+            () => [state.showAttn],
+            () => {
+                if (!state.showAttn) {
+                    clearAttn();
                 }
             }
         )

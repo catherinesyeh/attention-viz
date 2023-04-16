@@ -6,11 +6,6 @@
                     <span v-show="showAttn">({{ layerHead }})</span>
                 </Transition>
             </p>
-            <Transition>
-                <div class="attn-btns" v-show="showAttn">
-                    <a-button id="attn-clear" class="clear" type="link" @click="clearAttn">clear</a-button>
-                </div>
-            </Transition>
         </div>
         <span class="subtitle">{{ attnMsg }}</span>
         <Transition>
@@ -154,7 +149,6 @@ export default {
 
         }
         const clearAttn = () => {
-            store.commit("setShowAttn", false);
             state.attnMsg = state.mode == "single"
                 ? "click a point to explore its attention"
                 : "click a plot to zoom in";
@@ -189,6 +183,15 @@ export default {
                     state.attnMsg = state.mode == "single"
                         ? "click a point to explore its attention"
                         : "click a plot to zoom in";
+                }
+            }
+        )
+
+        watch(
+            () => [state.showAttn],
+            () => {
+                if (!state.showAttn) {
+                    clearAttn();
                 }
             }
         )
