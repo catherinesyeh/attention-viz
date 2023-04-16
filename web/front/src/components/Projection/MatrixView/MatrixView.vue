@@ -819,7 +819,7 @@ export default defineComponent({
                 getLineWidth: 0,
                 onClick: (info, event) => {
                     let obj = info.object as Typing.PlotHead;
-                    zoomToPlot(obj.layer, obj.head, true);
+                    zoomToPlot(obj.layer, obj.head, true, true);
                 },
                 updateTriggers: {
                     getPosition: [state.projectionMethod, state.zoom]
@@ -1045,7 +1045,7 @@ export default defineComponent({
                 });
                 if (closest) {
                     let obj = closest.object as Typing.PlotHead;
-                    zoomToPlot(obj.layer, obj.head, false);
+                    zoomToPlot(obj.layer, obj.head, false, false);
                 }
             } else if (old_zoom >= switchThreshold && zoom < switchThreshold) {
                 // if single mode
@@ -1150,7 +1150,7 @@ export default defineComponent({
             console.error("viewport", deckgl.getViewports());
         };
 
-        const zoomToPlot = (layer: number, head: number, clicked: boolean) => {
+        const zoomToPlot = (layer: number, head: number, clicked: boolean, transition: boolean) => {
             // zoom to plot
             if (state.mode !== "single") {
                 store.commit("setMode", "single");
@@ -1164,7 +1164,7 @@ export default defineComponent({
                 zoom: zoomThreshold,
                 minZoom: -1.5,
                 maxZoom: 9,
-                transitionDuration: 1000,
+                transitionDuration: transition ? 1000 : 0,
             };
             state.viewState = initialStateZoom;
 

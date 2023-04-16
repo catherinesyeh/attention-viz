@@ -39,7 +39,7 @@
                 <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                                                                                                                                                        </a-button> -->
+                                                                                                                                                            </a-button> -->
 
                     <div>
                         <p class="label">Mode</p>
@@ -195,7 +195,7 @@ export default defineComponent({
 
         // zoom to single plot
         const zoomToPlot = (layer: number, head: number) => {
-            (matrixView.value as any).zoomToPlot(layer, head, true);
+            (matrixView.value as any).zoomToPlot(layer, head, true, false);
         }
 
         // move 1 plot up/left/right/down
