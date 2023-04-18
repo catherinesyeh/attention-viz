@@ -713,7 +713,9 @@ export default {
             state.attnMsg = state.mode == "single"
                 ? "click a point to explore its attention"
                 : "click a plot to zoom in";
-            store.commit("setHighlightedTokenIndices", []);
+            if (state.view != "search") {
+                store.commit("setHighlightedTokenIndices", []);
+            }
         }
 
         const resetAttn = () => {
