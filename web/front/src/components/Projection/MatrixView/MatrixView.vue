@@ -1118,9 +1118,11 @@ export default defineComponent({
                 }
             }
 
-            // switch on labels if bert/gpt
+            // switch on labels if bert/gpt; off if vit
             if ((state.modelType == "bert" || state.modelType == "gpt-2") && !state.showAll) {
                 store.commit("setShowAll", true);
+            } else if ((state.modelType == "vit-32" || state.modelType == "vit-16") && state.showAll) {
+                store.commit("setShowAll", false);
             }
 
             if (state.mode == "single") {
