@@ -3,6 +3,12 @@
     <div class="container-fluid">
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
       <div class="dropdown">
+        <a-tooltip placement="bottomLeft" color="var(--radio-hover)">
+          <template #title>
+            <span>explore a single attention head</span>
+          </template>
+          <font-awesome-icon icon="circle-info" class="info-icon first" />
+        </a-tooltip>
         <label for="layernum">Zoom to Layer:</label>
         <a-select ref="layer-select" v-model:value="layernum" style="width: 60px" :layerNum="layernum"
           @change="handleChange('layer', layernum)">
@@ -24,14 +30,43 @@
         </a-button>
       </div>
       <div class="dropdown">
+        <a-tooltip placement="bottomRight" color="var(--radio-hover)">
+          <template #title>
+            <span>transformer options:</span>
+            <ul>
+              <li v-for="option in modelOptions">
+                <i>{{ option.value }}</i> (<span v-if="option.value.includes('vit')">vision</span>
+                <span v-else>language</span>)
+              </li>
+            </ul>
+          </template>
+          <font-awesome-icon icon="circle-info" class="info-icon first" />
+        </a-tooltip>
         <label for="model">Model:</label>
         <a-select v-model:value="modelType" style="width: 80px" :options="modelOptions">
         </a-select>
 
+        <a-tooltip placement="bottomRight" color="var(--radio-hover)">
+          <template #title>
+            <span>projection methods for creating joint q-k embeddings</span>
+          </template>
+          <font-awesome-icon icon="circle-info" class="info-icon" />
+        </a-tooltip>
         <label for="graph-type">Graph Type:</label>
         <a-select v-model:value="projectionMethod" style="width: 80px" :options="projectionMethods">
         </a-select>
 
+        <a-tooltip placement="bottomRight" color="var(--radio-hover)">
+          <template #title>
+            <span>color encodings:</span>
+            <ul>
+              <li v-for="(item, key) in colorByDict">
+                <i>{{ key }}</i>: {{ item }}
+              </li>
+            </ul>
+          </template>
+          <font-awesome-icon icon="circle-info" class="info-icon" />
+        </a-tooltip>
         <label for="color-by">Color By:</label>
         <a-select v-model:value="colorBy" style="width: 130px" :options="colorByOptions">
         </a-select>
@@ -65,8 +100,7 @@ import AttnMap from "./AttnMap/AttnMap.vue";
 import AttnMapWrapper from "./AttnMap/AttnMapWrapper.vue";
 
 import { onMounted, computed, reactive, toRefs, h, watch, ref } from "vue";
-
-
+import { keys } from "underscore";
 
 export default defineComponent({
   name: "App",
@@ -88,7 +122,8 @@ export default defineComponent({
         get: () => store.state.modelType,
         set: (v) => store.dispatch("switchModel", v)
       }),
-      modelOptions: ["vit-16", "vit-32", "bert", "gpt-2"].map((x) => (
+      // modelOptions: ["vit-16", "vit-32", "bert", "gpt-2"].map((x) => (
+      modelOptions: ["vit-32", "bert", "gpt-2"].map((x) => (
         { value: x, label: x }
       )),
       projectionMethod: computed({
@@ -101,14 +136,17 @@ export default defineComponent({
         set: (v) => store.commit("setColorBy", v),
       }),
       colorByOptions: [] as any,
-      userTheme: computed(() => store.state.userTheme)
+      colorByDict: {} as any,
+      userTheme: computed(() => store.state.userTheme),
+      icon: "moon",
+      doneLoading: computed(() => store.state.doneLoading)
     });
 
     // Init the store to read data from backend
     onMounted(async () => {
       await store.dispatch("init");
-      const initUserTheme = getTheme() || getMediaPreference();
-      setTheme(initUserTheme);
+      // const initUserTheme = getTheme() || getMediaPreference();
+      // setTheme(initUserTheme);
       switchColorOptions();
     });
 
@@ -138,6 +176,7 @@ export default defineComponent({
 
     // switch between light and dark mode
     const toggleTheme = () => {
+      console.log("toggle theme");
       const activeTheme = localStorage.getItem("user-theme");
       if (activeTheme === "light-theme") {
         setTheme("dark-theme");
@@ -147,16 +186,25 @@ export default defineComponent({
     }
 
     const getTheme = () => {
+      console.log("get theme");
       return localStorage.getItem("user-theme");
     }
 
     const setTheme = (theme: string) => {
+      console.log("set theme");
       localStorage.setItem("user-theme", theme);
       document.documentElement.className = theme;
       store.commit('setUserTheme', theme);
+
+      if (theme == 'dark-theme') {
+        state.icon = "sun";
+      } else {
+        state.icon = "moon";
+      }
     };
 
     const getMediaPreference = () => {
+      console.log("getMediaPreference");
       const hasDarkPreference = window.matchMedia(
         "(prefers-color-scheme: dark)"
       ).matches;
@@ -174,9 +222,26 @@ export default defineComponent({
       if (state.modelType == "bert" || state.modelType == "gpt-2") {
         color_opts = ["type", "position", "pos_mod_5", "punctuation", "embed_norm", "token_length", "sent_length"];
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
+        state.colorByDict = {
+          "type": "query or key",
+          "position": "token position in sentence (normalized)",
+          "pos_mod_5": "token position modulo 5 (unnormalized)",
+          "punctuation": "punctuation vs. non-punctuation tokens",
+          "embed_norm": "token embedding norm",
+          "token_length": "# chars in token (normalized)",
+          "sent_length": "# tokens in sentence (normalized)"
+        }
+
       } else {
         color_opts = ["type", "type_map", "row", "column", "no_outline"];
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
+        state.colorByDict = {
+          "type": "query or key (outline)",
+          "type_map": "query or key (fill)",
+          "row": "token row (fill)",
+          "column": "token column (fill)",
+          "no_outline": "original patch without q/k outline"
+        }
       }
       if (!color_opts.includes(curColorBy)) {
         store.commit("setColorBy", "type");
@@ -211,13 +276,13 @@ export default defineComponent({
     };
   },
   computed: {
-    icon() {
-      if (this.userTheme === 'dark-theme') {
-        return ['fas', 'sun']
-      } else {
-        return ['fas', 'moon']
-      }
-    }
+    // icon() {
+    //   if (this.userTheme === 'dark-theme') {
+    //     return ['fas', 'sun']
+    //   } else {
+    //     return ['fas', 'moon']
+    //   }
+    // }
   },
 });
 </script>
@@ -419,7 +484,8 @@ label {
 }
 
 .ant-checkbox-wrapper.disabled,
-.ant-btn.disabled {
+.ant-btn.disabled,
+.info-icon.disabled {
   opacity: 0.5;
   pointer-events: none !important;
 }
@@ -460,5 +526,47 @@ label {
 
 .dropdown .svg-inline--fa:hover {
   opacity: 0.8;
+}
+
+// tooltip
+.ant-tooltip-inner {
+  color: var(--navbar) !important;
+  padding: 8px 15px !important;
+  font-size: smaller;
+}
+
+.ant-tooltip-inner ul {
+  margin-bottom: 0px !important;
+  padding-left: 1rem !important;
+}
+
+.ant-tooltip-placement-bottomRight .ant-tooltip-arrow {
+  right: 0px !important;
+}
+
+.ant-tooltip-placement-bottomLeft .ant-tooltip-arrow {
+  left: 0px !important;
+}
+
+.ant-tooltip-placement-leftTop .ant-tooltip-arrow {
+  top: 0px !important;
+}
+
+.info-icon,
+.dropdown .info-icon {
+  width: 12px !important;
+  height: 12px !important;
+  margin-right: -4px !important;
+  transform: translateY(-6px) !important;
+  outline: none !important;
+}
+
+#label-wrapper .info-icon {
+  margin-right: 4px !important;
+  cursor: pointer;
+}
+
+.info-icon.first {
+  margin-left: 0 !important;
 }
 </style>

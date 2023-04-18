@@ -5,7 +5,7 @@ import App from "./components/App.vue";
 import { store, key } from '@/store/index'
 
 import {
-    Radio, Input, Button, Select, Checkbox
+    Radio, Input, Button, Select, Checkbox, Tooltip
 } from "ant-design-vue";
 
 /* import the fontawesome core */
@@ -15,14 +15,14 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 /* import specific icons */
-import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons'
+import { faMoon, faSun, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
-library.add(faMoon, faSun)
+library.add(faMoon, faSun, faCircleInfo)
 
 
 createApp(App)
     .use(store, key)
-    .use(Radio).use(Input).use(Button).use(Select).use(Checkbox)
+    .use(Radio).use(Input).use(Button).use(Select).use(Checkbox).use(Tooltip)
     .component('font-awesome-icon', FontAwesomeIcon)
     .mount("#app");

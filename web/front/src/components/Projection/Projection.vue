@@ -17,20 +17,46 @@
                         <span class="layer-axis">layer ↓</span>
                     </p>
 
-                    <p class="label">Search</p>
+                    <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
+                            <template #title>
+                                <span>search for <span v-if="!modelType.includes('vit')">a token</span><span v-else>an
+                                        object</span></span>
+                            </template>
+                            <font-awesome-icon icon="circle-info" class="info-icon first" />
+                        </a-tooltip>Search</p>
                     <a-input-search v-model:value="searchToken" :placeholder="placeholder" enter-button
                         @search="onSearch(searchToken)" spellcheck="false" />
                     <Transition>
                         <a-button class="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
                     </Transition>
 
-                    <p class="label">Show</p>
+                    <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)"
+                            :class="{ disabled: mode === 'matrix' }">
+                            <template #title>
+                                <span>overlay options:</span>
+                                <ul>
+                                    <li><i>labels</i>: <span v-if="!modelType.includes('vit')">token label (e.g., cat,
+                                            april)</span>
+                                        <span v-else>object label (e.g., bg, person)</span>
+                                    </li>
+                                    <li><i>attention lines</i>: top 2 connections for each token; line opacity
+                                        denotes attention weight</li>
+                                </ul>
+                            </template>
+                            <font-awesome-icon icon="circle-info" class="info-icon first" />
+                        </a-tooltip>Show</p>
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
                         :class="{ disabled: mode == 'matrix' || view == 'attn' }">labels</a-checkbox>
                     <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
                         :class="{ disabled: mode == 'matrix' || view != 'attn' }">attention lines</a-checkbox>
 
-                    <p class="label">Dot Size</p>
+                    <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)"
+                            :class="{ disabled: mode === 'matrix' || modelType == 'vit-16' || modelType == 'vit-32' }">
+                            <template #title>
+                                <span>scale dots in scatterplot by token embedding norm</span>
+                            </template>
+                            <font-awesome-icon icon="circle-info" class="info-icon first" />
+                        </a-tooltip>Dot Size</p>
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm" :class="{
                         disabled: mode == 'matrix' || modelType == 'vit-16' || modelType == 'vit-32'
                     }">scale by
@@ -39,10 +65,15 @@
                 <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                                                                                                                                                            </a-button> -->
+                                                                                                                                                                                                        </a-button> -->
 
                     <div>
-                        <p class="label">Mode</p>
+                        <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
+                                <template #title>
+                                    <span>view plots in 2D or 3D</span>
+                                </template>
+                                <font-awesome-icon icon="circle-info" class="info-icon first" />
+                            </a-tooltip>Mode</p>
                         <a-radio-group v-model:value="dimension">
                             <a-radio-button value="2D">2D</a-radio-button>
                             <a-radio-button value="3D">3D</a-radio-button>
@@ -56,7 +87,12 @@
 
                     <Transition>
                         <div v-show="mode === 'single'">
-                            <p class="label">Move</p>
+                            <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
+                                    <template #title>
+                                        <span>explore an adjacent attention head</span>
+                                    </template>
+                                    <font-awesome-icon icon="circle-info" class="info-icon first" />
+                                </a-tooltip>Move</p>
                             <div id="control-buttons">
                                 <a-button class="center" type="default" size="small" :class="{ disabled: layer < 1 }"
                                     @click="moveToPlot('up')" :disabled="layer < 1">
