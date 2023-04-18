@@ -65,7 +65,7 @@
                 <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                                                                                                                                                                                                        </a-button> -->
+                                                                                                                                                                                                            </a-button> -->
 
                     <div>
                         <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
@@ -90,6 +90,12 @@
                             <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
                                     <template #title>
                                         <span>explore an adjacent attention head</span>
+                                        <ul>
+                                            <li><i>up</i>: move up 1 layer</li>
+                                            <li><i>left</i>: move left 1 head</li>
+                                            <li><i>right</i>: move right 1 head</li>
+                                            <li><i>down</i>: move down 1 layer</li>
+                                        </ul>
                                     </template>
                                     <font-awesome-icon icon="circle-info" class="info-icon first" />
                                 </a-tooltip>Move</p>

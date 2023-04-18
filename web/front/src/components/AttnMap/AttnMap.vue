@@ -1,10 +1,23 @@
 <template>
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
-            <p>Sentence View
+            <p v-if='mode === "single"'><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                    <template #title>
+                        <span>q-k attention patterns for a single sentence; line opacity denotes attention weight</span>
+                    </template>
+                    <font-awesome-icon icon="circle-info" class="info-icon first" />
+                </a-tooltip>Sentence View
                 <Transition>
                     <span v-show="showAttn">({{ layerHead }})</span>
                 </Transition>
+            </p>
+            <p v-else>
+                <a-tooltip placement="topLeft" color="var(--radio-hover)">
+                    <template #title>
+                        <span>q-k attention patterns for all attention heads</span>
+                    </template>
+                    <font-awesome-icon icon="circle-info" class="info-icon first" />
+                </a-tooltip>Matrix View
             </p>
             <Transition>
                 <div class="attn-btns" v-show="showAttn">
@@ -16,7 +29,13 @@
         <Transition>
             <div v-show="showAttn" class="checkbox-contain">
                 <div :class="{ half: model == 'gpt-2' }">
-                    <p class="label">Hide</p>
+                    <p class="label"><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                            <template #title>
+                                <span>filter out attention to <span v-if="model === 'gpt-2'">first token</span><span
+                                        v-else>special tokens (cls, sep)</span></span>
+                            </template>
+                            <font-awesome-icon icon="circle-info" class="info-icon first" />
+                        </a-tooltip>Hide</p>
                     <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt-2'">first
                         token</a-checkbox>
                     <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
@@ -25,7 +44,12 @@
                         v-show="model == 'bert'">[sep]</a-checkbox>
                 </div>
                 <div class="half" v-show="model == 'gpt-2'">
-                    <p class="label">Weight by</p>
+                    <p class="label"><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                            <template #title>
+                                <span>weight attentions by the norm of each token's value vector</span>
+                            </template>
+                            <font-awesome-icon icon="circle-info" class="info-icon first" />
+                        </a-tooltip>Weight by</p>
                     <a-checkbox v-model:checked="weightByNorm" @click="toggleWeightBy">value norm</a-checkbox>
                 </div>
             </div>

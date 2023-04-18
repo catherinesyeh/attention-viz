@@ -1,22 +1,51 @@
 <template>
     <div class="viewHead" id="image-attn-map-view">
         <div class="align-top">
-            <p>Image View
+            <p v-if='mode === "single"'><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                    <template #title>
+                        <span>q-k attention patterns for a single image</span>
+                    </template>
+                    <font-awesome-icon icon="circle-info" class="info-icon first" />
+                </a-tooltip>Image View
                 <Transition>
                     <span v-show="showAttn">({{ layerHead }})</span>
                 </Transition>
             </p>
+            <p v-else>
+                <a-tooltip placement="topLeft" color="var(--radio-hover)">
+                    <template #title>
+                        <span>q-k attention patterns for all attention heads</span>
+                    </template>
+                    <font-awesome-icon icon="circle-info" class="info-icon first" />
+                </a-tooltip>Matrix View
+            </p>
         </div>
         <span class="subtitle">{{ attnMsg }}</span>
         <Transition>
-            <div v-show="showAttn" class="checkbox-contain">
-                <div class="half">
-                    <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap">Show Attn Arrows</a-checkbox>
-                </div>
-                <div class="half">
-                    <a-checkbox :class="{ disabled: !overlayAttn }" v-model:checked="lineOnly" @click="lineOnlyAttnMap">Attn
-                        Flow
-                        Only</a-checkbox>
+            <div v-show="showAttn">
+                <p class="label"><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                        <template #title>
+                            <span>visualization options:</span>
+                            <ul>
+                                <li><i>default</i>: heatmap for selected token; opacity denotes attention weight</li>
+                                <li><i>attn arrows</i>: top attention connection for each token in image</li>
+                                <li><i>attn flow only</i>: all strong connections in image; size and opacity denote
+                                    attention weight</li>
+                            </ul>
+                            (square = attention to [cls] token, circle arrow = attention to self)
+                        </template>
+                        <font-awesome-icon icon="circle-info" class="info-icon first" />
+                    </a-tooltip>Show</p>
+                <div class="checkbox-contain">
+                    <div class="half">
+                        <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap">Attn Arrows</a-checkbox>
+                    </div>
+                    <div class="half">
+                        <a-checkbox :class="{ disabled: !overlayAttn }" v-model:checked="lineOnly"
+                            @click="lineOnlyAttnMap">Attn
+                            Flow
+                            Only</a-checkbox>
+                    </div>
                 </div>
             </div>
         </Transition>

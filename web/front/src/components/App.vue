@@ -79,7 +79,7 @@
   <div class="main">
     <div class="row">
       <div class="col-2" style="position:relative">
-        <AttnMapWrapper />
+        <AttnMapWrapper id="attn-wrap" />
       </div>
       <div class="col-10">
         <Projection ref="projection" />
@@ -529,6 +529,10 @@ label {
 }
 
 // tooltip
+.ant-tooltip {
+  z-index: 10000 !important;
+}
+
 .ant-tooltip-inner {
   color: var(--navbar) !important;
   padding: 8px 15px !important;
@@ -544,7 +548,8 @@ label {
   right: 0px !important;
 }
 
-.ant-tooltip-placement-bottomLeft .ant-tooltip-arrow {
+.ant-tooltip-placement-bottomLeft .ant-tooltip-arrow,
+.ant-tooltip-placement-topLeft .ant-tooltip-arrow {
   left: 0px !important;
 }
 
@@ -561,7 +566,8 @@ label {
   outline: none !important;
 }
 
-#label-wrapper .info-icon {
+#label-wrapper .info-icon,
+#attn-wrap .info-icon {
   margin-right: 4px !important;
   cursor: pointer;
 }
