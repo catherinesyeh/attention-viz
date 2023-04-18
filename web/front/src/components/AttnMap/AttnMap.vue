@@ -1,7 +1,14 @@
 <template>
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
-            <p v-if='mode === "single"'><a-tooltip placement="topLeft" color="var(--radio-hover)">
+            <p v-if='mode === "single" && !showAttn'><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                    <template #title>
+                        <span>q-k attention patterns for a single head</span>
+                    </template>
+                    <font-awesome-icon icon="circle-info" class="info-icon first" />
+                </a-tooltip>Single View
+            </p>
+            <p v-else-if='mode === "single"'><a-tooltip placement="topLeft" color="var(--radio-hover)">
                     <template #title>
                         <span>q-k attention patterns for a single sentence; line opacity denotes attention weight</span>
                     </template>

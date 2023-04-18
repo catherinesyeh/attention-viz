@@ -2,8 +2,12 @@
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
             <Transition>
-                <p v-show="showAttn">
-                    Aggregate View ({{ layerHead }})
+                <p v-show="showAttn"><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                        <template #title>
+                            <span>aggregate sentence-level attention patterns for this attention head</span>
+                        </template>
+                        <font-awesome-icon icon="circle-info" class="info-icon first" />
+                    </a-tooltip>Aggregate View ({{ layerHead }})
                 </p>
             </Transition>
             <Transition>
