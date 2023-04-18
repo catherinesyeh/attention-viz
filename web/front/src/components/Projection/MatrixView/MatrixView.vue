@@ -1138,7 +1138,7 @@ export default defineComponent({
             let tokenIndices = [] as number[];
             if (str != "") {
                 tokenIndices = state.tokenData
-                    .map((x, idx) => (x.value === str ? idx : undefined))
+                    .map((x, idx) => (x.value.toLowerCase() === str ? idx : undefined))
                     .filter((x) => x) as number[];
             }
             store.commit("setHighlightedTokenIndices", tokenIndices);
