@@ -105,6 +105,7 @@ export default defineComponent({
             transitionInProgress: false,
             attentionLoading: computed(() => store.state.attentionLoading),
             modelType: computed(() => store.state.modelType),
+            resetting: false,
             // attnIndex: computed(() => store.state.attnIndex),
             // attnSide: computed(() => store.state.attnSide)
         });
@@ -1023,6 +1024,10 @@ export default defineComponent({
         }
 
         const handleRequest = (param: any) => {
+            if (state.resetting) {
+                state.resetting = false;
+                return;
+            }
             // deal with transition b/t single & matrix mode and updating zoom
             const zoom = param.viewState.zoom;
             const old_zoom = state.zoom;
@@ -1097,8 +1102,10 @@ export default defineComponent({
                 });
             } else {
                 deckgl.setProps({
-                    initialViewState: nullInitialViewZoom,
+                    initialViewState: nullInitialViewZoom
                 });
+                state.zoom = zoomThreshold;
+                state.resetting = true;
             }
             deckgl.setProps({
                 initialViewState: state.viewState,
@@ -1169,10 +1176,12 @@ export default defineComponent({
                 transitionDuration: transition ? 1000 : 0,
             };
             state.viewState = initialStateZoom;
+            state.zoom = zoomThreshold;
+            state.resetting = true;
 
             if (clicked) {
                 deckgl.setProps({
-                    initialViewState: state.viewState,
+                    initialViewState: state.viewState
                 });
             }
 
