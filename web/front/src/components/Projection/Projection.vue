@@ -3,7 +3,21 @@
     <div>
         <!-- Matrix View -->
         <div id="matrix-wrapper">
-            <p id="num-msg" class="subtitle" v-show="!renderState">Based on {{ num_message }}</p>
+            <div id="top-right-box" v-show="!renderState">
+                <p id="num-msg" class="subtitle">Based on {{ num_message }}</p>
+            </div>
+            <div id="bottom-left-box" v-show="!renderState">
+                <a-button type="primary" id="about" @click="showModal">about this tool</a-button>
+                <a-modal v-model:visible="modalVisible" title="About Attention Viz" @ok="closeModal">
+                    <p><b>Attention Viz</b> is an interactive tool that visualizes global attention patterns for transformer
+                        models. To create this tool, we visualize the joint embeddings of <b class="green">query</b>
+                        and <b class="pink">key</b> vectors. Click a
+                        button below to learn more.</p>
+                    <a-button type="primary" id="docs-link" href="https://catherinesyeh.github.io/attn-docs/"
+                        target="_blank">Documentation</a-button>
+                    <a-button type="primary" id="paper-link" class="disabled">arXiv Preprint: Coming Soon!</a-button>
+                </a-modal>
+            </div>
             <Transition>
                 <a-button type="default" id="clear-attn" v-show="!renderState && view == 'attn'" @click="clearSelection">
                     clear selection
@@ -65,7 +79,7 @@
                 <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                                                                                                                                                                                                            </a-button> -->
+                                                                                                                                                                                                                                                                                </a-button> -->
 
                     <div>
                         <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
@@ -179,6 +193,7 @@ export default defineComponent({
             }),
             placeholder: "",
             num_message: "",
+            modalVisible: true
         });
 
         onMounted(() => {
@@ -276,6 +291,15 @@ export default defineComponent({
             store.commit("setShowAttn", false);
         }
 
+        // show modal
+        const showModal = () => {
+            state.modalVisible = true;
+        }
+
+        const closeModal = () => {
+            state.modalVisible = false;
+        }
+
         watch(() => state.view,
             () => {
                 if (state.view == "attn") {
@@ -310,7 +334,9 @@ export default defineComponent({
             toggleCheckboxNorm,
             toggleCheckboxAttention,
             switchPlaceholder,
-            clearSelection
+            clearSelection,
+            showModal,
+            closeModal
         };
     }
 });
@@ -409,12 +435,22 @@ div.matrix-cell {
 }
 
 // img/sentence info
-#num-msg {
+#top-right-box,
+#bottom-left-box {
     position: absolute;
     top: 15px;
     right: 10px;
     margin-bottom: 0;
     z-index: 10;
+}
+
+#bottom-left-box {
+    position: absolute;
+    bottom: 70px;
+    left: 10px;
+    z-index: 10;
+    top: unset;
+    right: unset;
 }
 
 // clear attn bttn

@@ -394,6 +394,14 @@ label {
   color: var(--key);
 }
 
+.green {
+  color: rgb(95, 185, 108);
+}
+
+.pink {
+  color: rgb(227, 55, 143);
+}
+
 /* ant elements */
 .v-enter-active,
 .v-leave-active {
@@ -405,7 +413,8 @@ label {
   opacity: 0;
 }
 
-.dropdown .ant-btn {
+.dropdown .ant-btn,
+#paper-link {
   margin-left: 10px;
 }
 
@@ -574,5 +583,18 @@ label {
 
 .info-icon.first {
   margin-left: 0 !important;
+}
+
+/* modal */
+.ant-modal-mask {
+  z-index: 9999 !important;
+}
+
+.ant-modal-wrap {
+  z-index: 10000 !important;
+}
+
+.ant-modal-footer {
+  display: none !important;
 }
 </style>
