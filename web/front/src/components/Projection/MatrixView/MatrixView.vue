@@ -1081,6 +1081,8 @@ export default defineComponent({
                 deckgl.setProps({
                     initialViewState: state.viewState,
                 });
+                state.zoom = -1;
+                state.resetting = true;
             }
             state.transitionInProgress = false;
         };
@@ -1173,7 +1175,8 @@ export default defineComponent({
                 zoom: zoomThreshold,
                 minZoom: -1.5,
                 maxZoom: 9,
-                transitionDuration: transition ? 1000 : 0,
+                // transitionDuration: transition ? 1000 : 0,
+                transitionDuration: 0,
             };
             state.viewState = initialStateZoom;
             state.zoom = zoomThreshold;
