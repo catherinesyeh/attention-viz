@@ -1079,10 +1079,13 @@ export default defineComponent({
 
             if (clicked) {
                 deckgl.setProps({
+                    initialViewState: nullInitialView,
+                });
+                deckgl.setProps({
                     initialViewState: state.viewState,
                 });
                 state.zoom = -1;
-                state.resetting = true;
+                state.resetting = false;
             }
             state.transitionInProgress = false;
         };
