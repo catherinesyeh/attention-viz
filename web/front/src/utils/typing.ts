@@ -56,7 +56,7 @@ export namespace Typing {
     }
 
     export interface PointColor {
-        type: number[];
+        query_key: number[];
         position: number[];
         pos_mod_5: number[];
         punctuation: number[];
@@ -65,7 +65,7 @@ export namespace Typing {
         sent_length: number[];
         row: number[];
         column: number[];
-        type_map: number[];
+        qk_map: number[];
         no_outline: number[];
     }
 

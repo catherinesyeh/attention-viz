@@ -102,17 +102,18 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     const colorsByDiscretePosition = tokenData.map((td) => getDiscreteColor(td));
 
     // by punctuation vs. not
+    // orange, pink, blue, green
     const punctColors =  ["#F39226","#E3378F","#2E93D9","#5FB96C"];
     const getPunctColor = (td: Typing.TokenData) => {
         var colorstr = "rgb()";
         var punctuationless = td.value.replace(/[.,\/#!$?%\^&\*;:{}+=\-_`'"~()]/g, "");
 
-        if (punctuationless.length == 0) {
-            // token is only punctuation characters
-            colorstr = td.type === "query" ? punctColors[2] : punctColors[0]
+        if (punctuationless.length == 0 || td.value == "[sep]" || td.value == "[cls]") {
+            // token is only punctuation characters or special tokens
+            colorstr = td.type === "query" ? punctColors[3] : punctColors[2]
         } else {
             // token has alphanumeric characters
-            colorstr = td.type === "query" ? punctColors[3] : punctColors[1]
+            colorstr = td.type === "query" ? punctColors[0] : punctColors[1]
         }
 
         const color = d3.color(colorstr)?.rgb();
@@ -266,7 +267,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 pca_3d: pointsCoordinates.pca_3d[index] as [number, number, number],
             },
             color: {
-                type: colorsByType[index],
+                query_key: colorsByType[index],
                 position: colorsByPosition[index],
                 pos_mod_5: colorsByDiscretePosition[index],
                 punctuation: colorsByPunctuation[index],
@@ -275,7 +276,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 sent_length: colorsBySentLength[index],
                 row: colorsByPosition[index],
                 column: colorsByPosition[index],
-                type_map: colorsByPosition[index],
+                qk_map: colorsByPosition[index],
                 no_outline: colorsByPosition[index],
             },
             msg: {

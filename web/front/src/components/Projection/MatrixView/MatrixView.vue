@@ -360,8 +360,8 @@ export default defineComponent({
                 getFillColor: (d: Typing.Point) => {
                     const getColor = (d: Typing.Point) => {
                         switch (state.colorBy) {
-                            case 'type':
-                                return d.color.type
+                            case 'query_key':
+                                return d.color.query_key
                             case 'position':
                                 return d.color.position
                             case 'pos_mod_5':
@@ -483,14 +483,14 @@ export default defineComponent({
                 getColor: (d: Typing.Point) => {
                     const getColor = (d: Typing.Point) => {
                         switch (state.colorBy) {
-                            case 'type':
-                                return d.color.type
+                            case 'query_key':
+                                return d.color.query_key
                             case 'row':
                                 return d.color.row
                             case 'column':
                                 return d.color.column
-                            case 'type_map':
-                                return d.color.type_map
+                            case 'qk_map':
+                                return d.color.qk_map
                             default:
                                 throw Error('invalid color channel')
                         }
@@ -869,7 +869,7 @@ export default defineComponent({
                     layers.push(toPointLayer(layer_points));
                 }
                 else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
-                    if (state.colorBy == "type" || state.colorBy == "no_outline") {
+                    if (state.colorBy == "query_key" || state.colorBy == "no_outline") {
                         layers.push(toImageLayer(layer_points));
                     } else {
                         layers.push(toImageLayer(layer_points));
@@ -901,7 +901,7 @@ export default defineComponent({
                 return [toPointLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
             else {
-                if (state.colorBy == "type" || state.colorBy == "no_outline") {
+                if (state.colorBy == "query_key" || state.colorBy == "no_outline") {
                     return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
                 }
                 return [toImageLayer(points), toColorLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
@@ -948,13 +948,13 @@ export default defineComponent({
                 getTooltip: ({ object }) => {
                     const getMsg = (d: Typing.Point) => {
                         switch (state.colorBy) {
-                            case 'type':
+                            case 'query_key':
                             case 'position':
                             case 'punctuation':
                             case 'sent_length':
                             case 'column':
                             case 'row':
-                            case 'type_map':
+                            case 'qk_map':
                             case 'no_outline':
                                 return d.msg.position
                             case 'pos_mod_5':

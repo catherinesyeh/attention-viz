@@ -24,9 +24,9 @@
           reset zoom
         </a-button>
         <a-button type="text" class="matrix-reset" @click="resetToMatrix" :class="{
-          disabled: mode == 'matrix'
-        }">
-          view all
+            disabled: mode == 'matrix'
+          }">
+          view all heads
         </a-button>
       </div>
       <div class="dropdown">
@@ -220,10 +220,10 @@ export default defineComponent({
       const curColorBy = state.colorBy;
       let color_opts = [];
       if (state.modelType == "bert" || state.modelType == "gpt-2") {
-        color_opts = ["type", "position", "pos_mod_5", "punctuation", "embed_norm", "token_length", "sent_length"];
+        color_opts = ["query_key", "position", "pos_mod_5", "punctuation", "embed_norm", "token_length", "sent_length"];
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
         state.colorByDict = {
-          "type": "query or key",
+          "query_key": "token type, query or key",
           "position": "token position in sentence (normalized)",
           "pos_mod_5": "token position modulo 5 (unnormalized)",
           "punctuation": "punctuation vs. non-punctuation tokens",
@@ -233,18 +233,18 @@ export default defineComponent({
         }
 
       } else {
-        color_opts = ["type", "type_map", "row", "column", "no_outline"];
+        color_opts = ["query_key", "qk_map", "row", "column", "no_outline"];
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
         state.colorByDict = {
-          "type": "query or key (outline)",
-          "type_map": "query or key (fill)",
+          "query_key": "token type, query or key (outline)",
+          "qk_map": "token type, query or key (fill)",
           "row": "token row (fill)",
           "column": "token column (fill)",
           "no_outline": "original patch without q/k outline"
         }
       }
       if (!color_opts.includes(curColorBy)) {
-        store.commit("setColorBy", "type");
+        store.commit("setColorBy", "query_key");
       }
     }
 
@@ -354,9 +354,17 @@ body {
 }
 
 #loading {
-  animation: loading 2s infinite;
-  line-height: 50vh;
+  padding: 80px 0;
   transition: 0.5s;
+}
+
+#loading p:first-child {
+  animation: loading 2s infinite;
+}
+
+#loading p:not(:first-child) {
+  font-size: smaller;
+  font-style: italic;
 }
 
 .hide {
@@ -454,6 +462,11 @@ label {
 .ant-btn-text {
   font-family: monospace !important;
   font-size: small;
+}
+
+.ant-input {
+  font-size: small;
+  padding: 5px 11px;
 }
 
 .ant-input:hover {

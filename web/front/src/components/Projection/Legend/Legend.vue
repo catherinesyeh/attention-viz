@@ -2,8 +2,8 @@
     <Transition>
         <div id="legend" v-show="!renderState && (colorBy != 'no_outline')">
             <div class="bar-contain" :class="{
-                pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
-            }">
+                    pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
+                }">
                 <span>q</span>
                 <div class="bar" :class="{ smaller: colorBy == 'embed_norm' || colorBy == 'punctuation' }">
                     <span class="low">{{ lowLabel() }}</span>
@@ -144,13 +144,11 @@ export default defineComponent({
 
 /* categorical */
 .bar-contain.pun .bar {
-    background: linear-gradient(#5FB96C 50%,
-            #2E93D9 50%);
+    background: linear-gradient(#F39226 50%, #5FB96C 50%);
 }
 
 .bar-contain.k.pun .bar {
-    background: linear-gradient(#E3378F 50%,
-            #F39226 50%);
+    background: linear-gradient(#E3378F 50%, #2E93D9 50%);
 }
 
 /* bar labels */

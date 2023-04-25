@@ -171,7 +171,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 pca_3d: pointsCoordinates.pca_3d[index] as [number, number, number],
             },
             color: {
-                type: colorsByType[index],
+                query_key: colorsByType[index],
                 position: colorsByRow[index],
                 pos_mod_5: colorsByType[index],
                 punctuation: colorsByCol[index],
@@ -180,7 +180,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 sent_length: colorsByType[index],
                 row: colorsByRow[index],
                 column: colorsByCol[index],
-                type_map: colorsByType[index],
+                qk_map: colorsByType[index],
                 no_outline: colorsByType[index],
             },
             msg: {

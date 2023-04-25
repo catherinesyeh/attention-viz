@@ -24,7 +24,10 @@
                 </a-button>
             </Transition>
             <div id="label-wrapper">
-                <span id="loading" v-show="renderState">Loading...</span>
+                <div id="loading" v-show="renderState">
+                    <p>Loading...</p>
+                    <p>This visualization requires many megabytes and may take up to a minute to render.</p>
+                </div>
                 <div id="matrix-labels" v-show="!renderState">
                     <p class="axis-label">
                         <span class="head-axis">head →</span>
@@ -51,7 +54,7 @@
                                 <ul>
                                     <li><i>labels</i>: <span v-if="!modelType.includes('vit')">token label (e.g., cat,
                                             april)</span>
-                                        <span v-else>object label (e.g., bg, person)</span>
+                                        <span v-else>object label (e.g., background, person)</span>
                                     </li>
                                     <li><i>attention lines</i>: top 2 connections for each token; line opacity
                                         denotes attention weight</li>
@@ -72,11 +75,11 @@
                             <font-awesome-icon icon="circle-info" class="info-icon first" />
                         </a-tooltip>Dot Size</p>
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm" :class="{
-                        disabled: mode == 'matrix' || modelType == 'vit-16' || modelType == 'vit-32'
-                    }">scale by
+                            disabled: mode == 'matrix' || modelType == 'vit-16' || modelType == 'vit-32'
+                        }">scale by
                         norm</a-checkbox>
 
-                <!-- <p class="label">Developer Tool</p>
+                    <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
                                                                                                                                                                                                                                                                                 </a-button> -->
@@ -112,7 +115,7 @@
                                         </ul>
                                     </template>
                                     <font-awesome-icon icon="circle-info" class="info-icon first" />
-                                </a-tooltip>Move</p>
+                                </a-tooltip>View Adjacent Head</p>
                             <div id="control-buttons">
                                 <a-button class="center" type="default" size="small" :class="{ disabled: layer < 1 }"
                                     @click="moveToPlot('up')" :disabled="layer < 1">
@@ -278,7 +281,7 @@ export default defineComponent({
         // switch placeholder text
         const switchPlaceholder = () => {
             if (state.modelType == 'vit-32' || state.modelType == 'vit-16') {
-                state.placeholder = "e.g., person, bg";
+                state.placeholder = "e.g., person, background";
                 state.num_message = state.modelType == 'vit-32' ? "8 images" : "6 images";
             } else {
                 state.placeholder = "e.g., cat, april";
