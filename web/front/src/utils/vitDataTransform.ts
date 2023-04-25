@@ -37,7 +37,6 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         // compute plot-wise offset
         const xoffset = md.head * (matrixCellWidth + matrixCellMargin);
         const yoffset = -md.layer * (matrixCellHeight + matrixCellMargin);
-        // console.log(`compute data: layer ${md.layer}, head ${md.head}`);
 
         // compute coordinates for each token
         const data = md.tokens;

@@ -3,13 +3,13 @@
     <div class="container-fluid">
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
       <div class="dropdown">
-        <a-tooltip placement="bottomLeft" color="var(--radio-hover)">
-          <template #title>
-            <span>explore a single attention head</span>
-          </template>
-          <font-awesome-icon icon="circle-info" class="info-icon first" />
-        </a-tooltip>
         <label for="layernum">Zoom to Layer:</label>
+        <a-tooltip placement="bottomRight">
+          <template #title>
+            <span>explore a single attention head by selecting a layer and head number</span>
+          </template>
+          <font-awesome-icon icon="info" class="info-icon first" />
+        </a-tooltip>
         <a-select ref="layer-select" v-model:value="layernum" style="width: 60px" :layerNum="layernum"
           @change="handleChange('layer', layernum)">
           <a-select-option v-for="i in 12" :value="i - 1">{{ i - 1 }}</a-select-option>
@@ -30,7 +30,8 @@
         </a-button>
       </div>
       <div class="dropdown">
-        <a-tooltip placement="bottomRight" color="var(--radio-hover)">
+        <label for="model">Model:</label>
+        <a-tooltip placement="bottomRight">
           <template #title>
             <span>transformer options:</span>
             <ul>
@@ -40,23 +41,23 @@
               </li>
             </ul>
           </template>
-          <font-awesome-icon icon="circle-info" class="info-icon first" />
+          <font-awesome-icon icon="info" class="info-icon first" />
         </a-tooltip>
-        <label for="model">Model:</label>
         <a-select v-model:value="modelType" style="width: 80px" :options="modelOptions">
         </a-select>
 
-        <a-tooltip placement="bottomRight" color="var(--radio-hover)">
+        <label for="graph-type">Graph Type:</label>
+        <a-tooltip placement="bottomRight">
           <template #title>
             <span>projection methods for creating joint q-k embeddings</span>
           </template>
-          <font-awesome-icon icon="circle-info" class="info-icon" />
+          <font-awesome-icon icon="info" class="info-icon" />
         </a-tooltip>
-        <label for="graph-type">Graph Type:</label>
         <a-select v-model:value="projectionMethod" style="width: 80px" :options="projectionMethods">
         </a-select>
 
-        <a-tooltip placement="bottomRight" color="var(--radio-hover)">
+        <label for="color-by">Color By:</label>
+        <a-tooltip placement="bottomRight">
           <template #title>
             <span>color encodings:</span>
             <ul>
@@ -65,9 +66,8 @@
               </li>
             </ul>
           </template>
-          <font-awesome-icon icon="circle-info" class="info-icon" />
+          <font-awesome-icon icon="info" class="info-icon" />
         </a-tooltip>
-        <label for="color-by">Color By:</label>
         <a-select v-model:value="colorBy" style="width: 130px" :options="colorByOptions">
         </a-select>
         <Transition>
@@ -94,17 +94,15 @@ import "bootstrap/dist/css/bootstrap.css";
 import { defineComponent } from "vue";
 import { useStore } from "@/store/index";
 
-import UserPanel from "./UserPanel/UserPanel.vue";
 import Projection from "./Projection/Projection.vue";
 import AttnMap from "./AttnMap/AttnMap.vue";
 import AttnMapWrapper from "./AttnMap/AttnMapWrapper.vue";
 
 import { onMounted, computed, reactive, toRefs, h, watch, ref } from "vue";
-import { keys } from "underscore";
 
 export default defineComponent({
   name: "App",
-  components: { UserPanel, Projection, AttnMap, AttnMapWrapper },
+  components: { Projection, AttnMap, AttnMapWrapper },
   setup() {
     const store = useStore();
 
@@ -145,9 +143,8 @@ export default defineComponent({
     // Init the store to read data from backend
     onMounted(async () => {
       await store.dispatch("init");
-      // const initUserTheme = getTheme() || getMediaPreference();
-      // setTheme(initUserTheme);
       switchColorOptions();
+      getColorMsg();
     });
 
     // update graph settings based on dropdown option selected
@@ -224,12 +221,12 @@ export default defineComponent({
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
         state.colorByDict = {
           "query_key": "token type, query or key",
-          "position": "token position in sentence (normalized)",
-          "pos_mod_5": "token position modulo 5 (unnormalized)",
+          "position": "darkness encodes token position in sentence (normalized)",
+          "pos_mod_5": "darkness encodes token position modulo 5 (unnormalized)",
           "punctuation": "punctuation vs. non-punctuation tokens",
-          "embed_norm": "token embedding norm",
-          "token_length": "# chars in token (normalized)",
-          "sent_length": "# tokens in sentence (normalized)"
+          "embed_norm": "darkness encodes token embedding norm",
+          "token_length": "darkness encodes # chars in token (normalized)",
+          "sent_length": "darkness encodes # tokens in sentence (normalized)"
         }
 
       } else {
@@ -238,14 +235,20 @@ export default defineComponent({
         state.colorByDict = {
           "query_key": "token type, query or key (outline)",
           "qk_map": "token type, query or key (fill)",
-          "row": "token row (fill)",
-          "column": "token column (fill)",
-          "no_outline": "original patch without q/k outline"
+          "row": "darkness encodes row of patch in image (fill)",
+          "column": "darkness encodes column of patch in image (fill)",
+          "no_outline": "original image patch without q/k outline"
         }
       }
       if (!color_opts.includes(curColorBy)) {
         store.commit("setColorBy", "query_key");
       }
+    }
+
+    const getColorMsg = () => {
+      const colorMsg = state.colorByDict[state.colorBy];
+      console.log(colorMsg);
+      (projection.value as any).setColorMsg(colorMsg);
     }
 
     watch([() => state.storeHead, () => state.storeLayer],
@@ -262,6 +265,12 @@ export default defineComponent({
       }
     )
 
+    // change color msg
+    watch([() => state.colorBy],
+      () => {
+        getColorMsg();
+      })
+
     return {
       ...toRefs(state),
       projection,
@@ -272,17 +281,9 @@ export default defineComponent({
       toggleTheme,
       getTheme,
       setTheme,
-      getMediaPreference
+      getMediaPreference,
+      getColorMsg
     };
-  },
-  computed: {
-    // icon() {
-    //   if (this.userTheme === 'dark-theme') {
-    //     return ['fas', 'sun']
-    //   } else {
-    //     return ['fas', 'moon']
-    //   }
-    // }
   },
 });
 </script>
@@ -309,6 +310,7 @@ export default defineComponent({
   --radio-border: #d9d9d9;
   --radio-hover: rgba(0, 0, 0, 0.85);
   --token-hover: lightgrey;
+  --info: #777;
 }
 
 :root.dark-theme {
@@ -323,6 +325,7 @@ export default defineComponent({
   --token-hover: #222;
   --query-label: #c2e8b4;
   --key-label: #f0b3c7;
+  --info: white;
 }
 
 ::selection {
@@ -566,7 +569,8 @@ label {
   padding-left: 1rem !important;
 }
 
-.ant-tooltip-placement-bottomRight .ant-tooltip-arrow {
+.ant-tooltip-placement-bottomRight .ant-tooltip-arrow,
+.ant-tooltip-placement-topRight .ant-tooltip-arrow {
   right: 0px !important;
 }
 
@@ -575,27 +579,48 @@ label {
   left: 0px !important;
 }
 
-.ant-tooltip-placement-leftTop .ant-tooltip-arrow {
+.ant-tooltip-placement-leftTop .ant-tooltip-arrow,
+.ant-tooltip-placement-rightTop .ant-tooltip-arrow {
   top: 0px !important;
+}
+
+.ant-tooltip-placement-rightBottom .ant-tooltip-arrow,
+.ant-tooltip-placement-leftBottom .ant-tooltip-arrow {
+  bottom: 0px !important;
 }
 
 .info-icon,
 .dropdown .info-icon {
-  width: 12px !important;
-  height: 12px !important;
-  margin-right: -4px !important;
+  border-radius: 100%;
+  color: var(--info);
+  border: 1px solid var(--info);
+  padding: 1px;
+  width: 8px !important;
+  height: 8px !important;
+  margin-right: 4px !important;
   transform: translateY(-6px) !important;
   outline: none !important;
+  transition: 0.5s;
+  margin-left: 0 !important;
 }
 
 #label-wrapper .info-icon,
-#attn-wrap .info-icon {
-  margin-right: 4px !important;
+#attn-wrap .info-icon,
+#num-msg .info-icon {
+  margin-left: 4px !important;
   cursor: pointer;
+}
+
+#num-msg .info-icon {
+  transform: translateY(-1px) !important;
 }
 
 .info-icon.first {
   margin-left: 0 !important;
+}
+
+.info-icon:hover {
+  opacity: 0.8;
 }
 
 /* modal */

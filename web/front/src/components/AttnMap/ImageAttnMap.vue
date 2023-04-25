@@ -1,36 +1,36 @@
 <template>
     <div class="viewHead" id="image-attn-map-view">
         <div class="align-top">
-            <p v-if='mode === "single" && !showAttn'><a-tooltip placement="topLeft" color="var(--radio-hover)">
+            <p v-if='mode === "single" && !showAttn'>Single View<a-tooltip placement="rightTop">
                     <template #title>
                         <span>q-k attention patterns for a single head</span>
                     </template>
-                    <font-awesome-icon icon="circle-info" class="info-icon first" />
-                </a-tooltip>Single View
+                    <font-awesome-icon icon="info" class="info-icon first" />
+                </a-tooltip>
             </p>
-            <p v-else-if='mode === "single"'><a-tooltip placement="topLeft" color="var(--radio-hover)">
+            <p v-else-if='mode === "single"'>Image View<a-tooltip placement="rightTop">
                     <template #title>
                         <span>q-k attention patterns for a single image</span>
                     </template>
-                    <font-awesome-icon icon="circle-info" class="info-icon first" />
-                </a-tooltip>Image View
+                    <font-awesome-icon icon="info" class="info-icon first" />
+                </a-tooltip>
                 <Transition>
                     <span v-show="showAttn">({{ layerHead }})</span>
                 </Transition>
             </p>
             <p v-else>
-                <a-tooltip placement="topLeft" color="var(--radio-hover)">
+                Matrix View<a-tooltip placement="rightTop">
                     <template #title>
                         <span>q-k attention patterns for all attention heads</span>
                     </template>
-                    <font-awesome-icon icon="circle-info" class="info-icon first" />
-                </a-tooltip>Matrix View
+                    <font-awesome-icon icon="info" class="info-icon first" />
+                </a-tooltip>
             </p>
         </div>
         <span class="subtitle">{{ attnMsg }}</span>
         <Transition>
             <div v-show="showAttn">
-                <p class="label"><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                <p class="label">Show<a-tooltip placement="rightTop">
                         <template #title>
                             <span>visualization options:</span>
                             <ul>
@@ -41,8 +41,8 @@
                             </ul>
                             (square = attention to [cls] token, circle arrow = attention to self)
                         </template>
-                        <font-awesome-icon icon="circle-info" class="info-icon first" />
-                    </a-tooltip>Show</p>
+                        <font-awesome-icon icon="info" class="info-icon first" />
+                    </a-tooltip></p>
                 <div class="checkbox-contain">
                     <div class="half">
                         <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap">Attn Arrows</a-checkbox>
@@ -107,10 +107,7 @@ export default {
             document.querySelectorAll("canvas#bertviz + .deck-tooltip").forEach((v) => v.remove());
             // parse info from data
             let { attentionByToken } = state;
-            // state.attn_vals = attentionByToken.attns;
 
-            // const layer = attentionByToken.layer;
-            // const head = attentionByToken.head;
             state.layerHead = "L" + state.curLayer + " H" + state.curHead;
 
             const toOriginalImageLayer = new BitmapLayer({
@@ -124,7 +121,6 @@ export default {
             const toOverlaidlImageLayer = new BitmapLayer({
                 id: 'bertviz-overlay',
                 bounds: [-70, -84.5, 70, -2.5],
-                // bounds: [-490, -50, -350, 65],
                 image: attentionByToken.token.originalPatchPath,
                 pickable: false,
             });
@@ -132,7 +128,6 @@ export default {
             const toArrowedlImageLayer = new BitmapLayer({
                 id: 'bertviz-arrowed',
                 bounds: [-70, -80.5, 70, -2.5],
-                // bounds: [-490, -50, -350, 65],
                 image: attentionByToken.token.sentence,
                 pickable: false,
             });
@@ -140,7 +135,6 @@ export default {
             const toPatchedImageLayer = new BitmapLayer({
                 id: 'patched-image',
                 bounds: [-70, 2.5, 70, 80.5],
-                // bounds: [-490, -50, -350, 65],
                 image: attentionByToken.token.value,
                 pickable: false,
             });
@@ -148,31 +142,24 @@ export default {
             const toArrowedLayer = new BitmapLayer({
                 id: 'bertviz-pure',
                 bounds: [-70, -80.5, 70, -2.5],
-                // bounds: [-490, -50, -350, 65],
                 image: attentionByToken.token.length,
                 pickable: false,
             });
 
             if (state.overlayAttn && state.lineOnly) {
-                // deckgl2.setProps({ layers: [toOriginalImageLayer, toOverlaidlImageLayer] });
                 deckgl2 = new Deck({
                     canvas: "bertviz",
-                    // initialViewState: viewState,
                     layers: [toPatchedImageLayer, toArrowedLayer]
                 });
             }
             else if (state.overlayAttn) {
-
                 deckgl2 = new Deck({
                     canvas: "bertviz",
-                    // initialViewState: viewState,
                     layers: [toOriginalImageLayer, toArrowedlImageLayer]
                 });
             } else {
-                // deckgl2.setProps({ layers: [toOriginalImageLayer] });
                 deckgl2 = new Deck({
                     canvas: "bertviz",
-                    // initialViewState: viewState,
                     layers: [toOriginalImageLayer, toOverlaidlImageLayer]
                 });
             }

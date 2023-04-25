@@ -14,10 +14,8 @@ import {
     computed,
     reactive,
     toRefs,
-    h,
     watch,
     defineComponent,
-    PropType,
     shallowRef,
 } from "vue";
 import * as _ from "underscore";
@@ -27,7 +25,6 @@ import { IconLayer } from '@deck.gl/layers/typed';
 import { Typing } from "@/utils/typing";
 
 import { Deck, OrbitView, OrthographicView, View } from "@deck.gl/core/typed";
-// import interface {Deck} from "@deck.gl/core/typed";
 import { PolygonLayer, ScatterplotLayer, TextLayer, LineLayer } from "@deck.gl/layers/typed";
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
@@ -106,8 +103,6 @@ export default defineComponent({
             attentionLoading: computed(() => store.state.attentionLoading),
             modelType: computed(() => store.state.modelType),
             resetting: false,
-            // attnIndex: computed(() => store.state.attnIndex),
-            // attnSide: computed(() => store.state.attnSide)
         });
 
         let deckgl = {} as Deck;
@@ -180,7 +175,6 @@ export default defineComponent({
             }
             const overlap = tree.collides(new_coord);
             if (overlap) {
-                // return [255, 255, 255, 0];
                 return false;
             }
             tree.insert(new_coord);
@@ -208,37 +202,12 @@ export default defineComponent({
                     }
                 });
             }
-
-            // only show relevant lines on hover
-            // too laggy right now...
-            // if (state.attnIndex != -1) {
-            //     if (state.attnSide === "left") {
-            //         top_attn = top_attn.filter((v: any) => v.from === state.attnIndex);
-            //     } else {
-            //         top_attn = top_attn.filter((v: any) => v.to === state.attnIndex);
-            //     }
-            // }
-            // console.log(state.attnIndex);
-            // console.log(top_attn);
             return top_attn;
         }
 
         // LAYERS
         const toLineLayer = (points: Typing.Point[]) => {
             // show attention lines on scatterplot
-            // const clickedIndex = state.clickedPoint.index;
-            // const clickedType = state.clickedPoint.type;
-
-            // const sourcePosition = getPointCoordinate(state.clickedPoint);
-            // const searchIndex = state.tokenData[clickedIndex].pos_int;
-            // let minIndex = clickedIndex - searchIndex;
-            // const offset = state.tokenData.length / 2;
-            // if (clickedType === "query") {
-            //     minIndex += offset;
-            // } else {
-            //     minIndex -= offset;
-            // }
-
             const queries = points.filter((v) => v.type === "query");
             const keys = points.filter((v) => v.type === "key");
 
@@ -254,27 +223,8 @@ export default defineComponent({
                 getSourcePosition: (d: any) => getPointCoordinate(queries[d.from]),
                 getTargetPosition: (d: any) => getPointCoordinate(keys[d.to]),
                 getColor: (d: any) => {
-                    // if (d.index == clickedIndex || d.type === clickedType) {
-                    //     // don't show line to self or same type of token
-                    //     return [255, 255, 255, 0];
-                    // }
-                    // const arrayIndex = d.index - minIndex;
-                    // const opacity = state.attentionByToken.attns[searchIndex][arrayIndex] * 255;
                     const opacity = d.att * 255;
-
-                    // if (opacity == 0) { // fix 3d lines
-                    //     return [255, 255, 255, 0];
-                    // }
-
                     return [255, 195, 0, opacity];
-
-                    // return clickedType === "query" ?
-                    //     state.userTheme == "light-theme"
-                    //         ? [43, 91, 25, opacity]
-                    //         : [194, 232, 180, opacity]
-                    //     : state.userTheme == "light-theme"
-                    //         ? [117, 29, 58, opacity]
-                    //         : [240, 179, 199, opacity];
                 },
                 updateTriggers: {
                     getSourcePosition: [state.projectionMethod, state.dimension, state.curAttn],
@@ -329,7 +279,6 @@ export default defineComponent({
 
                     if (state.mode === "single" && state.sizeByNorm) {
                         // scale dot size by norm if checkbox on
-                        // maybe still need adjustment for highlighted size?
                         defaultSize = 0.15 + d.normScaled * 0.5;
                         highlightedSize = defaultSize * 2;
                     }
@@ -384,7 +333,7 @@ export default defineComponent({
                         highlightColorKey = [193, 91, 125, 175],
                         highlightColorKeyDark = [234, 138, 170, 175],
                         unactiveColor = [...getColor(d), 25];
-                    if (!state.highlightedTokenIndices.length) return defaultColor;
+                    if (state.view != 'search' && !state.highlightedTokenIndices.length) return defaultColor;
                     return (
                         state.highlightedTokenIndices.includes(d.index)
                             ? d.type == "query"
@@ -402,11 +351,6 @@ export default defineComponent({
                         // stop event propagation
                         return;
                     }
-                    // console.log("scatterplot");
-                    // if (deckgl['layerManager']) {
-                    //     console.log(deckgl['layerManager']['layers'].map((v) => v.id));
-                    // }
-                    // console.log('onClick', info.object);
                     if (state.view != "attn") { // switch to attention view if not already
                         store.commit("setView", 'attn');
                     }
@@ -503,7 +447,7 @@ export default defineComponent({
                         highlightColorKeyDark = [234, 138, 170, 0],
                         unactiveColor = [...getColor(d), 0];
 
-                    if (!state.highlightedTokenIndices.length) return defaultColor;
+                    if (state.view != 'search' && !state.highlightedTokenIndices.length) return defaultColor;
                     return (
                         state.highlightedTokenIndices.includes(d.index)
                             ? d.type == "query"
@@ -536,15 +480,11 @@ export default defineComponent({
                 pickable: state.mode == 'single' && state.modelType == "vit-16" || state.modelType == "vit-32",
                 data: points,
                 stroked: state.mode == 'single',
-                // alphaCutoff: 0.05,
-                // billboard: true,
-                // getAngle: 0,
                 getIcon: d => ({
                     url: getImagePath(d),
                     width: 40,
                     height: 40,
                 }),
-                // getPixelOffset: [0, 0],
                 getPosition: (d: Typing.Point) => getPointCoordinate(d),
                 getSize: (d: Typing.Point) => {
                     const size = getImageSize();
@@ -562,7 +502,7 @@ export default defineComponent({
                 sizeMinPixels: minSize,
                 sizeUnits: "pixels",
                 getColor: (d: Typing.Point) => {
-                    if (state.highlightedTokenIndices.length === 0) return [0, 0, 0, 255];
+                    if (state.view != 'search' && state.highlightedTokenIndices.length === 0) return [0, 0, 0, 255];
                     return state.highlightedTokenIndices.includes(d.index)
                         ? [0, 0, 0, 255]
                         : [0, 0, 0, 20];
@@ -572,20 +512,12 @@ export default defineComponent({
                         // stop event propagation
                         return;
                     }
-                    // console.log("image");
-                    // if (deckgl['layerManager']) {
-                    //     console.log(deckgl['layerManager']['layers'].map((v) => v.id));
-                    // }
-                    // console.log('onClick', info.object);
                     if (state.view != "attn") {
                         store.commit("setView", 'attn');
                     }
                     store.commit("updateAttentionLoading", true);
 
                     let pt = info.object as Typing.Point;
-
-                    // console.log(pt.index);
-                    // console.log(points.length);
 
                     state.clickedPoint = pt;
                     store.dispatch("setClickedPoint", pt);
@@ -679,7 +611,7 @@ export default defineComponent({
             // main text labels for scatterplot points
             return new TextLayer({
                 id: "point-label-layer",
-                data: points, // (state.pointScaleFactor < 0.3) ? points: [],
+                data: points,
                 pickable: false,
                 characterSet: 'auto',
                 getPosition: (d: Typing.Point) => {
@@ -697,7 +629,7 @@ export default defineComponent({
                     if (!state.showAll || !visiblePoints[d.index]) {
                         return [255, 255, 255, 0];
                     }
-                    if (state.highlightedTokenIndices.length === 0)
+                    if (state.view != 'search' && state.highlightedTokenIndices.length === 0)
                         return d.type == "query"
                             ? state.userTheme == "light-theme"
                                 ? [43, 91, 25, defaultOpacity]
@@ -736,7 +668,7 @@ export default defineComponent({
             // text labels for tokens in currently highlighted sentence
             return new TextLayer({
                 id: "attention-label-layer",
-                data: points, // (state.pointScaleFactor < 0.3) ? points: [],
+                data: points,
                 pickable: false,
                 characterSet: 'auto',
                 getPosition: (d: Typing.Point) => {
@@ -905,7 +837,6 @@ export default defineComponent({
                     return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
                 }
                 return [toImageLayer(points), toColorLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
-                // return [toImageLayer(points), toPlotHeadLayer(headings), toOverlayLayer(headings)];
             }
         };
 
@@ -976,9 +907,6 @@ export default defineComponent({
                     }
                 },
                 onViewStateChange: (param) => {
-                    // if (state.mode == 'matrix') {
-                    //     return;
-                    // }
                     if (param.interactionState.inTransition) {
                         clearTimeout(timeout);
                         timeout = setTimeout(function () {
@@ -987,28 +915,8 @@ export default defineComponent({
                     }
                 },
             });
-
-            // setTimeout needed here?
             store.commit("updateRenderState", false);
         };
-
-        // const toggleDisableLabel = (zoom: number) => {
-        //     if (state.dimension == "2D") {
-        //         if (zoom >= 5 && state.disableLabel) {
-        //             store.commit("setDisableLabel", false);
-        //         } else if (zoom < 5 && !state.disableLabel) {
-        //             store.commit("setDisableLabel", true);
-        //             // store.commit("setShowAll", false);
-        //         }
-        //     } else {
-        //         if (zoom >= 3 && state.disableLabel) {
-        //             store.commit("setDisableLabel", false);
-        //         } else if (zoom < 3 && !state.disableLabel) {
-        //             store.commit("setDisableLabel", true);
-        //             // store.commit("setShowAll", false);
-        //         }
-        //     }
-        // }
 
         onwheel = (event: WheelEvent) => { // track cursor position on zoom
             if (state.transitionInProgress) {
@@ -1232,10 +1140,6 @@ export default defineComponent({
                     }),
             });
 
-            // if (state.mode == "single" || state.modelType == "vit-32" || state.modelType == "vit-16") {
-            // if (state.mode == "single" && state.dimension === "3D") {
-            //     resetZoom();
-            // }
             const curZoom = deckgl.getViewports()[0].zoom;
 
             let switchThreshold = zoomThreshold;
@@ -1268,7 +1172,8 @@ export default defineComponent({
                 () => state.sizeByNorm,
                 () => state.attentionLoading,
                 () => state.clickedPoint,
-                () => state.curAttn
+                () => state.curAttn,
+                () => state.view
             ],
             () => {
                 if (state.view === "attn" && state.attentionLoading) {
@@ -1283,7 +1188,6 @@ export default defineComponent({
             () => {
                 if (state.doneLoading && state.activePoints.length != 0 && state.view === "attn" && state.clickedPoint != "") {
                     // fix attention view
-                    // let ind = state.highlightedTokenIndices[state.highlightedTokenIndices.length - 1];
                     store.commit("updateAttentionLoading", true);
                     let ind = state.clickedPoint.index;
                     let pt = state.activePoints[ind];
@@ -1297,7 +1201,7 @@ export default defineComponent({
             () => {
                 if (state.highlightedTokenIndices.length == 0) {
                     // reset highlighted token indices
-                    if (state.view != "none") {
+                    if (state.view == "attn") {
                         store.commit("setView", "none");
                         state.clickedPoint = "";
                     }

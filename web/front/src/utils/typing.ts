@@ -23,14 +23,6 @@ export namespace Typing {
         pca_y_3d: number;
         pca_z_3d: number;
     }
-    // export interface AttentionData {
-    //     head: number;
-    //     layer: number;
-    //     tokens: AttnCoordinate[];
-    // }
-    // export interface AttnCoordinate {
-    //     attention: number[];
-    // }
     export interface TokenData { // shared by all heads and layers
         position: number;
         pos_int: number;
@@ -42,10 +34,6 @@ export namespace Typing {
         originalPatchPath: string;
         originalImagePath: string;
     }
-
-    // export type projectionMethod = "tsne" | "umap";
-    // export type colorBy = "byPosition" | "byNorm";
-
     export interface PointCoordinate {
         tsne: [number, number];
         umap: [number, number];
@@ -54,7 +42,6 @@ export namespace Typing {
         umap_3d: [number, number, number];
         pca_3d: [number, number, number];
     }
-
     export interface PointColor {
         query_key: number[];
         position: number[];
@@ -68,14 +55,12 @@ export namespace Typing {
         qk_map: number[];
         no_outline: number[];
     }
-
     export interface PointMsg {
         position: string;
         categorical: string;
         norm: string;
         length: string;
     }
-
     export interface Point {
         coordinate: PointCoordinate;
         color: PointColor;
@@ -89,7 +74,6 @@ export namespace Typing {
         imagePath: string;
         originalPatchPath: string;
     }
-    
     export interface PlotHead {
         layer: number;
         head: number;
@@ -104,7 +88,6 @@ export namespace Typing {
             y: [number, number];
         }
     }
-
     export interface AttnByToken {
         layer: number;
         head: number;

@@ -4,7 +4,14 @@
         <!-- Matrix View -->
         <div id="matrix-wrapper">
             <div id="top-right-box" v-show="!renderState">
-                <p id="num-msg" class="subtitle">Based on {{ num_message }}</p>
+                <p id="num-msg" class="subtitle"><b>data info:</b> based on {{ num_message }}<span
+                        v-show="modelType.includes('vit')"><a-tooltip placement="bottom">
+                            <template #title>
+                                <span>object labels are generated from a segmentation model and may not be 100%
+                                    accurate</span>
+                            </template>
+                            <font-awesome-icon icon="info" class="info-icon first" />
+                        </a-tooltip></span></p>
             </div>
             <div id="bottom-left-box" v-show="!renderState">
                 <a-button type="primary" id="about" @click="showModal">about this tool</a-button>
@@ -19,7 +26,8 @@
                 </a-modal>
             </div>
             <Transition>
-                <a-button type="default" id="clear-attn" v-show="!renderState && view == 'attn'" @click="clearSelection">
+                <a-button type="default" id="clear-attn" v-show="!renderState && (view == 'attn' || view == 'search')"
+                    @click="clearSelection">
                     clear selection
                 </a-button>
             </Transition>
@@ -29,26 +37,25 @@
                     <p>This visualization requires many megabytes and may take up to a minute to render.</p>
                 </div>
                 <div id="matrix-labels" v-show="!renderState">
-                    <p class="axis-label">
+                    <p class="axis-label" :class="{ transparent: mode === 'single' }">
                         <span class="head-axis">head →</span>
                         <span class="layer-axis">layer ↓</span>
                     </p>
 
-                    <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
+                    <p class="label">Search<a-tooltip placement="rightBottom">
                             <template #title>
                                 <span>search for <span v-if="!modelType.includes('vit')">a token</span><span v-else>an
                                         object</span></span>
                             </template>
-                            <font-awesome-icon icon="circle-info" class="info-icon first" />
-                        </a-tooltip>Search</p>
+                            <font-awesome-icon icon="info" class="info-icon first" />
+                        </a-tooltip></p>
                     <a-input-search v-model:value="searchToken" :placeholder="placeholder" enter-button
                         @search="onSearch(searchToken)" spellcheck="false" />
                     <Transition>
                         <a-button class="clear" type="link" v-show="searchToken != ''" @click="clearSearch">clear</a-button>
                     </Transition>
 
-                    <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)"
-                            :class="{ disabled: mode === 'matrix' }">
+                    <p class="label">Show<a-tooltip placement="rightTop" :class="{ disabled: mode === 'matrix' }">
                             <template #title>
                                 <span>overlay options:</span>
                                 <ul>
@@ -60,20 +67,20 @@
                                         denotes attention weight</li>
                                 </ul>
                             </template>
-                            <font-awesome-icon icon="circle-info" class="info-icon first" />
-                        </a-tooltip>Show</p>
+                            <font-awesome-icon icon="info" class="info-icon first" />
+                        </a-tooltip></p>
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
                         :class="{ disabled: mode == 'matrix' || view == 'attn' }">labels</a-checkbox>
                     <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
                         :class="{ disabled: mode == 'matrix' || view != 'attn' }">attention lines</a-checkbox>
 
-                    <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)"
+                    <p class="label">Dot Size<a-tooltip placement="rightBottom"
                             :class="{ disabled: mode === 'matrix' || modelType == 'vit-16' || modelType == 'vit-32' }">
                             <template #title>
                                 <span>scale dots in scatterplot by token embedding norm</span>
                             </template>
-                            <font-awesome-icon icon="circle-info" class="info-icon first" />
-                        </a-tooltip>Dot Size</p>
+                            <font-awesome-icon icon="info" class="info-icon first" />
+                        </a-tooltip></p>
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm" :class="{
                             disabled: mode == 'matrix' || modelType == 'vit-16' || modelType == 'vit-32'
                         }">scale by
@@ -82,15 +89,15 @@
                     <!-- <p class="label">Developer Tool</p>
                     <a-button type="primary" @click="logViewport">
                         log viewport
-                                                                                                                                                                                                                                                                                </a-button> -->
+                    </a-button> -->
 
                     <div>
-                        <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
+                        <p class="label">Mode<a-tooltip placement="rightBottom">
                                 <template #title>
                                     <span>view plots in 2D or 3D</span>
                                 </template>
-                                <font-awesome-icon icon="circle-info" class="info-icon first" />
-                            </a-tooltip>Mode</p>
+                                <font-awesome-icon icon="info" class="info-icon first" />
+                            </a-tooltip></p>
                         <a-radio-group v-model:value="dimension">
                             <a-radio-button value="2D">2D</a-radio-button>
                             <a-radio-button value="3D">3D</a-radio-button>
@@ -104,7 +111,7 @@
 
                     <Transition>
                         <div v-show="mode === 'single'">
-                            <p class="label"><a-tooltip placement="leftTop" color="var(--radio-hover)">
+                            <p class="label">View Adjacent Head<a-tooltip placement="rightTop">
                                     <template #title>
                                         <span>explore an adjacent attention head</span>
                                         <ul>
@@ -114,8 +121,8 @@
                                             <li><i>down</i>: move down 1 layer</li>
                                         </ul>
                                     </template>
-                                    <font-awesome-icon icon="circle-info" class="info-icon first" />
-                                </a-tooltip>View Adjacent Head</p>
+                                    <font-awesome-icon icon="info" class="info-icon first" />
+                                </a-tooltip></p>
                             <div id="control-buttons">
                                 <a-button class="center" type="default" size="small" :class="{ disabled: layer < 1 }"
                                     @click="moveToPlot('up')" :disabled="layer < 1">
@@ -149,11 +156,10 @@
                 </div>
             </div>
             <div class="gradient-edge">
+                <Legend ref="legend" />
             </div>
             <div class="gradient-edge right">
-                <Legend />
             </div>
-            <!-- <canvas id="matrix-canvas" /> -->
 
             <MatrixView v-show="!renderState" ref="matrixView" />
         </div>
@@ -164,7 +170,6 @@
 import { onMounted, computed, reactive, toRefs, h, watch, ref, defineComponent } from "vue";
 import { useStore } from "@/store/index";
 
-import { Typing } from "@/utils/typing";
 import MatrixView from "./MatrixView/MatrixView.vue";
 import Legend from "./Legend/Legend.vue";
 import { ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons-vue";
@@ -175,6 +180,7 @@ export default defineComponent({
         const store = useStore();
 
         const matrixView = ref(null);
+        const legend = ref(null);
 
         const state = reactive({
             mode: computed(() => store.state.mode),
@@ -185,7 +191,6 @@ export default defineComponent({
             sizeByNorm: computed(() => store.state.sizeByNorm),
             showAttention: computed(() => store.state.showAttention),
             attnLoading: computed(() => store.state.attentionLoading),
-            // disableLabel: computed(() => store.state.disableLabel),
             colorBy: computed(() => store.state.colorBy),
             layer: computed(() => store.state.layer),
             head: computed(() => store.state.head),
@@ -212,13 +217,14 @@ export default defineComponent({
         }
 
         const clearSearch = () => {
-            const oldSearch = state.searchToken;
+            // const oldSearch = state.searchToken;
             state.searchToken = "";
-            if (!oldSearch.includes("(0 ") && oldSearch.includes("results)")) {
-                // actually need to clear search results from scatterplot
-                store.commit("setHighlightedTokenIndices", []);
-                // onSearch(state.searchToken);
-            } // else we just need to reset input box
+            // if (!oldSearch.includes("(0 ") && oldSearch.includes("results)")) {
+            // actually need to clear search results from scatterplot
+            store.commit("setHighlightedTokenIndices", []);
+            store.commit("setView", "none");
+            // onSearch(state.searchToken);
+            // } // else we just need to reset input box
         }
 
         const onSearch = (str: string) => {
@@ -229,10 +235,7 @@ export default defineComponent({
                 store.commit("setView", "search");
             }
             let num_results = (matrixView.value as any).onSearch(str);
-            // console.log(num_results);
-            // if (str != "") { // display # search results
             state.searchToken = str + " (" + num_results + " results)";
-            // }
         }
 
         const logViewport = () => {
@@ -289,9 +292,13 @@ export default defineComponent({
             }
         }
 
-        // clear attention
+        // clear search/attention
         const clearSelection = () => {
-            store.commit("setShowAttn", false);
+            if (state.view == 'attn') {
+                store.commit("setShowAttn", false);
+            } else { // state.view == 'search'
+                clearSearch();
+            }
         }
 
         // show modal
@@ -301,6 +308,12 @@ export default defineComponent({
 
         const closeModal = () => {
             state.modalVisible = false;
+        }
+
+        // switch color msg
+        const setColorMsg = (msg: string) => {
+            console.log(msg);
+            (legend.value as any).setColorMsg(msg);
         }
 
         watch(() => state.view,
@@ -325,6 +338,7 @@ export default defineComponent({
 
         return {
             ...toRefs(state),
+            legend,
             matrixView,
             onClickReset,
             resetToMatrix,
@@ -339,15 +353,14 @@ export default defineComponent({
             switchPlaceholder,
             clearSelection,
             showModal,
-            closeModal
+            closeModal,
+            setColorMsg
         };
     }
 });
 </script>
 
 <style lang="scss">
-// $background: #f5f5f7;
-
 #label-wrapper {
     position: absolute;
     top: 15px;
@@ -367,6 +380,10 @@ export default defineComponent({
     display: block;
     font-size: smaller;
     transition: 0.5s;
+}
+
+.axis-label.transparent {
+    opacity: 0;
 }
 
 p.label {
@@ -438,6 +455,10 @@ div.matrix-cell {
 }
 
 // img/sentence info
+#top-right-box {
+    max-width: 200px;
+}
+
 #top-right-box,
 #bottom-left-box {
     position: absolute;

@@ -2,12 +2,12 @@
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
             <Transition>
-                <p v-show="showAttn"><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                <p v-show="showAttn">Aggregate View<a-tooltip placement="rightTop">
                         <template #title>
                             <span>aggregate sentence-level attention patterns for this attention head</span>
                         </template>
-                        <font-awesome-icon icon="circle-info" class="info-icon first" />
-                    </a-tooltip>Aggregate View ({{ layerHead }})
+                        <font-awesome-icon icon="info" class="info-icon first" />
+                    </a-tooltip> ({{ layerHead }})
                 </p>
             </Transition>
             <Transition>
@@ -29,7 +29,6 @@ import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
 import * as _ from "underscore";
 import { useStore } from "@/store/index";
 import * as d3 from "d3";
-import { select } from "d3";
 
 type Config = {
     attention: any;
@@ -76,8 +75,6 @@ export default {
             hideFirst: computed(() => store.state.hideFirst),
             hideLast: computed(() => store.state.hideLast),
             weightByNorm: computed(() => store.state.weightByNorm),
-            // attnIndex: computed(() => store.state.attnIndex),
-            // attnSide: computed(() => store.state.attnSide)
         });
 
         // toggle agg attention view
@@ -114,10 +111,7 @@ export default {
             const new_attn = attns.map((row: number[]) => {
                 // scale
                 let new_row = row.map((cell: number, index: number) => {
-                    // if (state.weightByNorm) { // multiply if checkbox on
                     return cell * norms[index];
-                    // } // else divide
-                    // return cell / norms[index];
                 })
                 // now renormalize 
                 const row_sum = new_row.reduce((sum, elem) => sum + elem, 0);
@@ -164,8 +158,6 @@ export default {
                 }
             }
 
-            // const layer = attentionByToken.layer;
-            // const head = attentionByToken.head;
             state.layerHead = "L" + state.curLayer + " H" + state.curHead;
 
             const params = {
@@ -186,7 +178,6 @@ export default {
                 include_layers: [0],
             };
 
-            // let headColors = d3.scaleOrdinal(d3.schemePastel1);
             let config: Config = initialize();
             renderVis();
 
@@ -258,7 +249,6 @@ export default {
                     .attr("x2", "100%")
                     .attr("y1", "0%")
                     .attr("y2", "100%")
-                    // .attr("gradientTransform", "rotate(-15)")
                     .attr("gradientUnits", "userSpaceOnUse");
 
                 gradient.append("stop")
@@ -393,8 +383,6 @@ export default {
                     // toggle lines on and off on token click
                     const select = tokenContainer.nodes();
                     const ind = select.indexOf(this);
-                    // let hidden = d3.select(this).classed("clicked");
-                    // d3.select(this).classed("clicked", !hidden);
                     let hidden, new_attn;
                     if (isLeft) { // query
                         let hid_index = state.hidden["left"].indexOf(ind);
@@ -414,10 +402,7 @@ export default {
                             const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
                             new_attn = state.cur_attn[ind].map((x, index) => {
                                 // reset to current state (account for any tokens that are hidden on right side)
-                                // if (!state.hidden["right"].includes(index)) {
                                 return reset_to[ind][index];
-                                // }
-                                // return 0;
                             });
                             attn_copy[ind] = new_attn;
                         }
@@ -445,18 +430,13 @@ export default {
                             // add back cells corresponding to clicked on token
                             const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
                             new_attn = state.cur_attn.map((row: number[], index: number) => {
-                                // let token_val = state.attn_vals[index][ind];
                                 let rem_attn = 1;
                                 let row_index = index;
                                 state.hidden["right"].forEach((x, index) => {
                                     // account for other hidden keys too
                                     rem_attn -= reset_to[row_index][x];
                                 })
-                                // let rem_attn = 1 - token_val;
                                 return row.map((cell: number, index: number) => {
-                                    // if (index != ind) {
-                                    //     return cell * rem_attn;
-                                    // }
                                     return rem_attn == 0 || state.hidden["right"].includes(index)
                                         ? 0
                                         : Math.min(1, reset_to[row_index][index] / rem_attn);
@@ -596,9 +576,6 @@ export default {
                     )
                     .attr("stroke-width", 2)
                     .attr("stroke", function () {
-                        // const headIndex =
-                        //   +this.parentNode.parentNode.getAttribute("head-index");
-                        // return headColors(headIndex);
                         return "url(#svgGradient)";
                     })
                     .attr("left-token-index", function (this: any) {

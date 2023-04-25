@@ -1,30 +1,30 @@
 <template>
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
-            <p v-if='mode === "single" && !showAttn'><a-tooltip placement="topLeft" color="var(--radio-hover)">
+            <p v-if='mode === "single" && !showAttn'>Single View<a-tooltip placement="rightTop">
                     <template #title>
                         <span>q-k attention patterns for a single head</span>
                     </template>
-                    <font-awesome-icon icon="circle-info" class="info-icon first" />
-                </a-tooltip>Single View
+                    <font-awesome-icon icon="info" class="info-icon first" />
+                </a-tooltip>
             </p>
-            <p v-else-if='mode === "single"'><a-tooltip placement="topLeft" color="var(--radio-hover)">
+            <p v-else-if='mode === "single"'>Sentence View<a-tooltip placement="rightTop">
                     <template #title>
                         <span>q-k attention patterns for a single sentence; line opacity denotes attention weight</span>
                     </template>
-                    <font-awesome-icon icon="circle-info" class="info-icon first" />
-                </a-tooltip>Sentence View
+                    <font-awesome-icon icon="info" class="info-icon first" />
+                </a-tooltip>
                 <Transition>
                     <span v-show="showAttn">({{ layerHead }})</span>
                 </Transition>
             </p>
             <p v-else>
-                <a-tooltip placement="topLeft" color="var(--radio-hover)">
+                Matrix View<a-tooltip placement="rightTop">
                     <template #title>
                         <span>q-k attention patterns for all attention heads</span>
                     </template>
-                    <font-awesome-icon icon="circle-info" class="info-icon first" />
-                </a-tooltip>Matrix View
+                    <font-awesome-icon icon="info" class="info-icon first" />
+                </a-tooltip>
             </p>
             <Transition>
                 <div class="attn-btns" v-show="showAttn">
@@ -36,13 +36,13 @@
         <Transition>
             <div v-show="showAttn" class="checkbox-contain">
                 <div :class="{ half: model == 'gpt-2' }">
-                    <p class="label"><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                    <p class="label">Hide<a-tooltip placement="rightTop">
                             <template #title>
                                 <span>filter out attention to <span v-if="model === 'gpt-2'">first token</span><span
                                         v-else>special tokens (cls, sep)</span></span>
                             </template>
-                            <font-awesome-icon icon="circle-info" class="info-icon first" />
-                        </a-tooltip>Hide</p>
+                            <font-awesome-icon icon="info" class="info-icon first" />
+                        </a-tooltip></p>
                     <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt-2'">first
                         token</a-checkbox>
                     <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
@@ -51,12 +51,12 @@
                         v-show="model == 'bert'">[sep]</a-checkbox>
                 </div>
                 <div class="half" v-show="model == 'gpt-2'">
-                    <p class="label"><a-tooltip placement="topLeft" color="var(--radio-hover)">
+                    <p class="label">Weight by<a-tooltip placement="rightTop">
                             <template #title>
                                 <span>weight attentions by the norm of each token's value vector</span>
                             </template>
-                            <font-awesome-icon icon="circle-info" class="info-icon first" />
-                        </a-tooltip>Weight by</p>
+                            <font-awesome-icon icon="info" class="info-icon first" />
+                        </a-tooltip></p>
                     <a-checkbox v-model:checked="weightByNorm" @click="toggleWeightBy">value norm</a-checkbox>
                 </div>
             </div>
@@ -152,10 +152,7 @@ export default {
             const new_attn = attns.map((row: number[]) => {
                 // scale
                 let new_row = row.map((cell: number, index: number) => {
-                    // if (state.weightByNorm) { // multiply if checkbox on
                     return cell * norms[index];
-                    // } // else divide
-                    // return cell / norms[index];
                 })
                 // now renormalize 
                 const row_sum = new_row.reduce((sum, elem) => sum + elem, 0);
@@ -182,10 +179,6 @@ export default {
             const token_type: string = attentionByToken.token.type;
             const token_pos: number = attentionByToken.token.pos_int;
             const token_text: string[] = attentionByToken.token.sentence.split(" ");
-
-            // if (token_type == "key") { // flip graph if key
-            //     state.attn_vals = transpose(state.attn_vals);
-            // }
 
             store.commit("setCurAttn", state.attn_vals);
             state.hidden["left"] = [];
@@ -215,8 +208,6 @@ export default {
                 store.commit('updateAttentionLoading', false);
 
             }
-            // const layer = attentionByToken.layer;
-            // const head = attentionByToken.head;
             state.layerHead = "L" + state.curLayer + " H" + state.curHead;
 
             const params = {
@@ -309,7 +300,6 @@ export default {
                     .attr("x2", "100%")
                     .attr("y1", "0%")
                     .attr("y2", "100%")
-                    // .attr("gradientTransform", "rotate(-15)")
                     .attr("gradientUnits", "userSpaceOnUse");
 
                 gradient.append("stop")
@@ -393,7 +383,6 @@ export default {
                     .attr("width", BOXWIDTH / activeHeads())
                     .attr("height", BOXHEIGHT)
                     .attr("fill", function () {
-                        // return headColors(+this.parentNode.getAttribute("head-index"));
                         return isLeft ? "rgb(157, 216, 135)" : "rgb(234, 138, 170)";
                     })
                     .style("opacity", 0.0);
@@ -411,7 +400,6 @@ export default {
                     .append("rect")
                     .classed("background", true)
                     .style("opacity", 0.0)
-                    // .attr("fill", "lightgray")
                     .attr("x", leftPos)
                     .attr("y", (d: any, i: number) => TEXT_TOP + i * BOXHEIGHT)
                     .attr("width", BOXWIDTH)
@@ -444,8 +432,6 @@ export default {
                     // toggle lines on and off on token click
                     const select = tokenContainer.nodes();
                     const ind = select.indexOf(this);
-                    // let hidden = d3.select(this).classed("clicked");
-                    // d3.select(this).classed("clicked", !hidden);
                     let hidden, new_attn;
                     if (isLeft) { // query
                         let hid_index = state.hidden["left"].indexOf(ind);
@@ -465,10 +451,7 @@ export default {
                             const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
                             new_attn = state.cur_attn[ind].map((x, index) => {
                                 // reset to current state (account for any tokens that are hidden on right side)
-                                // if (!state.hidden["right"].includes(index)) {
                                 return reset_to[ind][index];
-                                // }
-                                // return 0;
                             });
                             attn_copy[ind] = new_attn;
                         }
@@ -496,18 +479,13 @@ export default {
                             // add back cells corresponding to clicked on token
                             const reset_to = state.weightByNorm && state.weighted_attn.length > 0 ? state.weighted_attn : state.attn_vals;
                             new_attn = state.cur_attn.map((row: number[], index: number) => {
-                                // let token_val = state.attn_vals[index][ind];
                                 let rem_attn = 1;
                                 let row_index = index;
                                 state.hidden["right"].forEach((x, index) => {
                                     // account for other hidden keys too
                                     rem_attn -= reset_to[row_index][x];
                                 })
-                                // let rem_attn = 1 - token_val;
                                 return row.map((cell: number, index: number) => {
-                                    // if (index != ind) {
-                                    //     return cell * rem_attn;
-                                    // }
                                     return rem_attn == 0 || state.hidden["right"].includes(index)
                                         ? 0
                                         : Math.min(1, reset_to[row_index][index] / rem_attn);
@@ -533,9 +511,6 @@ export default {
                 tokenContainer.on("mouseover", function (this: any, e: Event, d: string) {
                     const select = tokenContainer.nodes();
                     const index = select.indexOf(this);
-
-                    // store.commit("setAttnIndex", index);
-                    // store.commit("setAttnSide", isLeft ? "left" : "right");
 
                     // Show gray background for moused-over token
                     textContainer
@@ -594,7 +569,6 @@ export default {
                 });
 
                 textContainer.on("mouseleave", function (this: any) {
-                    // store.commit("setAttnIndex", -1);
                     // Unhighlight selected token
                     d3.select(this).selectAll(".background").style("opacity", 0.0);
 
@@ -653,9 +627,6 @@ export default {
                     )
                     .attr("stroke-width", 2)
                     .attr("stroke", function () {
-                        // const headIndex =
-                        //   +this.parentNode.parentNode.getAttribute("head-index");
-                        // return headColors(headIndex);
                         return "url(#svgGradient)";
                     })
                     .attr("left-token-index", function (this: any) {
@@ -719,8 +690,6 @@ export default {
         }
 
         const resetAttn = () => {
-            // state.hidden["left"] = [];
-            // state.hidden["right"] = [];
             store.commit("setHideFirst", false);
             store.commit("setHideLast", false);
             store.commit("setWeightByNorm", false);

@@ -1,19 +1,14 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as baseUseStore, Store } from 'vuex'
 import * as dataService from "@/services/dataService";
-import {computeMatrixProjection} from "@/utils/dataTransform";
-
-import { TypeOfList } from "underscore";
 
 // init default 
 import { Typing } from "@/utils/typing";
-import { ConsoleSqlOutlined } from '@ant-design/icons-vue';
 
 // Vuex docs: https://vuex.vuejs.org/
 
 export interface State {
   matrixData: Typing.MatrixData[];
-  // attentionData: Typing.AttentionData[];
   tokenData: Typing.TokenData[];
 
   // current layer and head
@@ -40,7 +35,6 @@ export interface State {
   hideLast: boolean;
   weightByNorm: boolean;
   showAgg: boolean;
-  // attentionByTokenLock: boolean; 
 
   modelType: string; // bert or gpt
   projectionMethod: keyof Typing.PointCoordinate; // tsne or umap
@@ -50,7 +44,6 @@ export interface State {
   showAll: boolean; // labels
   showAttention: boolean; // attention lines
   sizeByNorm: boolean; // dot size
-  // disableLabel: boolean;
 }
 
 // define injection key
@@ -59,7 +52,6 @@ export const key: InjectionKey<Store<State>> = Symbol()
 export const store = createStore<State>({
   state: {
     matrixData: [],
-    // attentionData: [],
     tokenData: [],
     layer: "",
     head: "",
@@ -84,7 +76,6 @@ export const store = createStore<State>({
     hideLast: false,
     weightByNorm: false,
     showAgg: true,
-    // attentionByTokenLock: false,
     modelType: 'vit-32',
     projectionMethod: 'tsne',
     colorBy: 'query_key',
@@ -96,7 +87,6 @@ export const store = createStore<State>({
     showAll: false,
     showAttention: false,
     sizeByNorm: false,
-    // disableLabel: false
   },
   modules: { // each module can contain its own state, mutations, actions, etc.
   },
@@ -106,9 +96,6 @@ export const store = createStore<State>({
     setMatrixData(state, matrixData) {
       state.matrixData = matrixData
     },
-    // setAttentionData(state, attentionData) {
-    //   state.attentionData = attentionData
-    // },
     setTokenData(state, tokenData) {
       state.tokenData = tokenData
     },
@@ -160,9 +147,6 @@ export const store = createStore<State>({
     setShowAgg(state, showAgg) {
       state.showAgg = showAgg;
     },
-    // setAttentionByTokenLock(state, attentionByTokenLock) {
-    //   state.attentionByTokenLock = attentionByTokenLock;
-    // },
     setModelType(state, modelType) {
       state.modelType = modelType
       console.log('setModelType', modelType);
@@ -206,10 +190,6 @@ export const store = createStore<State>({
       state.sizeByNorm = sizeByNorm;
       console.log('setSizeByNorm', sizeByNorm);
     },
-    // setDisableLabel(state, disableLabel) {
-    //   state.disableLabel = disableLabel;
-    //   console.log('setDisableLabel', disableLabel);
-    // }
   },
   actions: { // actions commit mutations
     async init({ state, dispatch }) {
@@ -217,14 +197,11 @@ export const store = createStore<State>({
     },
     async computeData({state, commit}) {
       commit("updateRenderState", true);
-      // console.log("computing data!");
       const matrixData = (await dataService.getMatrixData(state.modelType)).data;
       commit('setMatrixData', Object.freeze(matrixData));
-      // console.log('setMatrixData', Object.freeze(matrixData));
 
       const tokenData = (await dataService.getTokenData(state.modelType)).tokens;
       commit('setTokenData', Object.freeze(tokenData));
-      // console.log('setTokenData', Object.freeze(tokenData));
 
       commit('updateDoneLoading', true);
     },
@@ -234,16 +211,10 @@ export const store = createStore<State>({
       dispatch('computeData');
     },
     async setClickedPoint({state, commit}, pt: Typing.Point) {
-      // if (state.attentionByTokenLock) {
-      //   console.log('Lock');
-      //   return;
-      // } 
-      // commit('setAttentionByTokenLock', true); 
       console.log('setClickedPoint', pt);
       const attentionByToken = (await dataService.getAttentionByToken(pt, state.modelType));
       console.log('attentionDataByToken', attentionByToken);
       commit('setAttentionByToken', attentionByToken);
-      // commit('setAttentionByTokenLock', false)
     }
   },
   strict: process.env.NODE_ENV !== "production"
