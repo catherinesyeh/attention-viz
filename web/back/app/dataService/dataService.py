@@ -1,33 +1,19 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
-import os
-import datetime
-import math
 import numpy as np
-import pandas as pd
-import re
-import sys
 import json
-import itertools
-from typing import List
-from os.path import dirname, abspath, join, relpath
+from os.path import dirname, abspath, join
 import copy
 import io
 from PIL import Image
-from base64 import encodebytes
 from glob import glob
-from flask import jsonify
-import zipfile
 import json
 import time
 import base64
 import io
 import copy
 import cv2
-from scipy.stats import mode
-import matplotlib.pyplot as plt
 
-# get the /TableCharts
+# set root directory for data
 # Alter: abspath('') is called from back/run.py
 rootDir = dirname(abspath(''))
 # rootDir = "E:\\attention-viz\\web\\"
@@ -83,6 +69,7 @@ def read_agg_attn_data(model):
         model, time.time()-time_start))
     return d
 
+# HELPER FUNCTIONS
 # helper function for normalizing aggregate attn data
 
 
@@ -95,12 +82,16 @@ def normalize_attn(data):
         normalized_data.append(normalized_row)
     return normalized_data
 
+# decode image url
+
 
 def read_image_from_dataurl64(dataurl):
     image_bytes = base64.b64decode(str(dataurl[dataurl.find(",") + 1:]))
     image = np.asarray(Image.open(io.BytesIO(image_bytes)))
 
     return image
+
+# highlight patch in image
 
 
 def highlight_a_patch(image, row, col, patch_size, width=3, c=[255, 230, 10]):
@@ -120,6 +111,8 @@ def highlight_a_patch(image, row, col, patch_size, width=3, c=[255, 230, 10]):
 
     return image
 
+# highlight image patches
+
 
 def highlight_patches(image, patch_size):
     image_copy = image.copy()
@@ -135,6 +128,8 @@ def highlight_patches(image, patch_size):
 
     return image_copy
 
+# convert image to url
+
 
 def convert_np_image_to_dataurl64(np_image, compression_scheme="png"):
     if np_image.max() < 1 and np_image.dtype != np.uint8:
@@ -149,19 +144,18 @@ def convert_np_image_to_dataurl64(np_image, compression_scheme="png"):
 
     return dataurl
 
+# overlay attention info on image
+
 
 def overlay_image_with_attention(image, attention, patch_size, norm_attention=True, boost=True):
     image_h = image.shape[0]
     image_w = image.shape[1]
     attention = copy.copy(attention)
     if norm_attention:
-        # attention.append(1 - sum(attention))
         attention = np.array(attention)
         attention -= (attention.min() * 0.25)
         attention /= attention.max()
-        # attention *= 3
         attention = np.clip(attention, 0, 1)
-        # attention = attention[:-1]
     else:
         attention = np.array(attention)
 
@@ -186,20 +180,19 @@ def overlay_image_with_attention(image, attention, patch_size, norm_attention=Tr
 
     return image
 
+# append cls token to image viz
+
 
 def append_cls(image, attention, color=[255, 255, 255, 255], border_width=4, norm_attention=True, boost=True):
     if norm_attention:
-        # attention.append(1 - sum(attention))
         attention = np.array(attention)
         attention -= (attention.min() * 0.25)
         attention /= attention.max()
-        # attention *= 3
         attention = np.clip(attention, 0, 1)
     if boost:
         attention = attention ** (1/2)
 
     pad = np.ones(shape=(50, 224, 4)) * 255
-    # pad[..., :3] = [245, 245, 247]
     pad[..., :3] = [255, 255, 255]
     pad = pad.astype("uint8")
 
@@ -238,17 +231,12 @@ def complement(r, g, b):
     k = hilo(r, g, b)
     return tuple(k - u for u in (r, g, b))
 
+# draw arrow on image
+
 
 def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 230, 50], enhance_contrast=False):
-    image_h = image.shape[0]
-    image_w = image.shape[1]
-
-    # rgba_image = image.copy()
-    # image = image[..., :3].reshape(image_h, image_w, 3)
-
     image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
     median_rgb = np.median(image.reshape(-1, image.shape[-1]), axis=0)
-    print(median_rgb)
     complement_color = complement(median_rgb[0], median_rgb[1], median_rgb[2])
     if enhance_contrast:
         color = np.array([int(c) for c in complement_color])
@@ -335,11 +323,15 @@ def draw_arrow_on_image(image, attentions, patch_size, thickness=1, color=[245, 
 
     return image
 
+# resize image
+
 
 def resize_image(image, factor=1, interp_method=cv2.INTER_NEAREST):
     image = cv2.resize(image, (0, 0), fx=factor, fy=factor,
                        interpolation=interp_method)
     return image
+
+# draw arrow
 
 
 def draw_arrow(image, pt1, pt2, color, thickness=1, lineType=cv2.LINE_AA):
@@ -374,7 +366,6 @@ def draw_arrow_only(image, attentions, patch_size, thickness=1, color=[245, 230,
             color = color * (50 / arrow_luminance)
         color = np.clip(color, 0, 255).astype("uint8")
         color = color.tolist()
-#     print(color)
     color = color + [255]
 
     attentions = copy.copy(attentions)
@@ -476,22 +467,13 @@ def draw_arrow_only(image, attentions, patch_size, thickness=1, color=[245, 230,
 
     return image
 
+# dataservice object
+
 
 class DataService(object):
     def __init__(self):
         print('------inited------')
-        # self.df = pd.read_csv(join(rootDir, 'prodata', 'pro_data_results.csv')) .h5 .npy
-        # read data here
-
-        # self.all_data = {}
-        # for model in os.listdir(join(rootDir, 'data')):
-        #     if model.startswith("."):
-        #         continue
-        #     self.all_data[model] = {}
-        #     self.all_data[model]["matrix"] = read_matrix_data(model)
-        #     self.all_data[model]["attention"] = read_attention_data(model)
-        #     self.all_data[model]["token"] = read_token_data(model)
-
+        # reading in data
         # bert
         self.matrix_data_bert = read_matrix_data("bert")
         self.attention_data_bert = read_attention_data("bert")
@@ -516,10 +498,6 @@ class DataService(object):
 
         return None
 
-    # def get_raw_data(self):
-    #     # return data to the front end
-    #     return self.data
-
     def get_matrix_data(self, model):
         if model == "bert":
             return self.matrix_data_bert
@@ -528,11 +506,6 @@ class DataService(object):
         elif model == "vit-32":
             return self.matrix_data_vit_32
         return self.matrix_data_gpt
-
-    # def get_attention_data(self, model):
-    #     if model == "bert":
-    #         return self.attention_data_bert
-    #     return self.attention_data_gpt
 
     def get_token_data(self, model):
         if model == "bert":
@@ -544,7 +517,6 @@ class DataService(object):
         return self.token_data_gpt
 
     def get_attention_by_token(self, token, model):
-        print(model)
         layer = token['layer']
         head = token['head']
         index = token['index']
@@ -633,13 +605,11 @@ class DataService(object):
         attn = [t['attention'] for t in attns]
         attns_vis = [t['attention'] for t in attns_vis]
         agg_attn = [] if model not in ["bert", "gpt-2"] else normalize_attn([t['attention'][:num_tokens]
-                                                                           for t in agg_attns])
+                                                                             for t in agg_attns])
         norms = [] if model != "gpt-2" else [t['value_norm'] for t in attns]
         agg_norms = [] if model != "gpt-2" else [t['value_norm'] for t in agg_attns]
 
         if model == "vit-32":
-            # overlaid_image = overlay_image_with_attention(image.copy(), attn[index % 49], 32,
-            #                                               norm_attention=True if self.token_data_vit_32['tokens'][index]['type'] == "query" else False)
             overlaid_image = overlay_image_with_attention(
                 image.copy(), attns_vis[index % 50], 32)
             overlaid_image = highlight_patches(overlaid_image, 32)
