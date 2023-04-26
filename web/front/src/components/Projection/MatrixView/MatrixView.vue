@@ -102,7 +102,7 @@ export default defineComponent({
             transitionInProgress: false,
             attentionLoading: computed(() => store.state.attentionLoading),
             modelType: computed(() => store.state.modelType),
-            resetting: false,
+            resetting: false
         });
 
         let deckgl = {} as Deck;
@@ -114,6 +114,7 @@ export default defineComponent({
                 x: [0, 0],
                 y: [0, 0],
             },
+            images: []
         } as Typing.Projection);
 
         // helper functions for layers
@@ -1111,6 +1112,11 @@ export default defineComponent({
             }
         });
 
+        const getImages = () => {
+            let { images } = shallowData.value;
+            return images;
+        }
+
         // watchers
         watch([() => state.matrixData, () => state.tokenData],
             () => {
@@ -1215,6 +1221,7 @@ export default defineComponent({
             onSearch,
             printViewport,
             zoomToPlot,
+            getImages
         });
 
         return {

@@ -86,7 +86,8 @@ export namespace Typing {
         range: {
             x: [number, number];
             y: [number, number];
-        }
+        },
+        images: string[]
     }
     export interface AttnByToken {
         layer: number;

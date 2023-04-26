@@ -104,9 +104,11 @@ export default {
 
 #bertviz.image-viz {
     width: 200px !important;
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(-40px);
     left: 50%;
     height: 495px !important;
+    pointer-events: none !important;
+    cursor: default !important;
 }
 
 .bertviz,

@@ -12,6 +12,9 @@
                             </template>
                             <font-awesome-icon icon="info" class="info-icon first" />
                         </a-tooltip></span></p>
+                <Transition>
+                    <DataGrid ref="dataGrid" v-show="modelType.includes('vit') && mode === 'single'" />
+                </Transition>
             </div>
             <div id="bottom-left-box" v-show="!renderState">
                 <a-button type="primary" id="about" @click="showModal">about this tool</a-button>
@@ -172,15 +175,17 @@ import { useStore } from "@/store/index";
 
 import MatrixView from "./MatrixView/MatrixView.vue";
 import Legend from "./Legend/Legend.vue";
+import DataGrid from "./DataGrid/DataGrid.vue";
 import { ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons-vue";
 
 export default defineComponent({
-    components: { MatrixView, Legend, ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined },
+    components: { MatrixView, Legend, DataGrid, ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined },
     setup() {
         const store = useStore();
 
         const matrixView = ref(null);
         const legend = ref(null);
+        const dataGrid = ref(null);
 
         const state = reactive({
             mode: computed(() => store.state.mode),
@@ -206,6 +211,7 @@ export default defineComponent({
 
         onMounted(() => {
             switchPlaceholder();
+            // showImages();
         })
 
         const onClickReset = () => {
@@ -285,7 +291,7 @@ export default defineComponent({
         const switchPlaceholder = () => {
             if (state.modelType == 'vit-32' || state.modelType == 'vit-16') {
                 state.placeholder = "e.g., person, background";
-                state.num_message = state.modelType == 'vit-32' ? "8 images" : "6 images";
+                state.num_message = state.modelType == 'vit-32' ? "10 images" : "6 images";
             } else {
                 state.placeholder = "e.g., cat, april";
                 state.num_message = state.modelType == "bert" ? "84 sentences" : "87 sentences";
@@ -312,8 +318,15 @@ export default defineComponent({
 
         // switch color msg
         const setColorMsg = (msg: string) => {
-            console.log(msg);
             (legend.value as any).setColorMsg(msg);
+        }
+
+        // show image data
+        const showImages = () => {
+            if (state.modelType.includes('vit')) {
+                const images = (matrixView.value as any).getImages();
+                (dataGrid.value as any).drawGrid(images);
+            }
         }
 
         watch(() => state.view,
@@ -336,9 +349,16 @@ export default defineComponent({
                 switchPlaceholder();
             })
 
+        watch(() => state.renderState, () => {
+            if (!state.renderState) {
+                showImages();
+            }
+        })
+
         return {
             ...toRefs(state),
             legend,
+            dataGrid,
             matrixView,
             onClickReset,
             resetToMatrix,

@@ -10,7 +10,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
 
     const rows = tokenData.map(td => td.position);
 
-    num_tokens = Math.max(...rows)
+    num_tokens = Math.max(...rows);
 
     // compute msgs for each token
     const pos_msgs = tokenData.map(
@@ -235,10 +235,15 @@ const computeMatrixProjectionLabel = (matrixData: Typing.MatrixData[], matrixCel
 
 const computeVitMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20, num_tokens = 7): Typing.Projection => {
     const pts = computeMatrixProjectionPoint(matrixData, tokenData, matrixCellWidth, matrixCellHeight, matrixCellMargin, num_tokens)
+    
+    // get unique images
+    const images = tokenData.filter(td => td.originalImagePath != 'null').map(td => td.originalImagePath);
+    const uniqueImages = [...new Set(images)];
     return {
         'points': pts.points,
         'range': pts.range,
-        'headings': computeMatrixProjectionLabel(matrixData, matrixCellWidth, matrixCellHeight, matrixCellMargin)
+        'headings': computeMatrixProjectionLabel(matrixData, matrixCellWidth, matrixCellHeight, matrixCellMargin),
+        'images': uniqueImages
     }
 }
 

@@ -247,7 +247,6 @@ export default defineComponent({
 
     const getColorMsg = () => {
       const colorMsg = state.colorByDict[state.colorBy];
-      console.log(colorMsg);
       (projection.value as any).setColorMsg(colorMsg);
     }
 

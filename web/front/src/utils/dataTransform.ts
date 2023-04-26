@@ -332,7 +332,8 @@ const computeMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typ
     return {
         'points': pts.points,
         'range': pts.range,
-        'headings': computeMatrixProjectionLabel(matrixData, matrixCellWidth, matrixCellHeight, matrixCellMargin)
+        'headings': computeMatrixProjectionLabel(matrixData, matrixCellWidth, matrixCellHeight, matrixCellMargin),
+        'images': []
     }
 }
 

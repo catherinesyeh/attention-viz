@@ -68,8 +68,8 @@
 import { onMounted, computed, reactive, toRefs, h, watch } from "vue";
 import * as _ from "underscore";
 import { useStore } from "@/store/index";
-import { BitmapLayer, IconLayer } from "@deck.gl/layers/typed";
-import { COORDINATE_SYSTEM, Deck } from "@deck.gl/core/typed";
+import { BitmapLayer } from "@deck.gl/layers/typed";
+import { Deck } from "@deck.gl/core/typed";
 
 export default {
     components: {},

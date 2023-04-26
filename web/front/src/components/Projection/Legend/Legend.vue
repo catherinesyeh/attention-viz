@@ -80,7 +80,6 @@ export default defineComponent({
 
         // change msg below legend
         const setColorMsg = (msg: string) => {
-            console.log(msg);
             state.colorMsg = msg;
         }
 
