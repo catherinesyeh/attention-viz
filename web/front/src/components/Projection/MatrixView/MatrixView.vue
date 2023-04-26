@@ -878,6 +878,9 @@ export default defineComponent({
                 initialViewState: state.viewState,
                 layers: toLayers(),
                 getTooltip: ({ object }) => {
+                    if (state.mode === 'matrix' && (!object || !object.title)) {
+                        return null;
+                    }
                     const getMsg = (d: Typing.Point) => {
                         switch (state.colorBy) {
                             case 'query_key':
