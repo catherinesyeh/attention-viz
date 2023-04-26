@@ -32,6 +32,19 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     const minSentLength = lengths.reduce((a, b) => Math.min(a, b), Infinity);
     const rangeSentLength = maxSentLength - minSentLength;
 
+    // get token frequencies too
+    let maxFreq = 0; // max token frequency
+
+    const tokFreq = values.reduce((acc: any, curr: any) => {
+        acc[curr] = (acc[curr] ?? 0) + 1;
+        if (acc[curr] > maxFreq) {
+            maxFreq = acc[curr];
+        }
+        return acc;
+    }, {});
+
+    const rangeFreq = maxFreq - 2;
+
     // compute colors for each token
     // by position
     const queryColor = d3.scaleSequential(function (t) {
@@ -80,6 +93,21 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         return [color.r, color.g, color.b];
     };
     const colorsBySentLength = tokenData.map((td) => getSentColor(td));
+
+    // by token frequency
+    const getFreqColor = (td: Typing.TokenData) => {
+        var colorstr = "rgb()";
+        const freq = tokFreq[td.value] - 2;
+        if (td.type === "query") {
+            colorstr = queryColor(freq / rangeFreq);
+        } else if (td.type === "key") {
+            colorstr = keyColor(freq / rangeFreq);
+        }
+        const color = d3.color(colorstr)?.rgb();
+        if (!color) return [0, 0, 0];
+        return [color.r, color.g, color.b];
+    };
+    const colorsByFreq = tokenData.map((td) => getFreqColor(td));
 
     // by categorical position
     const discreteColors =  ["#F5C0CA","#E3378F","#F0D6A5","#EDB50E","#C4D6B8","#5FB96C","#C8DDED","#528DDB","#D6BAE3","#A144DB"];
@@ -131,6 +159,10 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
     const length_msgs = tokenData.map(
         (td) =>
             `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length - 1}, length: ${td.value.length})`
+    );
+    const freq_msgs = tokenData.map(
+        (td) => 
+        `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, pos: ${td.pos_int} of ${td.length - 1}, freq: ${tokFreq[td.value]})`
     );
 
     // for recording the x/y ranges
@@ -270,6 +302,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 embed_norm: colorsByNorm[index],
                 token_length: colorsByLength[index],
                 sent_length: colorsBySentLength[index],
+                token_freq: colorsByFreq[index],
                 row: colorsByPosition[index],
                 column: colorsByPosition[index],
                 qk_map: colorsByPosition[index],
@@ -279,7 +312,8 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 position: pos_msgs[index],
                 categorical: cat_msgs[index],
                 norm: norm_msgs[index],
-                length: length_msgs[index]
+                length: length_msgs[index],
+                freq: freq_msgs[index]
             },
             layer,
             head,

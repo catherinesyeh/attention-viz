@@ -324,6 +324,8 @@ export default defineComponent({
                                 return d.color.token_length
                             case 'sent_length':
                                 return d.color.sent_length
+                            case 'token_freq':
+                                return d.color.token_freq
                             default:
                                 throw Error('invalid color channel')
                         }
@@ -898,6 +900,8 @@ export default defineComponent({
                                 return d.msg.norm
                             case 'token_length':
                                 return d.msg.length
+                            case 'token_freq':
+                                return d.msg.freq
                             default:
                                 throw Error('invalid msg channel')
                         }
@@ -1237,5 +1241,6 @@ export default defineComponent({
 <style lang="scss" scoped>
 #matrix-canvas {
     transition: 0.5s;
+    transform: translateY(-2.5%);
 }
 </style>

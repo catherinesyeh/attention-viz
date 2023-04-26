@@ -3,7 +3,7 @@
         <div class="legend-box" v-show="!renderState">
             <div id="legend" v-show="colorBy != 'no_outline'">
                 <div class="bar-contain" :class="{
-                        pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
+                        pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length' || colorBy == 'token_freq', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
                     }">
                     <span>q</span>
                     <div class="bar">
@@ -12,7 +12,7 @@
                     </div>
                 </div>
                 <div class="bar-contain k" :class="{
-                    pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
+                    pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length' || colorBy == 'token_freq', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
                 }">
                     <span>k</span>
                     <div class="bar">
@@ -49,6 +49,7 @@ export default defineComponent({
                 case 'row':
                 case 'column':
                 case 'sent_length':
+                case 'token_freq':
                     return "0"
                 case 'embed_norm':
                     return "low"
@@ -63,6 +64,7 @@ export default defineComponent({
                 case 'position':
                 case 'token_length':
                 case 'sent_length':
+                case 'token_freq':
                     return "1"
                 case 'row':
                 case 'column':

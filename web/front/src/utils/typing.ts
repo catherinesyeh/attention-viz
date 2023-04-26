@@ -50,6 +50,7 @@ export namespace Typing {
         embed_norm: number[];
         token_length: number[];
         sent_length: number[];
+        token_freq: number[];
         row: number[];
         column: number[];
         qk_map: number[];
@@ -60,6 +61,7 @@ export namespace Typing {
         categorical: string;
         norm: string;
         length: string;
+        freq: string;
     }
     export interface Point {
         coordinate: PointCoordinate;

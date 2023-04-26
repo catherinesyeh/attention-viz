@@ -177,6 +177,7 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 embed_norm: colorsByType[index],
                 token_length: colorsByType[index],
                 sent_length: colorsByType[index],
+                token_freq: colorsByType[index],
                 row: colorsByRow[index],
                 column: colorsByCol[index],
                 qk_map: colorsByType[index],
@@ -186,7 +187,8 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 position: pos_msgs[index],
                 categorical: cat_msgs[index],
                 norm: norm_msgs[index],
-                length: length_msgs[index]
+                length: length_msgs[index],
+                freq: pos_msgs[index]
             },
             layer,
             head,

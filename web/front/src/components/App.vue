@@ -217,7 +217,7 @@ export default defineComponent({
       const curColorBy = state.colorBy;
       let color_opts = [];
       if (state.modelType == "bert" || state.modelType == "gpt-2") {
-        color_opts = ["query_key", "position", "pos_mod_5", "punctuation", "embed_norm", "token_length", "sent_length"];
+        color_opts = ["query_key", "position", "pos_mod_5", "punctuation", "embed_norm", "token_length", "sent_length", "token_freq"];
         state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
         state.colorByDict = {
           "query_key": "token type, query or key",
@@ -226,7 +226,8 @@ export default defineComponent({
           "punctuation": "punctuation vs. non-punctuation tokens",
           "embed_norm": "darkness encodes token embedding norm",
           "token_length": "darkness encodes # chars in token (normalized)",
-          "sent_length": "darkness encodes # tokens in sentence (normalized)"
+          "sent_length": "darkness encodes # tokens in sentence (normalized)",
+          "token_freq": "darkness encodes frequency of token in dataset (normalized)"
         }
 
       } else {
@@ -237,7 +238,7 @@ export default defineComponent({
           "qk_map": "token type, query or key (fill)",
           "row": "darkness encodes row of patch in image (fill)",
           "column": "darkness encodes column of patch in image (fill)",
-          "no_outline": "original image patch without q/k outline"
+          "no_outline": "original image patch without q/k outline",
         }
       }
       if (!color_opts.includes(curColorBy)) {
@@ -381,6 +382,7 @@ body {
 
 nav.navbar {
   background: var(--navbar) !important;
+  z-index: 10;
 }
 
 .navbar-brand {
@@ -394,6 +396,16 @@ nav.navbar {
 label {
   margin-right: 5px;
   margin-left: 10px;
+}
+
+.deck-tooltip {
+  margin-top: calc(-15px - 0.75vh);
+}
+
+@media (max-height:800px) {
+  .deck-tooltip {
+    margin-top: -15px;
+  }
 }
 
 .deck-tooltip .query {

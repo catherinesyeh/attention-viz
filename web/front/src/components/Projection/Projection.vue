@@ -40,12 +40,14 @@
                     <p>This visualization requires many megabytes and may take up to a minute to render.</p>
                 </div>
                 <div id="matrix-labels" v-show="!renderState">
-                    <p class="axis-label" :class="{ transparent: mode === 'single' }">
-                        <span class="head-axis">head →</span>
-                        <span class="layer-axis">layer ↓</span>
-                    </p>
+                    <Transition>
+                        <p class="axis-label" v-show="mode !== 'single'">
+                            <span class="head-axis">head →</span>
+                            <span class="layer-axis">layer ↓</span>
+                        </p>
+                    </Transition>
 
-                    <p class="label">Search<a-tooltip placement="rightBottom">
+                    <p class="label" :class="{ noMargin: mode === 'single' }">Search<a-tooltip placement="rightBottom">
                             <template #title>
                                 <span>search for <span v-if="!modelType.includes('vit')">a token</span><span v-else>an
                                         object</span></span>
@@ -402,8 +404,8 @@ export default defineComponent({
     transition: 0.5s;
 }
 
-.axis-label.transparent {
-    opacity: 0;
+.label.noMargin {
+    margin-top: 0 !important;
 }
 
 p.label {
