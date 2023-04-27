@@ -356,6 +356,9 @@ export default defineComponent({
                     }
                     if (state.view != "attn") { // switch to attention view if not already
                         store.commit("setView", 'attn');
+                        if (!state.showAll) {
+                            store.commit("setShowAll", true); // turn on labels by default
+                        }
                     }
                     store.commit("updateAttentionLoading", true);
 
@@ -517,6 +520,9 @@ export default defineComponent({
                     }
                     if (state.view != "attn") {
                         store.commit("setView", 'attn');
+                        if (!state.showAll) {
+                            store.commit("setShowAll", true); // turn on labels by default
+                        }
                     }
                     store.commit("updateAttentionLoading", true);
 
@@ -574,23 +580,18 @@ export default defineComponent({
                         return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
                     }
                     let coord = getPointCoordinate(d);
-                    let whiteOffset = state.zoom <= 3.5
-                        ? 0.1
-                        : state.zoom <= 5.5
-                            ? 0.1 / state.zoom
-                            : state.zoom <= 8
-                                ? 0.08 / state.zoom
-                                : 0.05 / (1.5 * state.zoom);
-
-                    if (state.modelType == "vit-32" || state.modelType == "vit-16") {
-                        coord[0] += 1 / Math.pow(3, state.zoom);
+                    return coord;
+                },
+                getText: (d: Typing.Point) => {
+                    if (state.view != "attn") {
+                        return d.value;
                     }
 
-                    let offset = 1 / Math.pow(1.5, state.zoom) + whiteOffset;
-
-                    return [coord[0] + offset, coord[1] + whiteOffset];
+                    if (state.modelType == "bert" || state.modelType == "gpt-2") {
+                        return state.tokenData[d.index].pos_int + ":" + d.value;
+                    }
+                    return " " + state.tokenData[d.index].value + "\n (" + state.tokenData[d.index].position + "," + state.tokenData[d.index].pos_int + ")";
                 },
-                getText: (d: Typing.Point) => d.value,
                 getColor: (d: Typing.Point) => {
                     if (!state.showAll || !visiblePoints[d.index]) {
                         return [255, 255, 255, 0];
@@ -599,6 +600,9 @@ export default defineComponent({
                         ? [255, 255, 255, defaultOpacity]
                         : [0, 0, 0, defaultOpacity];
                 },
+                fontSettings: { sdf: true },
+                outlineWidth: 2,
+                outlineColor: [255, 255, 255, defaultOpacity],
                 getSize: 12,
                 getAngle: 0,
                 getTextAnchor: "start",
@@ -610,7 +614,7 @@ export default defineComponent({
             });
         };
 
-        const toPointLabelLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
+        const toPointLabelLayer = (points: Typing.Point[]) => {
             // main text labels for scatterplot points
             return new TextLayer({
                 id: "point-label-layer",
@@ -618,81 +622,21 @@ export default defineComponent({
                 pickable: false,
                 characterSet: 'auto',
                 getPosition: (d: Typing.Point) => {
-                    if (!state.showAll || !visiblePoints[d.index]) {
-                        return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
-                    }
                     let coord = getPointCoordinate(d);
                     let offset = 1 / Math.pow(1.5, state.zoom);
                     return coord.length == 2
                         ? [coord[0] + offset, coord[1]]
                         : [coord[0] + offset, coord[1], coord[2] + offset];
                 },
-                getText: (d: Typing.Point) => d.value,
-                getColor: (d: Typing.Point) => {
-                    if (!state.showAll || !visiblePoints[d.index]) {
-                        return [255, 255, 255, 0];
-                    }
-                    if (state.view != 'search' && state.highlightedTokenIndices.length === 0)
-                        return d.type == "query"
-                            ? state.userTheme == "light-theme"
-                                ? [43, 91, 25, defaultOpacity]
-                                : [194, 232, 180, defaultOpacity]
-                            : state.userTheme == "light-theme"
-                                ? [117, 29, 58, defaultOpacity]
-                                : [240, 179, 199, defaultOpacity]
-                    return state.highlightedTokenIndices.includes(d.index)
-                        ? d.type == "query"
-                            ? state.userTheme == "light-theme"
-                                ? [43, 91, 25, defaultOpacity]
-                                : [194, 232, 180, defaultOpacity]
-                            : state.userTheme == "light-theme"
-                                ? [117, 29, 58, defaultOpacity]
-                                : [240, 179, 199, defaultOpacity]
-                        : d.type == "query"
-                            ? state.userTheme == "light-theme"
-                                ? [43, 91, 25, lightOpacity]
-                                : [194, 232, 180, lightOpacity]
-                            : state.userTheme == "light-theme"
-                                ? [117, 29, 58, lightOpacity]
-                                : [240, 179, 199, lightOpacity];
-                },
-                getSize: 12,
-                getAngle: 0,
-                getTextAnchor: "start",
-                getAlignmentBaseline: "center",
-                updateTriggers: {
-                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
-                    getPosition: [state.projectionMethod, state.zoom, state.dimension]
-                },
-            });
-        };
-
-        const toAttentionLabelLayer = (points: Typing.Point[]) => {
-            // text labels for tokens in currently highlighted sentence
-            return new TextLayer({
-                id: "attention-label-layer",
-                data: points,
-                pickable: false,
-                characterSet: 'auto',
-                getPosition: (d: Typing.Point) => {
-                    let coord = getPointCoordinate(d);
-                    let offset = 1 / (0.3 * state.zoom);
-                    if (state.zoom > 4 && state.zoom <= 6) {
-                        offset = 1 / (0.5 * state.zoom);
-                    }
-                    else if (state.zoom > 6) {
-                        offset = 1 / ((state.zoom - 5) * state.zoom);
-                    }
-                    return coord.length == 2
-                        ? [coord[0] + offset, coord[1]]
-                        : [coord[0] + offset, coord[1], coord[2] + offset];
-                },
                 getText: (d: Typing.Point) => {
+                    if (state.view != "attn") {
+                        return d.value;
+                    }
+                    // otherwise, in attn view
                     if (state.modelType == "bert" || state.modelType == "gpt-2") {
                         return state.tokenData[d.index].pos_int + ":" + d.value
-                    } else {
-                        return " " + state.tokenData[d.index].value + "\n (" + state.tokenData[d.index].position + "," + state.tokenData[d.index].pos_int + ")"
                     }
+                    return " " + state.tokenData[d.index].value + "\n (" + state.tokenData[d.index].position + "," + state.tokenData[d.index].pos_int + ")"
                 },
                 getColor: (d: Typing.Point) => {
                     return d.type == "query"
@@ -703,12 +647,19 @@ export default defineComponent({
                             ? [117, 29, 58, defaultOpacity]
                             : [240, 179, 199, defaultOpacity]
                 },
+                fontSettings: { sdf: true },
+                fontWeight: "bold",
+                outlineWidth: 1,
+                outlineColor: state.userTheme == "light-theme"
+                    ? [255, 255, 255, defaultOpacity]
+                    : [0, 0, 0, defaultOpacity],
                 getSize: 12,
                 getAngle: 0,
                 getTextAnchor: "start",
                 getAlignmentBaseline: "center",
                 updateTriggers: {
                     getColor: [state.userTheme],
+                    outlineColor: [state.userTheme],
                     getPosition: [state.projectionMethod, state.zoom, state.dimension]
                 },
             })
@@ -812,23 +763,24 @@ export default defineComponent({
                     }
                 }
 
-                if (state.view == "attn") {
-                    if (attn_points.length == 0) {
-                        // always show labels in attn view
-                        attn_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                if (state.showAll) {
+                    let vis_points = [] as Typing.Point[];
+                    if (state.view == "attn") { // label points in clicked sentence/image if labels on
+                        if (attn_points.length == 0) {
+                            vis_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                        } else {
+                            vis_points = attn_points;
+                        }
+                    } else if (state.view == "search") { // label search results if labels on
+                        vis_points = layer_points.filter((v) => state.highlightedTokenIndices.includes(v.index));
+                    } else { // show staggered labels otherwise if labels on
+                        vis_points = layer_points.filter((v) => visiblePoints[v.index]);
                     }
-                    layers.push(toAttentionLabelLayer(attn_points));
+                    layers.push(toPointLabelLayer(vis_points));
                 }
+
                 layers.push(toPlotHeadLayer([layer_headings]));
 
-                if (state.view != "attn" && state.showAll) {
-                    if (state.dimension == "2D") {
-                        // only white outline around labels in 2d view
-                        layers.push(toLabelOutlineLayer(layer_points, visiblePoints));
-                    }
-
-                    layers.push(toPointLabelLayer(layer_points, visiblePoints));
-                }
                 return layers;
             }
             // else: return matrix view

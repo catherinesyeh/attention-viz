@@ -3,7 +3,11 @@
     <div>
         <!-- Matrix View -->
         <div id="matrix-wrapper">
-            <div id="top-right-box" v-show="!renderState">
+            <div id="loading" v-show="renderState">
+                <p>Loading...</p>
+                <p>This visualization requires many megabytes and may take up to a minute to render.</p>
+            </div>
+            <div id="top-right-box">
                 <p id="num-msg" class="subtitle"><b>data info:</b> based on {{ num_message }}<span
                         v-show="modelType.includes('vit')"><a-tooltip placement="bottom">
                             <template #title>
@@ -13,7 +17,7 @@
                             <font-awesome-icon icon="info" class="info-icon first" />
                         </a-tooltip></span></p>
                 <Transition>
-                    <DataGrid ref="dataGrid" v-show="modelType.includes('vit') && mode === 'single'" />
+                    <DataGrid ref="dataGrid" v-show="!renderState && modelType.includes('vit') && mode === 'single'" />
                 </Transition>
             </div>
             <div id="bottom-left-box" v-show="!renderState">
@@ -35,11 +39,7 @@
                 </a-button>
             </Transition>
             <div id="label-wrapper">
-                <div id="loading" v-show="renderState">
-                    <p>Loading...</p>
-                    <p>This visualization requires many megabytes and may take up to a minute to render.</p>
-                </div>
-                <div id="matrix-labels" v-show="!renderState">
+                <div id="matrix-labels">
                     <Transition>
                         <p class="axis-label" v-show="mode !== 'single'">
                             <span class="head-axis">head →</span>
@@ -75,7 +75,7 @@
                             <font-awesome-icon icon="info" class="info-icon first" />
                         </a-tooltip></p>
                     <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
-                        :class="{ disabled: mode == 'matrix' || view == 'attn' }">labels</a-checkbox>
+                        :class="{ disabled: mode == 'matrix' }">labels</a-checkbox>
                     <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
                         :class="{ disabled: mode == 'matrix' || view != 'attn' }">attention lines</a-checkbox>
 
@@ -343,6 +343,7 @@ export default defineComponent({
                 store.commit("setHighlightedTokenIndices", []);
                 if (state.searchToken.length > 0) {
                     state.searchToken = "";
+                    store.commit("setView", "none");
                 }
                 if (state.attnLoading) {
                     store.commit("updateAttentionLoading", false);
@@ -386,7 +387,7 @@ export default defineComponent({
 #label-wrapper {
     position: absolute;
     top: 15px;
-    left: 10px;
+    left: 15px;
     z-index: 9999;
 }
 
@@ -485,7 +486,7 @@ div.matrix-cell {
 #bottom-left-box {
     position: absolute;
     top: 15px;
-    right: 10px;
+    right: 15px;
     margin-bottom: 0;
     z-index: 10;
 }
@@ -493,7 +494,7 @@ div.matrix-cell {
 #bottom-left-box {
     position: absolute;
     bottom: 70px;
-    left: 10px;
+    left: 15px;
     z-index: 10;
     top: unset;
     right: unset;
@@ -503,7 +504,7 @@ div.matrix-cell {
 #clear-attn {
     position: absolute;
     left: 50%;
-    top: 20px;
+    top: 15px;
     transform: translate(-50%);
     z-index: 10;
 }

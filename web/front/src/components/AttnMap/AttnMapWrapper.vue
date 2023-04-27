@@ -58,9 +58,15 @@ export default {
 
 <style lang="scss">
 .viewHead {
-    margin-left: 10px;
-    margin-top: 10px;
+    margin-left: 15px;
+    margin-top: 15px;
     background-color: transparent !important;
+    padding-right: calc(0.5 * var(--bs-gutter-x));
+}
+
+#attn-map-view {
+    margin-left: 0;
+    padding-right: calc(var(--bs-gutter-x));
 }
 
 #show-agg {
@@ -122,10 +128,11 @@ export default {
     overflow-y: scroll;
     max-height: calc(90vh - 150px);
     padding-bottom: 10px;
+    margin: 0 15px;
 }
 
 .splitcol #vis {
-    max-height: calc(50vh - 130px) !important;
+    max-height: calc(50vh - 135px) !important;
 }
 
 // hide scrollbar but still allow scroll

@@ -208,7 +208,7 @@ export default {
                 store.commit('updateAttentionLoading', false);
 
             }
-            state.layerHead = "L" + state.curLayer + " H" + state.curHead;
+            state.layerHead = "Layer " + state.curLayer + " Head " + state.curHead;
 
             const params = {
                 attention: [

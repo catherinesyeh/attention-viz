@@ -46,7 +46,7 @@
         <a-select v-model:value="modelType" style="width: 80px" :options="modelOptions">
         </a-select>
 
-        <label for="graph-type">Graph Type:</label>
+        <label for="graph-type">Projection:</label>
         <a-tooltip placement="bottomRight">
           <template #title>
             <span>projection methods for creating joint q-k embeddings</span>
@@ -56,7 +56,7 @@
         <a-select v-model:value="projectionMethod" style="width: 80px" :options="projectionMethods">
         </a-select>
 
-        <label for="color-by">Color By:</label>
+        <label for="color-by">Color:</label>
         <a-tooltip placement="bottomRight">
           <template #title>
             <span>color encodings:</span>
@@ -78,11 +78,12 @@
   </nav>
   <div class="main">
     <div class="row">
-      <div class="col-2" style="position:relative">
-        <AttnMapWrapper id="attn-wrap" />
-      </div>
       <div class="col-10">
         <Projection ref="projection" />
+      </div>
+
+      <div class="col-2" style="position:relative">
+        <AttnMapWrapper id="attn-wrap" />
       </div>
     </div>
   </div>
@@ -357,7 +358,10 @@ body {
 }
 
 #loading {
-  padding: 80px 0;
+  padding: 40px;
+  transition: 0.5s;
+  width: 100%;
+  text-align: center;
   transition: 0.5s;
 }
 

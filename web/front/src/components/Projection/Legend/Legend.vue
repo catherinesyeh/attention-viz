@@ -5,7 +5,7 @@
                 <div class="bar-contain" :class="{
                         pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length' || colorBy == 'token_freq', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
                     }">
-                    <span>q</span>
+                    <span>query</span>
                     <div class="bar">
                         <span class="low">{{ lowLabel() }}</span>
                         <span class="high">{{ highLabel() }}</span>
@@ -14,7 +14,7 @@
                 <div class="bar-contain k" :class="{
                     pos: colorBy == 'row' || colorBy == 'column' || colorBy == 'position' || colorBy == 'embed_norm' || colorBy == 'token_length' || colorBy == 'sent_length' || colorBy == 'token_freq', cat: colorBy == 'pos_mod_5', pun: colorBy == 'punctuation'
                 }">
-                    <span>k</span>
+                    <span>key</span>
                     <div class="bar">
                         <span class="low">{{ lowLabel() }}</span>
                         <span class="high">{{ highLabel() }}</span>
@@ -101,23 +101,25 @@ export default defineComponent({
 
 <style lang="scss">
 .legend-box {
-    // margin-right: 10px;
     transition: 0.5s;
     position: absolute;
-    // top: 45%;
     bottom: 110px;
-    left: 10px;
+    left: 15px;
     max-width: 200px;
-    // transform: translateY(-50%);
 }
 
 #legend {
     display: flex;
 }
 
+#legend-msg {
+    margin-bottom: 5px;
+}
+
 .bar-contain {
     text-align: center;
     margin: 10px;
+    font-size: small;
 }
 
 /* default: type */
@@ -126,7 +128,7 @@ export default defineComponent({
     max-height: 300px;
     width: calc(20px + 0.2vw);
     background: rgb(95, 185, 108);
-    margin-top: 5px;
+    margin: 5px auto 0;
     transition: 0.5s;
     position: relative;
 }
@@ -137,12 +139,12 @@ export default defineComponent({
 
 /* position or norm */
 .bar-contain.pos .bar {
-    background: linear-gradient(45deg, #D3EDA1, #82CA7C, #00482A);
+    background: linear-gradient(to top, #ddefbb, #82CA7C, #00482A);
     height: calc(100px + 1vw);
 }
 
 .bar-contain.k.pos .bar {
-    background: linear-gradient(45deg, #CEA1CE, #E33F97, #5E021B);
+    background: linear-gradient(to top, #ead4ed, #E33F97, #5E021B);
 }
 
 /* categorical */

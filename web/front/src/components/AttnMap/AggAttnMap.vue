@@ -158,7 +158,7 @@ export default {
                 }
             }
 
-            state.layerHead = "L" + state.curLayer + " H" + state.curHead;
+            state.layerHead = "Layer " + state.curLayer + " Head " + state.curHead;
 
             const params = {
                 attention: [

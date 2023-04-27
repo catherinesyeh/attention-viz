@@ -108,7 +108,7 @@ export default {
             // parse info from data
             let { attentionByToken } = state;
 
-            state.layerHead = "L" + state.curLayer + " H" + state.curHead;
+            state.layerHead = "Layer " + state.curLayer + " Head " + state.curHead;
 
             const toOriginalImageLayer = new BitmapLayer({
                 id: 'bertviz-image',
