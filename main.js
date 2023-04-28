@@ -15,7 +15,7 @@ function load_graph(layer, head) {
     graph.html("<p class='emphasis loading'>loading...</p>"); // clear content + loading message
 
     // change graph displayed on UI
-    let directory = "plots/";
+    let directory = "./plots/";
     graph.load(directory + "layer" + layer + "_head" + head + ".html");
     attn_filter.fadeIn();
 }
@@ -48,9 +48,9 @@ function load_single_view(plot) {
 }
 
 function create_matrix(matrix, umap) {
-    let directory = "plot_imgs/";
+    let directory = "./plot_imgs/";
     if (umap) { // switch directory for umap
-        directory = "umap_imgs/";
+        directory = "./umap_imgs/";
     }
     // generate matrix of all plots
     let head_label = $("<p class='axis-label'><span class='head-axis'>head →</span><span class='layer-axis'>layer ↓</span></p>");
