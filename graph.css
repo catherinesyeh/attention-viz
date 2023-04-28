@@ -1,0 +1,39 @@
+.plotly-graph-div {
+    transition: 0.5s !important;
+}
+
+.plotly-graph-div.loading {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+}
+
+.cursor-ns-resize, .cursor-ew-resize, .cursor-ns-resize, .cursor-ew-resize {
+    display: none !important;
+    pointer-events: none !important;
+    cursor: default;
+}
+
+.selectionlayer path {
+    pointer-events: none !important;
+}
+
+.outline-controllers circle {
+    display: none !important;
+    pointer-events: none !important;
+    cursor: default;
+}
+
+.points .point.unselected {
+    pointer-events: none !important;
+}
+
+.cbcoloraxis .hycbcoloraxistitle {
+    cursor: pointer !important;
+    transition: 0.5s !important;
+    pointer-events: all !important;
+}
+
+.cbcoloraxis .hycbcoloraxistitle:hover {
+    fill: rgb(231, 169, 147) !important;
+    letter-spacing: 1px !important;
+}
