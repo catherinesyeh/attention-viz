@@ -9,8 +9,6 @@ from glob import glob
 import json
 import time
 import base64
-import io
-import copy
 import cv2
 
 # set root directory for data
