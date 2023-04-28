@@ -1,7 +1,8 @@
 # attention-viz
 Visualizing query-key interactions in language + vision transformers
 
-Demo: [http://attentionviz.com/](http://attentionviz.com/)
+* Demo: [http://attentionviz.com/](http://attentionviz.com/)
+* Docs: [https://catherinesyeh.github.io/attn-docs/](https://catherinesyeh.github.io/attn-docs/)
 
 ## set up instructions
 1. Clone repo and navigate into folder: 
