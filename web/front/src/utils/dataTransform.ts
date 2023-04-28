@@ -1,6 +1,5 @@
 import { Typing } from "@/utils/typing";
 import * as d3 from "d3";
-import { image } from "d3";
 import * as _ from "underscore";
 
 /* Utility functions for helping render visualization */
@@ -363,11 +362,15 @@ const computeMatrixProjectionLabel = (matrixData: Typing.MatrixData[], matrixCel
 // compute projection for each point
 const computeMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20): Typing.Projection => {
     const pts = computeMatrixProjectionPoint(matrixData, tokenData, matrixCellWidth, matrixCellHeight, matrixCellMargin)
+
+    // get unique sentences
+    const sentences = tokenData.map(td => td.sentence);
+    const uniqueSentences = [...new Set(sentences)];
     return {
         'points': pts.points,
         'range': pts.range,
         'headings': computeMatrixProjectionLabel(matrixData, matrixCellWidth, matrixCellHeight, matrixCellMargin),
-        'images': []
+        'unique': uniqueSentences
     }
 }
 

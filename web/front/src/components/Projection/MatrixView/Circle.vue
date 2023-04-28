@@ -21,7 +21,7 @@ $duration: 1.4s;
 .spinner {
     animation: circle-rotator $duration linear infinite;
     position: absolute;
-    left: 180px;
+    right: 15px;
     top: 15px;
     width: 40px;
     height: 40px;

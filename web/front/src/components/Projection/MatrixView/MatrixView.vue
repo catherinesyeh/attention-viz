@@ -1,6 +1,6 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
-    <div>
+    <div id="mv-wrap">
         <Transition>
             <Circle v-show="attentionLoading || transitionInProgress" />
         </Transition>
@@ -114,7 +114,7 @@ export default defineComponent({
                 x: [0, 0],
                 y: [0, 0],
             },
-            images: []
+            unique: []
         } as Typing.Projection);
 
         // helper functions for layers
@@ -1071,9 +1071,9 @@ export default defineComponent({
             }
         });
 
-        const getImages = () => {
-            let { images } = shallowData.value;
-            return images;
+        const getUnique = () => {
+            let { unique } = shallowData.value;
+            return unique;
         }
 
         // watchers
@@ -1180,7 +1180,7 @@ export default defineComponent({
             onSearch,
             printViewport,
             zoomToPlot,
-            getImages
+            getUnique
         });
 
         return {
@@ -1194,5 +1194,14 @@ export default defineComponent({
 #matrix-canvas {
     transition: 0.5s;
     transform: translateY(-2.5%);
+}
+
+#mv-wrap {
+    width: 100%;
+    position: absolute;
+    left: 0;
+    height: 100vh;
+    top: 50px;
+    z-index: 0;
 }
 </style>

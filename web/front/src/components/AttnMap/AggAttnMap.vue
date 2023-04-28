@@ -2,12 +2,12 @@
     <div class="viewHead" id="attn-map-view">
         <div class="align-top">
             <Transition>
-                <p v-show="showAttn">Aggregate View<a-tooltip placement="rightTop">
+                <p v-show="showAttn">Aggregate View<a-tooltip placement="bottom">
                         <template #title>
                             <span>aggregate sentence-level attention patterns for this attention head</span>
                         </template>
-                        <font-awesome-icon icon="info" class="info-icon first" />
-                    </a-tooltip> ({{ layerHead }})
+                        <font-awesome-icon icon="info" class="info-icon" />
+                    </a-tooltip>
                 </p>
             </Transition>
             <Transition>
@@ -64,7 +64,6 @@ export default {
             view: computed(() => store.state.view),
             curLayer: computed(() => store.state.layer),
             curHead: computed(() => store.state.head),
-            layerHead: "",
             userTheme: computed(() => store.state.userTheme),
             mode: computed(() => store.state.mode),
             model: computed(() => store.state.modelType),
@@ -157,8 +156,6 @@ export default {
                     state.cur_attn = weightAttn(state.cur_attn);
                 }
             }
-
-            state.layerHead = "Layer " + state.curLayer + " Head " + state.curHead;
 
             const params = {
                 attention: [

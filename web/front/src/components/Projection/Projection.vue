@@ -1,58 +1,91 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
     <div>
-        <!-- Matrix View -->
-        <div id="matrix-wrapper">
+
+        <Transition>
+            <a-button type="default" id="clear-attn"
+                v-show="!renderState && ((showAttn && view == 'attn') || view == 'search')" @click="clearSelection">
+                clear selection
+            </a-button>
+        </Transition>
+        <Transition>
             <div id="loading" v-show="renderState">
                 <p>Loading...</p>
                 <p>This visualization requires many megabytes and may take up to a minute to render.</p>
             </div>
-            <div id="top-right-box">
-                <p id="num-msg" class="subtitle"><b>data info:</b> based on {{ num_message }}<span
-                        v-show="modelType.includes('vit')"><a-tooltip placement="bottom">
-                            <template #title>
-                                <span>object labels are generated from a segmentation model and may not be 100%
-                                    accurate</span>
-                            </template>
-                            <font-awesome-icon icon="info" class="info-icon first" />
-                        </a-tooltip></span></p>
-                <Transition>
-                    <DataGrid ref="dataGrid" v-show="!renderState && modelType.includes('vit') && mode === 'single'" />
-                </Transition>
-            </div>
-            <div id="bottom-left-box" v-show="!renderState">
-                <a-button type="primary" id="about" @click="showModal">about this tool</a-button>
-                <a-modal v-model:visible="modalVisible" title="About Attention Viz" @ok="closeModal">
-                    <p><b>Attention Viz</b> is an interactive tool that visualizes global attention patterns for transformer
-                        models. To create this tool, we visualize the joint embeddings of <b class="green">query</b>
-                        and <b class="pink">key</b> vectors. Click a
-                        button below to learn more.</p>
-                    <a-button type="primary" id="docs-link" href="https://catherinesyeh.github.io/attn-docs/"
-                        target="_blank">Documentation</a-button>
-                    <a-button type="primary" id="paper-link" class="disabled">arXiv Preprint: Coming Soon!</a-button>
-                </a-modal>
-            </div>
-            <Transition>
-                <a-button type="default" id="clear-attn" v-show="!renderState && (view == 'attn' || view == 'search')"
-                    @click="clearSelection">
-                    clear selection
-                </a-button>
-            </Transition>
-            <div id="label-wrapper">
-                <div id="matrix-labels">
-                    <Transition>
-                        <p class="axis-label" v-show="mode !== 'single'">
-                            <span class="head-axis">head →</span>
-                            <span class="layer-axis">layer ↓</span>
-                        </p>
-                    </Transition>
+        </Transition>
+        <div class="row">
+            <div id="label-wrapper" class="col-2">
 
-                    <p class="label" :class="{ noMargin: mode === 'single' }">Search<a-tooltip placement="rightBottom">
+                <!-- left sidebar -->
+                <div id="matrix-labels">
+                    <div class="align-top label-grid">
+                        <div>
+                            <p v-if='mode === "single"'>Single View<a-tooltip placement="rightTop">
+                                    <template #title>
+                                        <span>q-k attention patterns for a single head</span>
+                                    </template>
+                                    <font-awesome-icon icon="info" class="info-icon" />
+                                </a-tooltip>
+
+                                <Transition>
+                                    <span>({{ "Layer " + curLayer + " Head " + curHead }})</span>
+                                </Transition>
+                            </p>
+                            <p v-else>Matrix View<a-tooltip placement="rightTop">
+                                    <template #title>
+                                        <span>q-k attention patterns for all attention heads</span>
+                                    </template>
+                                    <font-awesome-icon icon="info" class="info-icon" />
+                                </a-tooltip></p>
+
+                            <p id="attn-msg" class="subtitle">{{ attnMsg }}</p>
+                        </div>
+
+                        <Transition>
+                            <p class="axis-label" v-show="mode !== 'single'" :class="{ hide: mode === 'single' }">
+                                <span class="head-axis">head →</span>
+                                <span class="layer-axis">layer ↓</span>
+                            </p>
+                        </Transition>
+                    </div>
+
+                    <div class="label-grid">
+                        <div>
+                            <p class="label">Model<a-tooltip placement="right">
+                                    <template #title>
+                                        <span>transformer options:</span>
+                                        <ul>
+                                            <li v-for="option in modelOptions">
+                                                <i>{{ option.value }}</i> (<span
+                                                    v-if="option.value.includes('vit')">vision</span>
+                                                <span v-else>language</span>)
+                                            </li>
+                                        </ul>
+                                    </template>
+                                    <font-awesome-icon icon="info" class="info-icon" />
+                                </a-tooltip></p>
+                            <a-select v-model:value="modelType" style="width: 115px" :options="modelOptions">
+                            </a-select>
+                        </div>
+                        <div>
+                            <p class="label">Projection<a-tooltip placement="right">
+                                    <template #title>
+                                        <span>projection methods for creating joint q-k embeddings</span>
+                                    </template>
+                                    <font-awesome-icon icon="info" class="info-icon" />
+                                </a-tooltip></p>
+                            <a-select v-model:value="projectionMethod" style="width: 115px" :options="projectionMethods">
+                            </a-select>
+                        </div>
+                    </div>
+
+                    <p class="label">Search<a-tooltip placement="rightBottom">
                             <template #title>
                                 <span>search for <span v-if="!modelType.includes('vit')">a token</span><span v-else>an
                                         object</span></span>
                             </template>
-                            <font-awesome-icon icon="info" class="info-icon first" />
+                            <font-awesome-icon icon="info" class="info-icon" />
                         </a-tooltip></p>
                     <a-input-search v-model:value="searchToken" :placeholder="placeholder" enter-button
                         @search="onSearch(searchToken)" spellcheck="false" />
@@ -72,19 +105,21 @@
                                         denotes attention weight</li>
                                 </ul>
                             </template>
-                            <font-awesome-icon icon="info" class="info-icon first" />
+                            <font-awesome-icon icon="info" class="info-icon" />
                         </a-tooltip></p>
-                    <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
-                        :class="{ disabled: mode == 'matrix' }">labels</a-checkbox>
-                    <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
-                        :class="{ disabled: mode == 'matrix' || view != 'attn' }">attention lines</a-checkbox>
+                    <div style="width:235px">
+                        <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
+                            :class="{ disabled: mode == 'matrix' }">labels</a-checkbox>
+                        <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
+                            :class="{ disabled: mode == 'matrix' || view != 'attn' }">attention lines</a-checkbox>
+                    </div>
 
                     <p class="label">Dot Size<a-tooltip placement="rightBottom"
                             :class="{ disabled: mode === 'matrix' || modelType == 'vit-16' || modelType == 'vit-32' }">
                             <template #title>
                                 <span>scale dots in scatterplot by token embedding norm</span>
                             </template>
-                            <font-awesome-icon icon="info" class="info-icon first" />
+                            <font-awesome-icon icon="info" class="info-icon" />
                         </a-tooltip></p>
                     <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm" :class="{
                             disabled: mode == 'matrix' || modelType == 'vit-16' || modelType == 'vit-32'
@@ -96,26 +131,62 @@
                         log viewport
                     </a-button> -->
 
-                    <div>
-                        <p class="label">Mode<a-tooltip placement="rightBottom">
-                                <template #title>
-                                    <span>view plots in 2D or 3D</span>
-                                </template>
-                                <font-awesome-icon icon="info" class="info-icon first" />
-                            </a-tooltip></p>
-                        <a-radio-group v-model:value="dimension">
-                            <a-radio-button value="2D">2D</a-radio-button>
-                            <a-radio-button value="3D">3D</a-radio-button>
-                        </a-radio-group>
-                        <Transition>
-                            <p class="label italic" v-show="dimension === '3D' && mode === 'matrix'">click a head to see
-                                full
-                                3D</p>
-                        </Transition>
+                    <div class="label-grid">
+                        <div>
+                            <p class="label">Color<a-tooltip placement="rightTop">
+                                    <template #title>
+                                        <span>color encodings:</span>
+                                        <ul>
+                                            <li v-for="(item, key) in colorByDict">
+                                                <i>{{ item.label }}</i>: {{ item.desc }}
+                                            </li>
+                                        </ul>
+                                    </template>
+                                    <font-awesome-icon icon="info" class="info-icon" />
+                                </a-tooltip></p>
+                            <a-select v-model:value="colorBy" style="width: 135px" :options="colorByOptions">
+                            </a-select>
+                        </div>
+
+                        <div>
+                            <p class="label">Mode<a-tooltip placement="rightBottom">
+                                    <template #title>
+                                        <span>view plots in 2D or 3D</span>
+                                    </template>
+                                    <font-awesome-icon icon="info" class="info-icon" />
+                                </a-tooltip></p>
+                            <a-radio-group v-model:value="dimension">
+                                <a-radio-button value="2D">2D</a-radio-button>
+                                <a-radio-button value="3D">3D</a-radio-button>
+                            </a-radio-group>
+                            <Transition>
+                                <p class="label italic" v-show="dimension === '3D' && mode === 'matrix'">click a head to see
+                                    full
+                                    3D</p>
+                            </Transition>
+                        </div>
                     </div>
 
+                    <Legend ref="legend" />
+
                     <Transition>
-                        <div v-show="mode === 'single'">
+                        <div v-show="!renderState">
+                            <p id="num-msg" class="subtitle"><b>data info:</b> based on {{ num_message }}<span
+                                    v-show="modelType.includes('vit')"><a-tooltip placement="rightTop">
+                                        <template #title>
+                                            <span>object labels are generated from a segmentation model and may not be 100%
+                                                accurate</span>
+                                        </template>
+                                        <font-awesome-icon icon="info" class="info-icon" />
+                                    </a-tooltip></span></p>
+                            <Transition>
+                                <DataGrid ref="dataGrid" v-show="modelType.includes('vit') && mode === 'single'" />
+                            </Transition>
+                        </div>
+                    </Transition>
+
+                    <Transition>
+                        <div v-show="!renderState && mode === 'single'">
                             <p class="label">View Adjacent Head<a-tooltip placement="rightTop">
                                     <template #title>
                                         <span>explore an adjacent attention head</span>
@@ -126,7 +197,7 @@
                                             <li><i>down</i>: move down 1 layer</li>
                                         </ul>
                                     </template>
-                                    <font-awesome-icon icon="info" class="info-icon first" />
+                                    <font-awesome-icon icon="info" class="info-icon" />
                                 </a-tooltip></p>
                             <div id="control-buttons">
                                 <a-button class="center" type="default" size="small" :class="{ disabled: layer < 1 }"
@@ -160,14 +231,14 @@
                     </Transition>
                 </div>
             </div>
-            <div class="gradient-edge">
-                <Legend ref="legend" />
+            <div id="matrix-wrapper" class="col-10">
+                <div class="gradient-edge">
+                </div>
+                <div class="gradient-edge right">
+                </div>
             </div>
-            <div class="gradient-edge right">
-            </div>
-
-            <MatrixView v-show="!renderState" ref="matrixView" />
         </div>
+        <MatrixView v-show="!renderState" ref="matrixView" />
     </div>
 </template>
 
@@ -179,6 +250,77 @@ import MatrixView from "./MatrixView/MatrixView.vue";
 import Legend from "./Legend/Legend.vue";
 import DataGrid from "./DataGrid/DataGrid.vue";
 import { ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons-vue";
+
+const text_color_info = [
+    {
+        label: "query vs. key",
+        value: "query_key",
+        desc: "token type, query or key"
+    },
+    {
+        label: "position",
+        value: "position",
+        desc: "darkness encodes token position in sentence (normalized)"
+    },
+    {
+        label: "position mod 5",
+        value: "pos_mod_5",
+        desc: "darkness encodes token position modulo 5 (unnormalized)"
+    },
+    {
+        label: "punctuation",
+        value: "punctuation",
+        desc: "punctuation vs. non-punctuation tokens"
+    },
+    {
+        label: "embedding norm",
+        value: "embed_norm",
+        desc: "darkness encodes token embedding norm"
+    },
+    {
+        label: "token length",
+        value: "token_length",
+        desc: "darkness encodes # chars in token (normalized)"
+    },
+    {
+        label: "sentence length",
+        value: "sent_length",
+        desc: "darkness encodes # tokens in sentence (normalized)"
+    },
+    {
+        label: "token frequency",
+        value: "token_freq",
+        desc: "darkness encodes frequency of token in dataset (normalized)"
+    }
+];
+
+const image_color_info = [
+    {
+        label: "query vs. key",
+        value: "query_key",
+        desc: "token type, query or key (outline)"
+    },
+    {
+        label: "query vs. key (fill)",
+        value: "qk_map",
+        desc: "token type, query or key (fill)"
+    },
+    {
+        label: "patch row",
+        value: "row",
+        desc: "darkness encodes row of patch in image (fill)"
+    },
+    {
+        label: "patch column",
+        value: "column",
+        desc: "darkness encodes column of patch in image (fill)"
+    },
+    {
+        label: "no outline",
+        value: "no_outline",
+        desc: "original image patch without q/k outline"
+    }
+];
 
 export default defineComponent({
     components: { MatrixView, Legend, DataGrid, ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined },
@@ -198,22 +340,51 @@ export default defineComponent({
             sizeByNorm: computed(() => store.state.sizeByNorm),
             showAttention: computed(() => store.state.showAttention),
             attnLoading: computed(() => store.state.attentionLoading),
-            colorBy: computed(() => store.state.colorBy),
+
             layer: computed(() => store.state.layer),
             head: computed(() => store.state.head),
-            modelType: computed(() => store.state.modelType),
+
             dimension: computed({
                 get: () => store.state.dimension,
                 set: (v) => store.commit("setDimension", v)
             }),
+
             placeholder: "",
             num_message: "",
-            modalVisible: true
+
+            colorBy: computed({
+                get: () => store.state.colorBy,
+                set: (v) => store.commit("setColorBy", v),
+            }),
+            colorByOptions: [] as any,
+            colorByDict: {} as any,
+
+            projectionMethod: computed({
+                get: () => store.state.projectionMethod,
+                set: (v) => store.commit("setProjectionMethod", v),
+            }),
+            projectionMethods: ["tsne", "umap", "pca"].map((x) => ({ value: x, label: x })),
+
+            modelType: computed({
+                get: () => store.state.modelType,
+                set: (v) => store.dispatch("switchModel", v)
+            }),
+            // modelOptions: ["vit-16", "vit-32", "bert", "gpt-2"].map((x) => (
+            modelOptions: ["vit-32", "bert", "gpt-2"].map((x) => (
+                { value: x, label: x }
+            )),
+
+            tokenData: computed(() => store.state.tokenData),
+            attnMsg: "click a plot to zoom in",
+            curLayer: computed(() => store.state.layer),
+            curHead: computed(() => store.state.head),
+            showAttn: computed(() => store.state.showAttn)
         });
 
         onMounted(() => {
+            switchViewMsg();
             switchPlaceholder();
-            // showImages();
+            switchColorOptions();
         })
 
         const onClickReset = () => {
@@ -225,14 +396,10 @@ export default defineComponent({
         }
 
         const clearSearch = () => {
-            // const oldSearch = state.searchToken;
             state.searchToken = "";
-            // if (!oldSearch.includes("(0 ") && oldSearch.includes("results)")) {
             // actually need to clear search results from scatterplot
             store.commit("setHighlightedTokenIndices", []);
             store.commit("setView", "none");
-            // onSearch(state.searchToken);
-            // } // else we just need to reset input box
         }
 
         const onSearch = (str: string) => {
@@ -293,10 +460,21 @@ export default defineComponent({
         const switchPlaceholder = () => {
             if (state.modelType == 'vit-32' || state.modelType == 'vit-16') {
                 state.placeholder = "e.g., person, background";
-                state.num_message = state.modelType == 'vit-32' ? "10 images" : "6 images";
             } else {
                 state.placeholder = "e.g., cat, april";
-                state.num_message = state.modelType == "bert" ? "84 sentences" : "87 sentences";
+            }
+        }
+
+        // switch data text
+        const switchDataMsg = () => {
+            const numTokens = state.tokenData.length;
+            const numInstances = (matrixView.value as any).getUnique().length;
+            const messageStart = numTokens + " tokens (";
+
+            if (state.modelType.includes("vit")) {
+                state.num_message = messageStart + numInstances + " images)";
+            } else {
+                state.num_message = messageStart + numInstances + " sentences)";
             }
         }
 
@@ -309,26 +487,42 @@ export default defineComponent({
             }
         }
 
-        // show modal
-        const showModal = () => {
-            state.modalVisible = true;
-        }
-
-        const closeModal = () => {
-            state.modalVisible = false;
-        }
-
-        // switch color msg
-        const setColorMsg = (msg: string) => {
-            (legend.value as any).setColorMsg(msg);
-        }
 
         // show image data
         const showImages = () => {
             if (state.modelType.includes('vit')) {
-                const images = (matrixView.value as any).getImages();
+                const images = (matrixView.value as any).getUnique();
                 (dataGrid.value as any).drawGrid(images);
             }
+        }
+
+        const switchColorOptions = () => {
+            // reset color options depending on model selected
+            const curColorBy = state.colorBy;
+            let color_map = state.modelType.includes("vit") ? image_color_info : text_color_info;
+
+            state.colorByOptions = color_map.map((x) => ({ value: x.value, label: x.label }));
+            state.colorByDict = Object.assign({}, ...color_map.map((x) => ({ [x.value]: { label: x.label, desc: x.desc } })));
+
+            if (!(curColorBy in state.colorByDict)) {
+                if (state.modelType.includes('vit')) {
+                    store.commit("setColorBy", "no_outline"); // make no outline the default for vit
+                } else {
+                    store.commit("setColorBy", "query_key"); // query vs. key default for bert/gpt
+                }
+            }
+        }
+
+        // switch color msg
+        const getColorMsg = () => {
+            const colorMsg = state.colorByDict[state.colorBy].desc;
+            (legend.value as any).setColorMsg(colorMsg);
+        }
+
+        const switchViewMsg = () => {
+            state.attnMsg = state.mode == "single"
+                ? "click a point to explore its attention"
+                : "click a plot to zoom in";
         }
 
         watch(() => state.view,
@@ -337,6 +531,13 @@ export default defineComponent({
                     state.searchToken = "";
                 }
             })
+
+        watch(
+            () => [state.mode],
+            () => {
+                switchViewMsg();
+            }
+        )
 
         watch(() => state.modelType,
             () => { // clear highlighted tokens for simplicity
@@ -350,13 +551,23 @@ export default defineComponent({
                 }
 
                 switchPlaceholder();
+                switchColorOptions();
+                onClickReset();
             })
 
         watch(() => state.renderState, () => {
             if (!state.renderState) {
                 showImages();
+                switchDataMsg();
+                getColorMsg();
             }
         })
+
+        // change color msg
+        watch([() => state.colorBy],
+            () => {
+                getColorMsg();
+            })
 
         return {
             ...toRefs(state),
@@ -375,9 +586,7 @@ export default defineComponent({
             toggleCheckboxAttention,
             switchPlaceholder,
             clearSelection,
-            showModal,
-            closeModal,
-            setColorMsg
+            getColorMsg
         };
     }
 });
@@ -385,18 +594,34 @@ export default defineComponent({
 
 <style lang="scss">
 #label-wrapper {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    z-index: 9999;
+    position: relative;
+    padding-right: 0;
+    z-index: 10;
+    background-color: var(--background);
+    overflow-x: visible;
 }
 
 #matrix-labels {
+    position: absolute;
     transition: 0.5s;
+    width: 250px;
+    margin: 15px 0 15px 15px;
+    overflow-y: scroll;
+    height: calc(100vh - 80px);
+}
+
+// hide scrollbar but still allow scroll
+#matrix-labels::-webkit-scrollbar {
+    width: 0 !important;
+}
+
+#matrix-labels.element {
+    overflow: -moz-scrollbars-none;
 }
 
 .axis-label {
     transition: 0.5s;
+    margin-bottom: 0;
 }
 
 .axis-label span {
@@ -405,8 +630,13 @@ export default defineComponent({
     transition: 0.5s;
 }
 
-.label.noMargin {
+.noMargin .label {
     margin-top: 0 !important;
+}
+
+#num-msg {
+    margin-top: 15px;
+    width: 235px;
 }
 
 p.label {
@@ -419,7 +649,12 @@ p.label {
 p.label.italic {
     font-style: italic;
     opacity: 0.7;
-    margin-top: 5px;
+    margin-top: 2.5px;
+    font-size: small;
+    position: absolute;
+    right: -110px;
+    width: 100px;
+    transform: translateY(-100%);
 }
 
 #control-buttons {
@@ -438,7 +673,9 @@ p.label.italic {
 div#matrix-wrapper {
     position: relative;
     height: 100vh;
-    width: 100%;
+    padding: 0;
+    transition: 0.5s;
+    // width: 100%;
 
     canvas {
         height: 100%;
@@ -504,8 +741,28 @@ div.matrix-cell {
 #clear-attn {
     position: absolute;
     left: 50%;
-    top: 15px;
+    top: 65px;
     transform: translate(-50%);
     z-index: 10;
+}
+
+.label-grid {
+    display: flex;
+    column-gap: 5px;
+    width: 235px;
+}
+
+.align-top {
+    align-items: baseline;
+    display: flex;
+    justify-content: space-between;
+}
+
+.align-top p {
+    margin-bottom: 0 !important;
+}
+
+#attn-msg {
+    max-width: 235px;
 }
 </style>

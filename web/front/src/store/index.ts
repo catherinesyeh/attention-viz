@@ -7,6 +7,7 @@ import { Typing } from "@/utils/typing";
 
 // Vuex docs: https://vuex.vuejs.org/
 
+const starter_model = "vit-32";
 export interface State {
   matrixData: Typing.MatrixData[];
   tokenData: Typing.TokenData[];
@@ -76,9 +77,9 @@ export const store = createStore<State>({
     hideLast: false,
     weightByNorm: false,
     showAgg: true,
-    modelType: 'vit-32',
+    modelType: starter_model,
     projectionMethod: 'tsne',
-    colorBy: 'query_key',
+    colorBy: starter_model.includes('vit') ? 'no_outline' : 'query_key',
     highlightedTokenIndices: [],
     mode: 'matrix',
     view: 'none',

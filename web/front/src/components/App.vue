@@ -3,18 +3,18 @@
     <div class="container-fluid">
       <span class="navbar-brand mb-0 h1">Attention Viz</span>
       <div class="dropdown">
-        <label for="layernum">Zoom to Layer:</label>
+        <label for="layernum" style="margin-left: 0">Zoom to Layer</label>
         <a-tooltip placement="bottomRight">
           <template #title>
             <span>explore a single attention head by selecting a layer and head number</span>
           </template>
-          <font-awesome-icon icon="info" class="info-icon first" />
+          <font-awesome-icon icon="info" class="info-icon" />
         </a-tooltip>
         <a-select ref="layer-select" v-model:value="layernum" style="width: 60px" :layerNum="layernum"
           @change="handleChange('layer', layernum)">
           <a-select-option v-for="i in 12" :value="i - 1">{{ i - 1 }}</a-select-option>
         </a-select>
-        <label for="headnum">Head:</label>
+        <label for="headnum">Head</label>
         <a-select ref="head-select" v-model:value="headnum" style="width: 60px" :headNum="headnum"
           @change="handleChange('head', headnum)">
           <a-select-option v-for="i in 12" :value="i - 1">{{ i - 1 }}</a-select-option>
@@ -30,46 +30,18 @@
         </a-button>
       </div>
       <div class="dropdown">
-        <label for="model">Model:</label>
-        <a-tooltip placement="bottomRight">
-          <template #title>
-            <span>transformer options:</span>
-            <ul>
-              <li v-for="option in modelOptions">
-                <i>{{ option.value }}</i> (<span v-if="option.value.includes('vit')">vision</span>
-                <span v-else>language</span>)
-              </li>
-            </ul>
-          </template>
-          <font-awesome-icon icon="info" class="info-icon first" />
-        </a-tooltip>
-        <a-select v-model:value="modelType" style="width: 80px" :options="modelOptions">
-        </a-select>
-
-        <label for="graph-type">Projection:</label>
-        <a-tooltip placement="bottomRight">
-          <template #title>
-            <span>projection methods for creating joint q-k embeddings</span>
-          </template>
-          <font-awesome-icon icon="info" class="info-icon" />
-        </a-tooltip>
-        <a-select v-model:value="projectionMethod" style="width: 80px" :options="projectionMethods">
-        </a-select>
-
-        <label for="color-by">Color:</label>
-        <a-tooltip placement="bottomRight">
-          <template #title>
-            <span>color encodings:</span>
-            <ul>
-              <li v-for="(item, key) in colorByDict">
-                <i>{{ key }}</i>: {{ item }}
-              </li>
-            </ul>
-          </template>
-          <font-awesome-icon icon="info" class="info-icon" />
-        </a-tooltip>
-        <a-select v-model:value="colorBy" style="width: 130px" :options="colorByOptions">
-        </a-select>
+        <a-button type="text" class="matrix-reset" @click="showModal" style="margin-left: 0">
+          about
+        </a-button>
+        <a-modal v-model:visible="modalVisible" title="About Attention Viz" @ok="closeModal">
+          <p><b>Attention Viz</b> is an interactive tool that visualizes global attention patterns for transformer
+            models. To create this tool, we visualize the joint embeddings of <b class="green">query</b>
+            and <b class="pink">key</b> vectors. Click a
+            button below to learn more.</p>
+          <a-button type="primary" id="docs-link" href="https://catherinesyeh.github.io/attn-docs/"
+            target="_blank">Documentation</a-button>
+          <a-button type="primary" id="paper-link" class="disabled">arXiv Preprint: Coming Soon!</a-button>
+        </a-modal>
         <Transition>
           <font-awesome-icon :icon="icon" @click="toggleTheme" />
         </Transition>
@@ -78,12 +50,14 @@
   </nav>
   <div class="main">
     <div class="row">
-      <div class="col-10">
+      <div :class="{ 'col-10': showAttn && view == 'attn', 'col-12': !showAttn || view != 'attn' }">
         <Projection ref="projection" />
       </div>
 
-      <div class="col-2" style="position:relative">
-        <AttnMapWrapper id="attn-wrap" />
+      <div v-show="showAttn && view == 'attn'" class="col-2" id="attn-div">
+        <Transition>
+          <AttnMapWrapper id="attn-wrap" />
+        </Transition>
       </div>
     </div>
   </div>
@@ -96,14 +70,13 @@ import { defineComponent } from "vue";
 import { useStore } from "@/store/index";
 
 import Projection from "./Projection/Projection.vue";
-import AttnMap from "./AttnMap/AttnMap.vue";
 import AttnMapWrapper from "./AttnMap/AttnMapWrapper.vue";
 
 import { onMounted, computed, reactive, toRefs, h, watch, ref } from "vue";
 
 export default defineComponent({
   name: "App",
-  components: { Projection, AttnMap, AttnMapWrapper },
+  components: { Projection, AttnMapWrapper },
   setup() {
     const store = useStore();
 
@@ -116,36 +89,15 @@ export default defineComponent({
       headnum: "" as string | number,
       mode: computed(() => store.state.mode),
       view: computed(() => store.state.view),
-
-      modelType: computed({
-        get: () => store.state.modelType,
-        set: (v) => store.dispatch("switchModel", v)
-      }),
-      // modelOptions: ["vit-16", "vit-32", "bert", "gpt-2"].map((x) => (
-      modelOptions: ["vit-32", "bert", "gpt-2"].map((x) => (
-        { value: x, label: x }
-      )),
-      projectionMethod: computed({
-        get: () => store.state.projectionMethod,
-        set: (v) => store.commit("setProjectionMethod", v),
-      }),
-      projectionMethods: ["tsne", "umap", "pca"].map((x) => ({ value: x, label: x })),
-      colorBy: computed({
-        get: () => store.state.colorBy,
-        set: (v) => store.commit("setColorBy", v),
-      }),
-      colorByOptions: [] as any,
-      colorByDict: {} as any,
       userTheme: computed(() => store.state.userTheme),
       icon: "moon",
-      doneLoading: computed(() => store.state.doneLoading)
+      modalVisible: true,
+      showAttn: computed(() => store.state.showAttn)
     });
 
     // Init the store to read data from backend
     onMounted(async () => {
       await store.dispatch("init");
-      switchColorOptions();
-      getColorMsg();
     });
 
     // update graph settings based on dropdown option selected
@@ -213,44 +165,15 @@ export default defineComponent({
       }
     };
 
-    const switchColorOptions = () => {
-      // reset color options depending on model selected
-      const curColorBy = state.colorBy;
-      let color_opts = [];
-      if (state.modelType == "bert" || state.modelType == "gpt-2") {
-        color_opts = ["query_key", "position", "pos_mod_5", "punctuation", "embed_norm", "token_length", "sent_length", "token_freq"];
-        state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
-        state.colorByDict = {
-          "query_key": "token type, query or key",
-          "position": "darkness encodes token position in sentence (normalized)",
-          "pos_mod_5": "darkness encodes token position modulo 5 (unnormalized)",
-          "punctuation": "punctuation vs. non-punctuation tokens",
-          "embed_norm": "darkness encodes token embedding norm",
-          "token_length": "darkness encodes # chars in token (normalized)",
-          "sent_length": "darkness encodes # tokens in sentence (normalized)",
-          "token_freq": "darkness encodes frequency of token in dataset (normalized)"
-        }
-
-      } else {
-        color_opts = ["query_key", "qk_map", "row", "column", "no_outline"];
-        state.colorByOptions = color_opts.map((x) => ({ value: x, label: x }));
-        state.colorByDict = {
-          "query_key": "token type, query or key (outline)",
-          "qk_map": "token type, query or key (fill)",
-          "row": "darkness encodes row of patch in image (fill)",
-          "column": "darkness encodes column of patch in image (fill)",
-          "no_outline": "original image patch without q/k outline",
-        }
-      }
-      if (!color_opts.includes(curColorBy)) {
-        store.commit("setColorBy", "query_key");
-      }
+    // show modal
+    const showModal = () => {
+      state.modalVisible = true;
     }
 
-    const getColorMsg = () => {
-      const colorMsg = state.colorByDict[state.colorBy];
-      (projection.value as any).setColorMsg(colorMsg);
+    const closeModal = () => {
+      state.modalVisible = false;
     }
+
 
     watch([() => state.storeHead, () => state.storeLayer],
       () => {
@@ -259,18 +182,6 @@ export default defineComponent({
       }
 
     );
-
-    watch([() => state.modelType],
-      () => {
-        switchColorOptions()
-      }
-    )
-
-    // change color msg
-    watch([() => state.colorBy],
-      () => {
-        getColorMsg();
-      })
 
     return {
       ...toRefs(state),
@@ -283,7 +194,8 @@ export default defineComponent({
       getTheme,
       setTheme,
       getMediaPreference,
-      getColorMsg
+      closeModal,
+      showModal
     };
   },
 });
@@ -358,6 +270,7 @@ body {
 }
 
 #loading {
+  position: absolute;
   padding: 40px;
   transition: 0.5s;
   width: 100%;
@@ -404,6 +317,7 @@ label {
 
 .deck-tooltip {
   margin-top: calc(-15px - 0.75vh);
+  z-index: 999 !important;
 }
 
 @media (max-height:800px) {
@@ -444,6 +358,10 @@ label {
   margin-left: 10px;
 }
 
+.ant-radio-group {
+  font-size: small;
+}
+
 .ant-radio-button-wrapper {
   background: var(--radio-invert) !important;
   border-color: var(--radio-border) !important;
@@ -482,6 +400,10 @@ label {
   font-size: small;
 }
 
+.ant-input-search {
+  width: 235px;
+}
+
 .ant-input {
   font-size: small;
   padding: 5px 11px;
@@ -497,6 +419,10 @@ label {
 
 .ant-btn:not([disabled]):hover {
   opacity: 0.8;
+}
+
+.ant-select {
+  font-size: small;
 }
 
 .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
@@ -621,9 +547,14 @@ label {
 
 #label-wrapper .info-icon,
 #attn-wrap .info-icon,
-#num-msg .info-icon {
+#num-msg .info-icon,
+.info-icon.first {
   margin-left: 4px !important;
   cursor: pointer;
+}
+
+#label-wrapper .label .info-icon {
+  transform: translateY(-4px) !important;
 }
 
 #num-msg .info-icon {
@@ -631,7 +562,8 @@ label {
 }
 
 .info-icon.first {
-  margin-left: 0 !important;
+  margin-right: 0 !important;
+  transform: translateY(-8px) !important;
 }
 
 .info-icon:hover {
@@ -649,5 +581,15 @@ label {
 
 .ant-modal-footer {
   display: none !important;
+}
+
+// attn div
+#attn-div {
+  position: relative;
+  z-index: 10;
+  background-color: var(--background);
+  padding-left: 0;
+  display: flex;
+  justify-content: end;
 }
 </style>

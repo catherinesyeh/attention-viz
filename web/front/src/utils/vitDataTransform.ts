@@ -1,6 +1,5 @@
 import { Typing } from "@/utils/typing";
 import * as d3 from "d3";
-import { image } from "d3";
 import * as _ from "underscore";
 
 const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData: Typing.TokenData[], matrixCellWidth = 100, matrixCellHeight = 100, matrixCellMargin = 20, num_tokens = 7) => {
@@ -245,7 +244,7 @@ const computeVitMatrixProjection = (matrixData: Typing.MatrixData[], tokenData: 
         'points': pts.points,
         'range': pts.range,
         'headings': computeMatrixProjectionLabel(matrixData, matrixCellWidth, matrixCellHeight, matrixCellMargin),
-        'images': uniqueImages
+        'unique': uniqueImages
     }
 }
 

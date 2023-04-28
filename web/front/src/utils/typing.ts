@@ -89,7 +89,7 @@ export namespace Typing {
             x: [number, number];
             y: [number, number];
         },
-        images: string[]
+        unique: string[]
     }
     export interface AttnByToken {
         layer: number;

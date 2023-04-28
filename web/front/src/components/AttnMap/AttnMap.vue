@@ -1,47 +1,27 @@
 <template>
-    <div class="viewHead" id="attn-map-view">
+    <div class="viewHead" id="attn-map-view" v-show="showAttn">
         <div class="align-top">
-            <p v-if='mode === "single" && !showAttn'>Single View<a-tooltip placement="rightTop">
-                    <template #title>
-                        <span>q-k attention patterns for a single head</span>
-                    </template>
-                    <font-awesome-icon icon="info" class="info-icon first" />
-                </a-tooltip>
-            </p>
-            <p v-else-if='mode === "single"'>Sentence View<a-tooltip placement="rightTop">
+            <p>Sentence View<a-tooltip placement="bottom">
                     <template #title>
                         <span>q-k attention patterns for a single sentence; line opacity denotes attention weight</span>
                     </template>
-                    <font-awesome-icon icon="info" class="info-icon first" />
-                </a-tooltip>
-                <Transition>
-                    <span v-show="showAttn">({{ layerHead }})</span>
-                </Transition>
-            </p>
-            <p v-else>
-                Matrix View<a-tooltip placement="rightTop">
-                    <template #title>
-                        <span>q-k attention patterns for all attention heads</span>
-                    </template>
-                    <font-awesome-icon icon="info" class="info-icon first" />
+                    <font-awesome-icon icon="info" class="info-icon" />
                 </a-tooltip>
             </p>
-            <Transition>
-                <div class="attn-btns" v-show="showAttn">
-                    <a-button id="attn-reset" class="clear" type="link" @click="resetAttn">reset</a-button>
-                </div>
-            </Transition>
+            <div class="attn-btns">
+                <a-button id="attn-reset" class="clear" type="link" @click="resetAttn">reset</a-button>
+            </div>
         </div>
-        <span class="subtitle">{{ attnMsg }}</span>
+        <p class="subtitle" v-show="showAttn">{{ attnMsg }}</p>
         <Transition>
             <div v-show="showAttn" class="checkbox-contain">
                 <div :class="{ half: model == 'gpt-2' }">
-                    <p class="label">Hide<a-tooltip placement="rightTop">
+                    <p class="label">Hide<a-tooltip placement="leftTop">
                             <template #title>
                                 <span>filter out attention to <span v-if="model === 'gpt-2'">first token</span><span
                                         v-else>special tokens (cls, sep)</span></span>
                             </template>
-                            <font-awesome-icon icon="info" class="info-icon first" />
+                            <font-awesome-icon icon="info" class="info-icon" />
                         </a-tooltip></p>
                     <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt-2'">first
                         token</a-checkbox>
@@ -51,11 +31,11 @@
                         v-show="model == 'bert'">[sep]</a-checkbox>
                 </div>
                 <div class="half" v-show="model == 'gpt-2'">
-                    <p class="label">Weight by<a-tooltip placement="rightTop">
+                    <p class="label">Weight by<a-tooltip placement="leftTop">
                             <template #title>
                                 <span>weight attentions by the norm of each token's value vector</span>
                             </template>
-                            <font-awesome-icon icon="info" class="info-icon first" />
+                            <font-awesome-icon icon="info" class="info-icon" />
                         </a-tooltip></p>
                     <a-checkbox v-model:checked="weightByNorm" @click="toggleWeightBy">value norm</a-checkbox>
                 </div>
@@ -103,13 +83,9 @@ export default {
         const state = reactive({
             attentionByToken: computed(() => store.state.attentionByToken),
             showAttn: computed(() => store.state.showAttn),
-            attnMsg: "click a plot to zoom in",
+            attnMsg: "click a token to toggle lines off/on",
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             view: computed(() => store.state.view),
-            curLayer: computed(() => store.state.layer),
-            curHead: computed(() => store.state.head),
-            layerHead: "",
-            userTheme: computed(() => store.state.userTheme),
             mode: computed(() => store.state.mode),
             model: computed(() => store.state.modelType),
             attn_vals: [] as number[][],
@@ -165,12 +141,6 @@ export default {
             return new_attn;
         }
 
-        if (state.view != "attn") { // set msg just in case
-            state.attnMsg = state.mode == "single"
-                ? "click a point to explore its attention"
-                : "click a plot to zoom in";
-        }
-
         // start bertviz
         const bertviz = () => {
             // parse info from data
@@ -208,7 +178,6 @@ export default {
                 store.commit('updateAttentionLoading', false);
 
             }
-            state.layerHead = "Layer " + state.curLayer + " Head " + state.curHead;
 
             const params = {
                 attention: [
@@ -681,9 +650,6 @@ export default {
         }
 
         const clearAttn = () => {
-            state.attnMsg = state.mode == "single"
-                ? "click a point to explore its attention"
-                : "click a plot to zoom in";
             if (state.view != "search") {
                 store.commit("setHighlightedTokenIndices", []);
             }
@@ -715,7 +681,6 @@ export default {
             () => {
                 // draw attention plot
                 store.commit("setShowAttn", true);
-                state.attnMsg = "click a token to toggle lines off/on";
                 bertviz();
             }
         );
@@ -725,9 +690,6 @@ export default {
             () => {
                 if (state.view != 'attn') {
                     store.commit("setShowAttn", false);
-                    state.attnMsg = state.mode == "single"
-                        ? "click a point to explore its attention"
-                        : "click a plot to zoom in";
                 }
             }
         )

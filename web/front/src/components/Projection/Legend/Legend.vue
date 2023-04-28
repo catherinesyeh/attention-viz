@@ -21,6 +21,7 @@
                     </div>
                 </div>
             </div>
+
             <p id="legend-msg" class="subtitle"><b>color info:</b> {{ colorMsg }}</p>
         </div>
     </Transition>
@@ -102,23 +103,24 @@ export default defineComponent({
 <style lang="scss">
 .legend-box {
     transition: 0.5s;
-    position: absolute;
-    bottom: 110px;
-    left: 15px;
-    max-width: 200px;
+    margin-top: 10px;
+    width: 235px;
+    display: flex;
+    column-gap: 20px;
+    align-items: center;
 }
 
 #legend {
     display: flex;
+    column-gap: 15px;
 }
 
 #legend-msg {
-    margin-bottom: 5px;
+    margin-bottom: 0;
 }
 
 .bar-contain {
     text-align: center;
-    margin: 10px;
     font-size: small;
 }
 

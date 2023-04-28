@@ -1,64 +1,50 @@
 <template>
-    <div class="viewHead" id="image-attn-map-view">
+    <div class="viewHead" id="image-attn-map-view" v-show="showAttn">
         <div class="align-top">
-            <p v-if='mode === "single" && !showAttn'>Single View<a-tooltip placement="rightTop">
-                    <template #title>
-                        <span>q-k attention patterns for a single head</span>
-                    </template>
-                    <font-awesome-icon icon="info" class="info-icon first" />
-                </a-tooltip>
-            </p>
-            <p v-else-if='mode === "single"'>Image View<a-tooltip placement="rightTop">
+            <p>Image View<a-tooltip placement="top">
                     <template #title>
                         <span>q-k attention patterns for a single image</span>
                     </template>
-                    <font-awesome-icon icon="info" class="info-icon first" />
-                </a-tooltip>
-                <Transition>
-                    <span v-show="showAttn">({{ layerHead }})</span>
-                </Transition>
-            </p>
-            <p v-else>
-                Matrix View<a-tooltip placement="rightTop">
-                    <template #title>
-                        <span>q-k attention patterns for all attention heads</span>
-                    </template>
-                    <font-awesome-icon icon="info" class="info-icon first" />
+                    <font-awesome-icon icon="info" class="info-icon" />
                 </a-tooltip>
             </p>
         </div>
-        <span class="subtitle">{{ attnMsg }}</span>
+        <p class="subtitle" v-show="showAttn">{{ attnMsg }}</p>
         <Transition>
             <div v-show="showAttn">
-                <p class="label">Show<a-tooltip placement="rightTop">
+                <p class="label">Show<a-tooltip placement="leftTop">
                         <template #title>
                             <span>visualization options:</span>
                             <ul>
-                                <li><i>default</i>: heatmap for selected token; opacity denotes attention weight</li>
-                                <li><i>attn arrows</i>: top attention connection for each token in image</li>
-                                <li><i>attn flow only</i>: all strong connections in image; size and opacity denote
+                                <li><i>attention to selected token</i>: heatmap for selected token; opacity denotes
+                                    attention weight</li>
+                                <li><i>highest attention to each token</i>: top attention connection for each token in image
+                                </li>
+                                <li><i>all high attention flows</i>: all strong connections in image; size and opacity
+                                    denote
                                     attention weight</li>
                             </ul>
-                            (square = attention to [cls] token, circle arrow = attention to self)
                         </template>
-                        <font-awesome-icon icon="info" class="info-icon first" />
+                        <font-awesome-icon icon="info" class="info-icon" />
                     </a-tooltip></p>
-                <div class="checkbox-contain">
-                    <div class="half">
-                        <a-checkbox v-model:checked="overlayAttn" @click="overlayAttnMap">Attn Arrows</a-checkbox>
-                    </div>
-                    <div class="half">
-                        <a-checkbox :class="{ disabled: !overlayAttn }" v-model:checked="lineOnly"
-                            @click="lineOnlyAttnMap">Attn
-                            Flow
-                            Only</a-checkbox>
-                    </div>
-                </div>
+                <a-select v-model:value="vizType" style="width: 240px" :options="vizOptions">
+                </a-select>
             </div>
         </Transition>
         <Transition>
-            <div v-show="showAttn">
+            <div v-show="showAttn" style="position:relative">
                 <canvas id="bertviz" class="image-viz" />
+                <div id="white-square" v-show="userTheme != 'light-theme' && vizType == 'all_top'"></div>
+            </div>
+        </Transition>
+        <Transition>
+            <div class="note" v-show="vizType != 'cur_token'">
+                <p class="subtitle">
+                    <b>square</b> = attention to [cls] token
+                </p>
+                <p class="subtitle">
+                    <b>circle arrow</b> = attention to self
+                </p>
             </div>
         </Transition>
     </div>
@@ -79,28 +65,30 @@ export default {
         const state = reactive({
             attentionByToken: computed(() => store.state.attentionByToken),
             showAttn: computed(() => store.state.showAttn),
-            attnMsg: "click a plot to zoom in",
+            attnMsg: "attention within selected image",
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             view: computed(() => store.state.view),
-            curLayer: computed(() => store.state.layer),
-            curHead: computed(() => store.state.head),
-            layerHead: "",
-            userTheme: computed(() => store.state.userTheme),
             mode: computed(() => store.state.mode),
-            model: computed(() => store.state.modelType),
-            attn_vals: [] as number[][],
             attentionLoading: computed(() => store.state.attentionLoading),
-            overlayAttn: false,
-            lineOnly: false,
+            userTheme: computed(() => store.state.userTheme),
+            vizType: "top_arrow",
+            vizOptions: [
+                {
+                    value: "cur_token",
+                    label: "attention to selected token"
+                },
+                {
+                    value: "top_arrow",
+                    label: "highest attention to each token"
+                },
+                {
+                    value: "all_top",
+                    label: "all high attention flows"
+                }
+            ]
         });
 
         let deckgl2 = {} as Deck;
-
-        if (state.view != "attn") { // set msg just in case
-            state.attnMsg = state.mode == "single"
-                ? "click a point to explore its attention"
-                : "click a plot to zoom in";
-        }
 
         // start bertviz for images
         const bertviz = () => {
@@ -108,12 +96,9 @@ export default {
             // parse info from data
             let { attentionByToken } = state;
 
-            state.layerHead = "Layer " + state.curLayer + " Head " + state.curHead;
-
             const toOriginalImageLayer = new BitmapLayer({
                 id: 'bertviz-image',
                 bounds: [-70, 2.5, 70, 80.5],
-                // bounds: [-490, 67, -350, 88],
                 image: attentionByToken.token.originalImagePath,
                 pickable: false,
             });
@@ -146,18 +131,18 @@ export default {
                 pickable: false,
             });
 
-            if (state.overlayAttn && state.lineOnly) {
+            if (state.vizType == "all_top") { // attn flow only (but all top attn lines shown)
                 deckgl2 = new Deck({
                     canvas: "bertviz",
                     layers: [toPatchedImageLayer, toArrowedLayer]
                 });
             }
-            else if (state.overlayAttn) {
+            else if (state.vizType == "top_arrow") { // top attn arrow for whole image
                 deckgl2 = new Deck({
                     canvas: "bertviz",
                     layers: [toOriginalImageLayer, toArrowedlImageLayer]
                 });
-            } else {
+            } else { // heatmap for current patch
                 deckgl2 = new Deck({
                     canvas: "bertviz",
                     layers: [toOriginalImageLayer, toOverlaidlImageLayer]
@@ -172,30 +157,18 @@ export default {
 
         }
         const clearAttn = () => {
-            state.attnMsg = state.mode == "single"
-                ? "click a point to explore its attention"
-                : "click a plot to zoom in";
             if (state.view != "search") {
                 store.commit("setHighlightedTokenIndices", []);
             }
         }
 
-        const overlayAttnMap = () => {
-            state.overlayAttn = !state.overlayAttn;
-            bertviz();
-        }
-
-        const lineOnlyAttnMap = () => {
-            state.lineOnly = !state.lineOnly;
-            bertviz();
-        }
-
         watch(
-            () => [state.attentionByToken],
+            () => [state.attentionByToken, state.vizType],
             () => {
                 // draw attention plot
-                store.commit("setShowAttn", true);
-                state.attnMsg = "click a token to toggle lines off/on";
+                if (!state.showAttn) {
+                    store.commit("setShowAttn", true);
+                }
                 bertviz();
             }
         );
@@ -205,9 +178,6 @@ export default {
             () => {
                 if (state.view != 'attn') {
                     store.commit("setShowAttn", false);
-                    state.attnMsg = state.mode == "single"
-                        ? "click a point to explore its attention"
-                        : "click a plot to zoom in";
                 }
             }
         )
@@ -224,12 +194,33 @@ export default {
         return {
             ...toRefs(state),
             clearAttn,
-            bertviz,
-            overlayAttnMap,
-            lineOnlyAttnMap,
+            bertviz
         };
     },
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.note {
+    position: absolute;
+    top: 560px;
+    width: 300px;
+    text-align: center;
+    margin-left: -7.5px !important;
+}
+
+.note .subtitle {
+    margin: 0 ! important;
+}
+
+#white-square {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    top: 265px;
+    z-index: -1;
+    background: white;
+    transform: translateX(-50%) translateY(-40px);
+    left: 50%;
+}
+</style>

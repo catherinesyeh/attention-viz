@@ -62,6 +62,7 @@ export default {
     margin-top: 15px;
     background-color: transparent !important;
     padding-right: calc(0.5 * var(--bs-gutter-x));
+    width: 300px;
 }
 
 #attn-map-view {
@@ -73,16 +74,6 @@ export default {
     margin: auto;
     position: relative;
     display: block;
-}
-
-.align-top {
-    align-items: baseline;
-    display: flex;
-    justify-content: space-between;
-}
-
-.align-top p {
-    margin-bottom: 0 !important;
 }
 
 .attn-btns span {
@@ -101,6 +92,10 @@ export default {
 .subtitle {
     font-family: monospace;
     font-size: small;
+}
+
+.viewHead .subtitle {
+    margin-bottom: 0;
 }
 
 .bertviz,
@@ -128,11 +123,12 @@ export default {
     overflow-y: scroll;
     max-height: calc(90vh - 150px);
     padding-bottom: 10px;
-    margin: 0 15px;
+    margin: 0 0 -10px 7.5px;
+    width: 260px !important;
 }
 
 .splitcol #vis {
-    max-height: calc(50vh - 135px) !important;
+    max-height: calc(50vh - 120px) !important;
 }
 
 // hide scrollbar but still allow scroll
