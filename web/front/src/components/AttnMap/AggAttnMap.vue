@@ -1,5 +1,5 @@
 <template>
-    <div class="viewHead" id="attn-map-view">
+    <div class="viewHead" id="agg-map-view">
         <div class="align-top">
             <Transition>
                 <p v-show="showAttn">Aggregate View<a-tooltip placement="bottom">

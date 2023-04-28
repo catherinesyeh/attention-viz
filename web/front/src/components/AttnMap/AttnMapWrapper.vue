@@ -65,9 +65,14 @@ export default {
     width: 300px;
 }
 
-#attn-map-view {
+#attn-map-view,
+#agg-map-view {
     margin-left: 0;
     padding-right: calc(var(--bs-gutter-x));
+}
+
+#agg-map-view {
+    margin-top: 5px;
 }
 
 #show-agg {
@@ -128,7 +133,7 @@ export default {
 }
 
 .splitcol #vis {
-    max-height: calc(50vh - 120px) !important;
+    max-height: calc(50vh - 115px) !important;
 }
 
 // hide scrollbar but still allow scroll

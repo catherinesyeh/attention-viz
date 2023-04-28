@@ -16,14 +16,6 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
         (td) =>
             `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, row: ${td.position}, col: ${td.pos_int})`
     );
-    const cat_msgs = tokenData.map(
-        (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, row: ${td.position}, col: ${td.pos_int})`
-    );
-    const length_msgs = tokenData.map(
-        (td) =>
-            `<b class='${td.type}'>${td.value}</b> (<i>${td.type}</i>, row: ${td.position}, col: ${td.pos_int})`
-    );
 
     // for recording the x/y ranges
     let xs = [];
@@ -94,23 +86,8 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             'pca_3d': computeCoordinate('pca_3d')
         }
 
-        const norm_msgs = data.map(
-            (x, index) =>
-                `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, row: ${tokenData[index].position}, col: ${tokenData[index].pos_int})`
-        );
-
-        const image_path = tokenData.map(td => td.imagePath)
-        const original_patch_path = tokenData.map(td => td.originalPatchPath)
-        const norms = data.map((x) => x.norm);
-        const norm_range = d3.extent(norms) as [number, number];
-        const min_norm = norm_range[0];
-        const max_norm = norm_range[1];
-        const range_norm = max_norm - min_norm;
-        // round to 3 decimal places
-        const norms_scaled = norms.map((x) => {
-            let scaled = (x - min_norm) / range_norm;
-            return +scaled.toFixed(3);
-        });
+        const image_path = tokenData.map(td => td.imagePath);
+        const original_patch_path = tokenData.map(td => td.originalPatchPath);
 
         const colorsByType = data.map((x, index) => {
             const tokenType = tokenData[index].type
@@ -124,7 +101,6 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             if (!color) return [0, 0, 0];
             return [color.r, color.g, color.b];
         })
-
 
         const queryColor = d3.scaleSequential(function (t) {
             return d3.interpolateYlGn(t / num_tokens * 0.75 + 0.25);
@@ -170,13 +146,13 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             },
             color: {
                 query_key: colorsByType[index],
-                position: colorsByRow[index],
-                pos_mod_5: colorsByType[index],
-                punctuation: colorsByCol[index],
-                embed_norm: colorsByType[index],
-                token_length: colorsByType[index],
-                sent_length: colorsByType[index],
-                token_freq: colorsByType[index],
+                position: [0,0,0],
+                pos_mod_5: [0,0,0],
+                punctuation: [0,0,0],
+                embed_norm: [0,0,0],
+                token_length: [0,0,0],
+                sent_length: [0,0,0],
+                token_freq: [0,0,0],
                 row: colorsByRow[index],
                 column: colorsByCol[index],
                 qk_map: colorsByType[index],
@@ -184,17 +160,17 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             },
             msg: {
                 position: pos_msgs[index],
-                categorical: cat_msgs[index],
-                norm: norm_msgs[index],
-                length: length_msgs[index],
-                freq: pos_msgs[index]
+                categorical: "",
+                norm: "",
+                length: "",
+                freq: ""
             },
             layer,
             head,
             index,
             value: values[index],
             type: types[index],
-            normScaled: norms_scaled[index],
+            normScaled: 0,
             imagePath: image_path[index],
             originalPatchPath: original_patch_path[index],
         }));

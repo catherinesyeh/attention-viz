@@ -256,8 +256,6 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 `<b class='${tokenData[index].type}'>${tokenData[index].value}</b> (<i>${tokenData[index].type}</i>, pos: ${tokenData[index].pos_int} of ${tokenData[index].length - 1}, norm: ${Math.round(x.norm * 100) / 100})`
         );
 
-        const image_path = tokenData.map(td => td.imagePath)
-        const original_patch_path = tokenData.map(td => td.originalPatchPath)
         const norms = data.map((x) => x.norm);
         const norm_range = d3.extent(norms) as [number, number];
         const min_norm = norm_range[0];
@@ -302,10 +300,10 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
                 token_length: colorsByLength[index],
                 sent_length: colorsBySentLength[index],
                 token_freq: colorsByFreq[index],
-                row: colorsByPosition[index],
-                column: colorsByPosition[index],
-                qk_map: colorsByPosition[index],
-                no_outline: colorsByPosition[index],
+                row: [0, 0, 0],
+                column: [0, 0, 0],
+                qk_map: [0, 0, 0],
+                no_outline: [0, 0, 0],
             },
             msg: {
                 position: pos_msgs[index],
@@ -320,8 +318,8 @@ const computeMatrixProjectionPoint = (matrixData: Typing.MatrixData[], tokenData
             value: values[index],
             type: types[index],
             normScaled: norms_scaled[index],
-            imagePath: image_path[index],
-            originalPatchPath: original_patch_path[index],
+            imagePath: "",
+            originalPatchPath: "",
         }));
 
         xs.push(...[xoffset, matrixCellWidth + xoffset]);

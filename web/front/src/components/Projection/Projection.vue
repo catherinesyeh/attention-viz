@@ -659,6 +659,8 @@ p.label.italic {
 
 #control-buttons {
     width: fit-content;
+    margin: auto;
+    transform: translateX(-10px);
 }
 
 #control-buttons .center {
