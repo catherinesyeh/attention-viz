@@ -729,7 +729,7 @@ div.matrix-cell {
 .clear {
     display: block;
     position: absolute;
-    right: 0;
+    right: 15px;
     padding: 0;
     font-size: small;
     color: #888 !important;
