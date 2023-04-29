@@ -16,7 +16,9 @@
         </Transition>
         <div class="row">
             <div id="label-wrapper" class="col-2">
-
+                <Transition>
+                    <Circle v-show="attentionLoading || transitionInProgress" />
+                </Transition>
                 <!-- left sidebar -->
                 <div id="matrix-labels">
                     <div class="align-top label-grid">
@@ -249,6 +251,7 @@ import { useStore } from "@/store/index";
 import MatrixView from "./MatrixView/MatrixView.vue";
 import Legend from "./Legend/Legend.vue";
 import DataGrid from "./DataGrid/DataGrid.vue";
+import Circle from './MatrixView/Circle.vue';
 import { ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons-vue";
 
 const text_color_info = [
@@ -323,7 +326,7 @@ const image_color_info = [
 ];
 
 export default defineComponent({
-    components: { MatrixView, Legend, DataGrid, ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined },
+    components: { MatrixView, Legend, DataGrid, Circle, ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined },
     setup() {
         const store = useStore();
 
@@ -378,7 +381,10 @@ export default defineComponent({
             attnMsg: "click a plot to zoom in",
             curLayer: computed(() => store.state.layer),
             curHead: computed(() => store.state.head),
-            showAttn: computed(() => store.state.showAttn)
+            showAttn: computed(() => store.state.showAttn),
+            attentionLoading: computed(() => store.state.attentionLoading),
+            transitionInProgress: computed(() => store.state.transitionInProgress),
+            clearSelection: computed(() => store.state.clearSelection)
         });
 
         onMounted(() => {
@@ -396,10 +402,12 @@ export default defineComponent({
         }
 
         const clearSearch = () => {
+            store.commit("updateTransitionInProgress", true);
             state.searchToken = "";
             // actually need to clear search results from scatterplot
             store.commit("setHighlightedTokenIndices", []);
             store.commit("setView", "none");
+            store.commit("updateTransitionInProgress", false);
         }
 
         const onSearch = (str: string) => {
@@ -481,7 +489,9 @@ export default defineComponent({
         // clear search/attention
         const clearSelection = () => {
             if (state.view == 'attn') {
+                store.commit("updateTransitionInProgress", true);
                 store.commit("setShowAttn", false);
+                store.commit("updateTransitionInProgress", false);
             } else { // state.view == 'search'
                 clearSearch();
             }
@@ -567,6 +577,15 @@ export default defineComponent({
         watch([() => state.colorBy],
             () => {
                 getColorMsg();
+            })
+
+        // clear search from matrix view if user unselects
+        watch([() => state.clearSelection],
+            () => {
+                if (state.clearSelection) {
+                    clearSelection();
+                    store.commit("setClearSelection", false);
+                }
             })
 
         return {
@@ -659,7 +678,7 @@ p.label.italic {
 
 #control-buttons {
     width: fit-content;
-    margin: auto;
+    margin: 5px auto 0;
     transform: translateX(-10px);
 }
 

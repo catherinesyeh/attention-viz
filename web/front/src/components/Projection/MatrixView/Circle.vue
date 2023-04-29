@@ -6,7 +6,7 @@
     </svg>
 </template>
 <script lang="ts">
-import { onMounted, computed, reactive, toRefs, h, watch, ref, defineComponent } from "vue";
+import { defineComponent } from "vue";
 export default defineComponent({
     setup() {
     },
@@ -21,7 +21,8 @@ $duration: 1.4s;
 .spinner {
     animation: circle-rotator $duration linear infinite;
     position: absolute;
-    right: 15px;
+    z-index: 999;
+    left: 280px;
     top: 15px;
     width: 40px;
     height: 40px;
@@ -79,7 +80,7 @@ $duration: 1.4s;
     }
 
     50% {
-        stroke-dashoffset: $offset/4;
+        stroke-dashoffset: calc($offset / 4);
         transform: rotate(135deg);
     }
 

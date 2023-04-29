@@ -18,7 +18,9 @@ export interface State {
 
   renderState: boolean; // true when the canvas is being rendered; false upon finished
   attentionLoading: boolean; 
+  transitionInProgress: boolean;
   doneLoading: boolean;
+  clearSelection: boolean;
   userTheme: string; // dark or light
   view: string; // none, search, or attention
   mode: string; // single or matrix
@@ -61,6 +63,8 @@ export const store = createStore<State>({
     showAttn: false,
     resetAttn: false,
     attentionLoading: false,
+    transitionInProgress: false,
+    clearSelection: false,
     attentionByToken: {
       layer: 0, 
       head: 0, 
@@ -112,12 +116,17 @@ export const store = createStore<State>({
     },
     updateAttentionLoading(state, attentionLoading) {
       state.attentionLoading = attentionLoading;
-      console.log('state: attentionLoading', attentionLoading);
+    },
+    updateTransitionInProgress(state, inProgress) {
+      state.transitionInProgress = inProgress;
     },
     updateRenderState(state, renderState) {
       state.renderState = renderState;
       console.log('state: renderState', renderState);
     }, 
+    setClearSelection(state, clearSelection) {
+      state.clearSelection = clearSelection;
+    },
     setShowAttn(state, showAttn) {
       state.showAttn = showAttn;
     },

@@ -33,14 +33,18 @@
         <a-button type="text" class="matrix-reset" @click="showModal" style="margin-left: 0">
           about
         </a-button>
-        <a-modal v-model:visible="modalVisible" title="About Attention Viz" @ok="closeModal">
+        <a-modal v-model:visible="modalVisible" width="550px" title="About Attention Viz" @ok="closeModal">
           <p><b>Attention Viz</b> is an interactive tool that visualizes global attention patterns for transformer
             models. To create this tool, we visualize the joint embeddings of <b class="green">query</b>
             and <b class="pink">key</b> vectors. Click a
             button below to learn more.</p>
-          <a-button type="primary" id="docs-link" href="https://catherinesyeh.github.io/attn-docs/"
-            target="_blank">Documentation</a-button>
-          <a-button type="primary" id="paper-link" class="disabled">arXiv Preprint: Coming Soon!</a-button>
+          <div class="modal-buttons">
+
+            <a-button type="primary" id="docs-link" href="https://catherinesyeh.github.io/attn-docs/"
+              target="_blank">Documentation</a-button>
+            <a-button type="primary" id="paper-link" class="disabled">arXiv Preprint: Coming Soon!</a-button>
+            <a-button type="primary" id="close-link" @click="closeModal">Jump Right In</a-button>
+          </div>
         </a-modal>
         <Transition>
           <font-awesome-icon :icon="icon" @click="toggleTheme" />
@@ -353,8 +357,7 @@ label {
   opacity: 0;
 }
 
-.dropdown .ant-btn,
-#paper-link {
+.dropdown .ant-btn {
   margin-left: 10px;
 }
 
@@ -583,6 +586,22 @@ label {
   display: none !important;
 }
 
+.modal-buttons .ant-btn:not(:first-child) {
+  margin-left: 10px;
+}
+
+@media (max-width:540px) {
+  .modal-buttons .ant-btn {
+    display: block;
+    margin: auto !important;
+    width: 100%;
+  }
+
+  .modal-buttons .ant-btn:not(:first-child) {
+    margin-top: 10px !important;
+  }
+}
+
 // attn div
 #attn-div {
   position: relative;
@@ -590,6 +609,6 @@ label {
   background-color: var(--background);
   padding-left: 0;
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
 }
 </style>

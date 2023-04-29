@@ -1,9 +1,6 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
     <div id="mv-wrap">
-        <Transition>
-            <Circle v-show="attentionLoading || transitionInProgress" />
-        </Transition>
         <canvas id="matrix-canvas" />
     </div>
 </template>
@@ -29,7 +26,6 @@ import { PolygonLayer, ScatterplotLayer, TextLayer, LineLayer } from "@deck.gl/l
 
 import { computeMatrixProjection } from "@/utils/dataTransform";
 import { computeVitMatrixProjection } from "@/utils/vitDataTransform";
-import Circle from './Circle.vue';
 import RBush from 'rbush';
 
 // constants
@@ -67,11 +63,10 @@ const nullInitialViewZoom: ViewState = {
 let initialState = nullInitialView;
 let initialStateZoom = nullInitialViewZoom;
 
-const defaultOpacity = 225,
-    lightOpacity = 50;
+const defaultOpacity = 225;
 
 export default defineComponent({
-    components: { Circle },
+    components: {},
     setup(props, context) {
         const store = useStore();
 
@@ -99,10 +94,11 @@ export default defineComponent({
             dimension: computed(() => store.state.dimension),
             cursorX: 0,
             cursorY: 0,
-            transitionInProgress: false,
+            transitionInProgress: computed(() => store.state.transitionInProgress),
             attentionLoading: computed(() => store.state.attentionLoading),
             modelType: computed(() => store.state.modelType),
-            resetting: false
+            resetting: false,
+            clearSelection: computed(() => store.state.clearSelection)
         });
 
         let deckgl = {} as Deck;
@@ -542,7 +538,6 @@ export default defineComponent({
 
                     let start_index = 0
                     if (pt.value == "CLS") {
-                        console.log("CLS Token")
                         start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int);
                     } else {
                         start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
@@ -831,6 +826,12 @@ export default defineComponent({
                     }),
                 initialViewState: state.viewState,
                 layers: toLayers(),
+                onClick: (info) => {
+                    // deselect points on click outside plot in single view (if attn/search view)
+                    if (info.layer == null && state.mode == 'single' && state.view != 'none') {
+                        store.commit("setClearSelection", true);
+                    }
+                },
                 getTooltip: ({ object }) => {
                     if (state.mode === 'matrix' && (!object || !object.title)) {
                         return null;
@@ -906,7 +907,7 @@ export default defineComponent({
                 switchThreshold = 1.5;
             }
 
-            state.transitionInProgress = true;
+            store.commit("updateTransitionInProgress", true);
             if (old_zoom < switchThreshold && zoom >= switchThreshold) {
                 // if matrix mode, zoom to closest graph on zoom
                 const closest = deckgl.pickObject({
@@ -924,14 +925,14 @@ export default defineComponent({
                 // if single mode
                 reset(false);
             }
-            state.transitionInProgress = false;
+            store.commit("updateTransitionInProgress", false);
         };
 
         /**
          * Reset the view state to matrix mode
          */
         const reset = (clicked: boolean) => {
-            state.transitionInProgress = true;
+            store.commit("updateTransitionInProgress", true);
             if (state.mode !== "matrix") {
                 store.commit("setMode", "matrix");
                 store.commit("setLayer", "");
@@ -955,7 +956,7 @@ export default defineComponent({
                 state.zoom = -1;
                 state.resetting = false;
             }
-            state.transitionInProgress = false;
+            store.commit("updateTransitionInProgress", false);
         };
 
         /* 
@@ -1015,7 +1016,7 @@ export default defineComponent({
          * @param str
          */
         const onSearch = (str: string) => {
-            state.transitionInProgress = true;
+            store.commit("updateTransitionInProgress", true);
             str = str.toLowerCase(); // convert to lowercase first to match other tokens
             let tokenIndices = [] as number[];
             if (str != "") {
@@ -1024,7 +1025,7 @@ export default defineComponent({
                     .filter((x) => x) as number[];
             }
             store.commit("setHighlightedTokenIndices", tokenIndices);
-            state.transitionInProgress = false;
+            store.commit("updateTransitionInProgress", false);
             return tokenIndices.length;
         };
 
@@ -1186,7 +1187,7 @@ export default defineComponent({
         return {
             ...toRefs(state),
         };
-    },
+    }
 });
 </script>
 
