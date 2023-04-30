@@ -57,12 +57,11 @@
       <div :class="{ 'col-10': showAttn && view == 'attn', 'col-12': !showAttn || view != 'attn' }">
         <Projection ref="projection" />
       </div>
-
-      <div v-show="showAttn && view == 'attn'" class="col-2" id="attn-div">
-        <Transition>
+      <Transition>
+        <div v-show="showAttn && view == 'attn'" class="col-2" id="attn-div">
           <AttnMapWrapper id="attn-wrap" />
-        </Transition>
-      </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>

@@ -1,10 +1,9 @@
 <!-- Vue components: https://vuejs.org/guide/essentials/component-basics.html -->
 <template>
     <div>
-
         <Transition>
-            <a-button type="default" id="clear-attn"
-                v-show="!renderState && ((showAttn && view == 'attn') || view == 'search')" @click="clearSelection">
+            <a-button type="default" id="clear-attn" v-show="!renderState && (view == 'attn' || view == 'search')"
+                @click="clearSelection">
                 clear selection
             </a-button>
         </Transition>
@@ -17,7 +16,7 @@
         <div class="row">
             <div id="label-wrapper" class="col-2">
                 <Transition>
-                    <Circle v-show="attentionLoading || transitionInProgress" />
+                    <Circle v-show="attnLoading || transitionInProgress" />
                 </Transition>
                 <!-- left sidebar -->
                 <div id="matrix-labels">
@@ -110,9 +109,8 @@
                             <font-awesome-icon icon="info" class="info-icon" />
                         </a-tooltip></p>
                     <div style="width:235px">
-                        <a-checkbox v-model:checked="showAll" @click="toggleCheckbox"
-                            :class="{ disabled: mode == 'matrix' }">labels</a-checkbox>
-                        <a-checkbox v-model:checked="showAttention" @click="toggleCheckboxAttention"
+                        <a-checkbox v-model:checked="showAll" :class="{ disabled: mode == 'matrix' }">labels</a-checkbox>
+                        <a-checkbox v-model:checked="showAttention"
                             :class="{ disabled: mode == 'matrix' || view != 'attn' }">attention lines</a-checkbox>
                     </div>
 
@@ -123,7 +121,7 @@
                             </template>
                             <font-awesome-icon icon="info" class="info-icon" />
                         </a-tooltip></p>
-                    <a-checkbox v-model:checked="sizeByNorm" @click="toggleCheckboxNorm" :class="{
+                    <a-checkbox v-model:checked="sizeByNorm" :class="{
                             disabled: mode == 'matrix' || modelType == 'vit-16' || modelType == 'vit-32'
                         }">scale by
                         norm</a-checkbox>
@@ -339,11 +337,20 @@ export default defineComponent({
             renderState: computed(() => store.state.renderState),
             searchToken: "",
             view: computed(() => store.state.view),
-            showAll: computed(() => store.state.showAll),
-            sizeByNorm: computed(() => store.state.sizeByNorm),
-            showAttention: computed(() => store.state.showAttention),
-            attnLoading: computed(() => store.state.attentionLoading),
+            showAll: computed({
+                get: () => store.state.showAll,
+                set: (v) => store.commit("setShowAll", v)
+            }),
+            sizeByNorm: computed({
+                get: () => store.state.sizeByNorm,
+                set: (v) => store.commit("setSizeByNorm", v)
+            }),
+            showAttention: computed({
+                get: () => store.state.showAttention,
+                set: (v) => store.commit("setShowAttention", v)
+            }),
 
+            attnLoading: computed(() => store.state.attentionLoading),
             layer: computed(() => store.state.layer),
             head: computed(() => store.state.head),
 
@@ -382,9 +389,8 @@ export default defineComponent({
             curLayer: computed(() => store.state.layer),
             curHead: computed(() => store.state.head),
             showAttn: computed(() => store.state.showAttn),
-            attentionLoading: computed(() => store.state.attentionLoading),
             transitionInProgress: computed(() => store.state.transitionInProgress),
-            clearSelection: computed(() => store.state.clearSelection)
+            clearSelection: computed(() => store.state.clearSelection),
         });
 
         onMounted(() => {
@@ -425,18 +431,6 @@ export default defineComponent({
             setTimeout(() => {
                 (matrixView.value as any).printViewport();
             }, 100)
-        }
-
-        const toggleCheckbox = () => {
-            store.commit('setShowAll', !state.showAll);
-        }
-
-        const toggleCheckboxAttention = () => {
-            store.commit('setShowAttention', !state.showAttention);
-        }
-
-        const toggleCheckboxNorm = () => {
-            store.commit('setSizeByNorm', !state.sizeByNorm);
         }
 
         // zoom to single plot
@@ -488,6 +482,7 @@ export default defineComponent({
 
         // clear search/attention
         const clearSelection = () => {
+            console.log('clearing selection');
             if (state.view == 'attn') {
                 store.commit("updateTransitionInProgress", true);
                 store.commit("setShowAttn", false);
@@ -600,9 +595,6 @@ export default defineComponent({
             logViewport,
             zoomToPlot,
             moveToPlot,
-            toggleCheckbox,
-            toggleCheckboxNorm,
-            toggleCheckboxAttention,
             switchPlaceholder,
             clearSelection,
             getColorMsg
@@ -765,6 +757,7 @@ div.matrix-cell {
     top: 65px;
     transform: translate(-50%);
     z-index: 10;
+    transition: 0.5s;
 }
 
 .label-grid {

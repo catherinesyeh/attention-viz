@@ -1,5 +1,5 @@
 <template>
-    <div class="viewHead" id="image-attn-map-view" v-show="showAttn">
+    <div class="viewHead" id="image-attn-map-view">
         <div class="align-top">
             <p>Image View<a-tooltip placement="top">
                     <template #title>
@@ -9,30 +9,28 @@
                 </a-tooltip>
             </p>
         </div>
-        <p class="subtitle" v-show="showAttn">{{ attnMsg }}</p>
+        <p class="subtitle">{{ attnMsg }}</p>
+        <div>
+            <p class="label">Show<a-tooltip placement="leftTop">
+                    <template #title>
+                        <span>visualization options:</span>
+                        <ul>
+                            <li><i>attention to selected token</i>: heatmap for selected token; opacity denotes
+                                attention weight</li>
+                            <li><i>highest attention to each token</i>: top attention connection for each token in image
+                            </li>
+                            <li><i>all high attention flows</i>: all strong connections in image; size and opacity
+                                denote
+                                attention weight</li>
+                        </ul>
+                    </template>
+                    <font-awesome-icon icon="info" class="info-icon" />
+                </a-tooltip></p>
+            <a-select v-model:value="vizType" style="width: 285px" :options="vizOptions">
+            </a-select>
+        </div>
         <Transition>
-            <div v-show="showAttn">
-                <p class="label">Show<a-tooltip placement="leftTop">
-                        <template #title>
-                            <span>visualization options:</span>
-                            <ul>
-                                <li><i>attention to selected token</i>: heatmap for selected token; opacity denotes
-                                    attention weight</li>
-                                <li><i>highest attention to each token</i>: top attention connection for each token in image
-                                </li>
-                                <li><i>all high attention flows</i>: all strong connections in image; size and opacity
-                                    denote
-                                    attention weight</li>
-                            </ul>
-                        </template>
-                        <font-awesome-icon icon="info" class="info-icon" />
-                    </a-tooltip></p>
-                <a-select v-model:value="vizType" style="width: 285px" :options="vizOptions">
-                </a-select>
-            </div>
-        </Transition>
-        <Transition>
-            <div v-show="showAttn" style="position:relative">
+            <div style="position:relative">
                 <canvas id="bertviz" class="image-viz" />
                 <div id="white-square" v-show="userTheme != 'light-theme' && vizType == 'all_top'"></div>
             </div>

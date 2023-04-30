@@ -1,5 +1,5 @@
 <template>
-    <div class="viewHead" id="attn-map-view" v-show="showAttn">
+    <div class="viewHead" id="attn-map-view">
         <div class="align-top">
             <p>Sentence View<a-tooltip placement="bottom">
                     <template #title>
@@ -12,37 +12,35 @@
                 <a-button id="attn-reset" class="clear" type="link" @click="resetAttn">reset</a-button>
             </div>
         </div>
-        <p class="subtitle" v-show="showAttn">{{ attnMsg }}</p>
-        <Transition>
-            <div v-show="showAttn" class="checkbox-contain">
-                <div :class="{ half: model == 'gpt-2' }">
-                    <p class="label">Hide<a-tooltip placement="leftTop">
-                            <template #title>
-                                <span>filter out attention to <span v-if="model === 'gpt-2'">first token</span><span
-                                        v-else>special tokens (cls, sep)</span></span>
-                            </template>
-                            <font-awesome-icon icon="info" class="info-icon" />
-                        </a-tooltip></p>
-                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt-2'">first
-                        token</a-checkbox>
-                    <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
-                        v-show="model == 'bert'">[cls]</a-checkbox>
-                    <a-checkbox v-model:checked="hideLast" @click="hideTokens('last')"
-                        v-show="model == 'bert'">[sep]</a-checkbox>
-                </div>
-                <div class="half" v-show="model == 'gpt-2'">
-                    <p class="label">Weight by<a-tooltip placement="leftTop">
-                            <template #title>
-                                <span>weight attentions by the norm of each token's value vector</span>
-                            </template>
-                            <font-awesome-icon icon="info" class="info-icon" />
-                        </a-tooltip></p>
-                    <a-checkbox v-model:checked="weightByNorm" @click="toggleWeightBy">value norm</a-checkbox>
-                </div>
+        <p class="subtitle">{{ attnMsg }}</p>
+        <div class="checkbox-contain">
+            <div :class="{ half: model == 'gpt-2' }">
+                <p class="label">Hide<a-tooltip placement="leftTop">
+                        <template #title>
+                            <span>filter out attention to <span v-if="model === 'gpt-2'">first token</span><span
+                                    v-else>special tokens (cls, sep)</span></span>
+                        </template>
+                        <font-awesome-icon icon="info" class="info-icon" />
+                    </a-tooltip></p>
+                <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')" v-show="model == 'gpt-2'">first
+                    token</a-checkbox>
+                <a-checkbox v-model:checked="hideFirst" @click="hideTokens('first')"
+                    v-show="model == 'bert'">[cls]</a-checkbox>
+                <a-checkbox v-model:checked="hideLast" @click="hideTokens('last')"
+                    v-show="model == 'bert'">[sep]</a-checkbox>
             </div>
-        </Transition>
+            <div class="half" v-show="model == 'gpt-2'">
+                <p class="label">Weight by<a-tooltip placement="leftTop">
+                        <template #title>
+                            <span>weight attentions by the norm of each token's value vector</span>
+                        </template>
+                        <font-awesome-icon icon="info" class="info-icon" />
+                    </a-tooltip></p>
+                <a-checkbox v-model:checked="weightByNorm">value norm</a-checkbox>
+            </div>
+        </div>
         <Transition>
-            <div :id="myID" class="bertviz" v-show="showAttn">
+            <div :id="myID" class="bertviz">
                 <div id="vis"></div>
             </div>
         </Transition>
@@ -92,9 +90,18 @@ export default {
             cur_attn: computed(() => store.state.curAttn),
             weighted_attn: [] as number[][],
             hidden: { left: [] as number[], right: [] as number[] },
-            hideFirst: computed(() => store.state.hideFirst),
-            hideLast: computed(() => store.state.hideLast),
-            weightByNorm: computed(() => store.state.weightByNorm),
+            hideFirst: computed({
+                get: () => store.state.hideFirst,
+                set: (v) => store.commit("setHideFirst", v)
+            }),
+            hideLast: computed({
+                get: () => store.state.hideLast,
+                set: (v) => store.commit("setHideLast", v)
+            }),
+            weightByNorm: computed({
+                get: () => store.state.weightByNorm,
+                set: (v) => { store.commit("setWeightByNorm", v); bertviz() }
+            }),
             attentionLoading: computed(() => store.state.attentionLoading),
             checkClick: false
         });
@@ -428,9 +435,9 @@ export default {
                     } else { // key
                         if (e.isTrusted || state.checkClick) {
                             if (ind == 0) {
-                                store.commit("setHideFirst", !state.hideFirst);
+                                state.hideFirst = !state.hideFirst;
                             } else if (ind == select.length - 1) {
-                                store.commit("setHideLast", !state.hideLast);
+                                state.hideLast = !state.hideLast;
                             }
                         }
                         let hid_index = state.hidden["right"].indexOf(ind);
@@ -644,11 +651,6 @@ export default {
             };
         }
 
-        const toggleWeightBy = () => { // toggle weightby checkbox
-            store.commit("setWeightByNorm", !state.weightByNorm);
-            bertviz();
-        }
-
         const clearAttn = () => {
             if (state.view != "search") {
                 store.commit("setHighlightedTokenIndices", []);
@@ -656,9 +658,9 @@ export default {
         }
 
         const resetAttn = () => {
-            store.commit("setHideFirst", false);
-            store.commit("setHideLast", false);
-            store.commit("setWeightByNorm", false);
+            state.hideFirst = false;
+            state.hideLast = false;
+            state.weightByNorm = false;
             store.commit("setResetAttn", true);
             bertviz();
         }
@@ -708,8 +710,7 @@ export default {
             clearAttn,
             bertviz,
             hideTokens,
-            resetAttn,
-            toggleWeightBy
+            resetAttn
         };
     },
 };

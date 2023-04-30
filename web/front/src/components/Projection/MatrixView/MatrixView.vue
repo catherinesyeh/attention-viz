@@ -34,7 +34,7 @@ const matrixCellWidth = 100;
 const matrixCellMargin = 20;
 
 let canvasWidth: number, canvasHeight: number;
-let timeout: any;
+let timeout: any, clickTimeout: any;
 let zoomThreshold = 2.5;
 
 interface ViewState {
@@ -74,29 +74,38 @@ export default defineComponent({
             matrixData: computed(() => store.state.matrixData),
             tokenData: computed(() => store.state.tokenData),
             viewState: nullInitialView,
+            zoom: nullInitialView.zoom,
+
             highlightedTokenIndices: computed(() => store.state.highlightedTokenIndices),
             attentionByToken: computed(() => store.state.attentionByToken),
             curAttn: computed(() => store.state.curAttn),
+            clickedPoint: "" as any,
+            activePoints: [] as Typing.Point[],
+
+            modelType: computed(() => store.state.modelType),
             projectionMethod: computed(() => store.state.projectionMethod),
             colorBy: computed(() => store.state.colorBy),
             view: computed(() => store.state.view),
             mode: computed(() => store.state.mode),
             userTheme: computed(() => store.state.userTheme),
+            dimension: computed(() => store.state.dimension),
+
             curLayer: computed(() => store.state.layer),
             curHead: computed(() => store.state.head),
             doneLoading: computed(() => store.state.doneLoading),
-            showAll: computed(() => store.state.showAll),
+
+            showAll: computed({
+                get: () => store.state.showAll,
+                set: (v) => store.commit("setShowAll", v)
+            }),
             showAttention: computed(() => store.state.showAttention),
             sizeByNorm: computed(() => store.state.sizeByNorm),
-            zoom: nullInitialView.zoom,
-            clickedPoint: "" as any,
-            activePoints: [] as Typing.Point[],
-            dimension: computed(() => store.state.dimension),
+
             cursorX: 0,
             cursorY: 0,
+
             transitionInProgress: computed(() => store.state.transitionInProgress),
             attentionLoading: computed(() => store.state.attentionLoading),
-            modelType: computed(() => store.state.modelType),
             resetting: false,
             clearSelection: computed(() => store.state.clearSelection)
         });
@@ -345,38 +354,6 @@ export default defineComponent({
                             : unactiveColor
                     ) as any;
                 },
-                onClick: (info, event) => {
-                    if (state.mode === 'matrix' || state.attentionLoading) {
-                        // stop event propagation
-                        return;
-                    }
-                    if (state.view != "attn") { // switch to attention view if not already
-                        store.commit("setView", 'attn');
-                        if (!state.showAll) {
-                            store.commit("setShowAll", true); // turn on labels by default
-                        }
-                    }
-                    store.commit("updateAttentionLoading", true);
-
-                    let pt = info.object as Typing.Point;
-                    state.clickedPoint = pt;
-                    store.dispatch("setClickedPoint", pt);
-
-                    let pt_info = state.tokenData[pt.index];
-                    let offset = state.tokenData.length / 2;
-                    let start_index = pt.index - pt_info.pos_int;
-
-                    let same_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
-                    if (pt_info.type === "key") {
-                        start_index -= offset;
-                    } else {
-                        start_index += offset;
-                    }
-
-                    let opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
-                    let tokenIndices = [...same_indices, ...opposite_indices];
-                    store.commit("setHighlightedTokenIndices", tokenIndices);
-                },
                 updateTriggers: {
                     getFillColor: [state.colorBy, state.highlightedTokenIndices, state.userTheme],
                     getRadius: [state.highlightedTokenIndices, state.sizeByNorm],
@@ -509,51 +486,6 @@ export default defineComponent({
                         ? [0, 0, 0, 255]
                         : [0, 0, 0, 20];
                 },
-                onClick: (info, event) => {
-                    if (state.mode === 'matrix' || state.attentionLoading) {
-                        // stop event propagation
-                        return;
-                    }
-                    if (state.view != "attn") {
-                        store.commit("setView", 'attn');
-                        if (!state.showAll) {
-                            store.commit("setShowAll", true); // turn on labels by default
-                        }
-                    }
-                    store.commit("updateAttentionLoading", true);
-
-                    let pt = info.object as Typing.Point;
-
-                    state.clickedPoint = pt;
-                    store.dispatch("setClickedPoint", pt);
-
-                    let pt_info = state.tokenData[pt.index];
-                    let offset = 0;
-                    if (state.modelType == "vit-32") {
-                        offset = 50;
-                    }
-                    else {
-                        offset = 197;
-                    }
-
-                    let start_index = 0
-                    if (pt.value == "CLS") {
-                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int);
-                    } else {
-                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
-                    }
-
-                    let same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
-                    if (pt_info.type === "key") {
-                        start_index -= offset;
-                    } else {
-                        start_index += offset;
-                    }
-
-                    let opposite_indices = Array.from({ length: offset }, (x, i) => i + start_index);
-                    let tokenIndices = [...same_indices, ...opposite_indices];
-                    store.commit("setHighlightedTokenIndices", tokenIndices);
-                },
                 updateTriggers: {
                     getSize: [state.zoom, state.highlightedTokenIndices, state.mode, state.dimension],
                     getPosition: [state.projectionMethod, state.dimension],
@@ -561,52 +493,6 @@ export default defineComponent({
                     getIcon: [state.colorBy]
                 }
             })
-        };
-
-        const toLabelOutlineLayer = (points: Typing.Point[], visiblePoints: boolean[]) => {
-            // white outline around text
-            return new TextLayer({
-                id: "label-outline-layer",
-                data: points,
-                pickable: false,
-                characterSet: 'auto',
-                getPosition: (d: Typing.Point) => {
-                    if (!state.showAll || !visiblePoints[d.index]) {
-                        return state.dimension === "2D" ? [0, 0] : [0, 0, 0];
-                    }
-                    let coord = getPointCoordinate(d);
-                    return coord;
-                },
-                getText: (d: Typing.Point) => {
-                    if (state.view != "attn") {
-                        return d.value;
-                    }
-
-                    if (state.modelType == "bert" || state.modelType == "gpt-2") {
-                        return state.tokenData[d.index].pos_int + ":" + d.value;
-                    }
-                    return " " + state.tokenData[d.index].value + "\n (" + state.tokenData[d.index].position + "," + state.tokenData[d.index].pos_int + ")";
-                },
-                getColor: (d: Typing.Point) => {
-                    if (!state.showAll || !visiblePoints[d.index]) {
-                        return [255, 255, 255, 0];
-                    }
-                    return state.userTheme == "light-theme"
-                        ? [255, 255, 255, defaultOpacity]
-                        : [0, 0, 0, defaultOpacity];
-                },
-                fontSettings: { sdf: true },
-                outlineWidth: 2,
-                outlineColor: [255, 255, 255, defaultOpacity],
-                getSize: 12,
-                getAngle: 0,
-                getTextAnchor: "start",
-                getAlignmentBaseline: "center",
-                updateTriggers: {
-                    getColor: [state.zoom, state.highlightedTokenIndices, state.userTheme, state.showAll],
-                    getPosition: [state.projectionMethod, state.zoom]
-                },
-            });
         };
 
         const toPointLabelLayer = (points: Typing.Point[]) => {
@@ -826,11 +712,11 @@ export default defineComponent({
                     }),
                 initialViewState: state.viewState,
                 layers: toLayers(),
-                onClick: (info) => {
-                    // deselect points on click outside plot in single view (if attn/search view)
-                    if (info.layer == null && state.mode == 'single' && state.view != 'none') {
-                        store.commit("setClearSelection", true);
-                    }
+                onClick: (info) => { // deal with click behavior for both vit and bert/gpt
+                    clearTimeout(clickTimeout);
+                    clickTimeout = setTimeout(function () {
+                        handleClick(info);
+                    }, 100);
                 },
                 getTooltip: ({ object }) => {
                     if (state.mode === 'matrix' && (!object || !object.title)) {
@@ -889,6 +775,75 @@ export default defineComponent({
                 // only run if matrix mode
                 state.cursorX = event.offsetX;
                 state.cursorY = event.offsetY;
+            }
+        }
+
+        const handleClick = (info: any) => {
+            if (state.mode === 'matrix' || state.attentionLoading) {
+                // stop event propagation
+                return;
+            }
+            if (info.layer && (info.layer.id === 'point-layer' || info.layer.id === 'image-scatter-layer')) {
+                // open attn view if single view 
+                store.commit("updateAttentionLoading", true);
+                if (state.view != "attn") { // switch to attention view if not already
+                    store.commit("setView", 'attn');
+                    if (!state.showAll) {
+                        state.showAll = true; // turn on labels by default
+                    }
+                }
+
+                let pt = info.object as Typing.Point;
+                state.clickedPoint = pt;
+                store.dispatch("setClickedPoint", pt);
+
+                let same_indices = [] as number[];
+                let opposite_indices = [] as number[];
+                let pt_info = state.tokenData[pt.index];
+
+                if (info.layer.id === 'point-layer') { // bert or gpt
+                    let offset = state.tokenData.length / 2;
+                    let start_index = pt.index - pt_info.pos_int;
+
+                    same_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
+                    if (pt_info.type === "key") {
+                        start_index -= offset;
+                    } else {
+                        start_index += offset;
+                    }
+
+                    opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
+                } else { // vit
+                    let offset = 0;
+                    if (state.modelType == "vit-32") {
+                        offset = 50;
+                    }
+                    else {
+                        offset = 197;
+                    }
+
+                    let start_index = 0
+                    if (pt.value == "CLS") {
+                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int);
+                    } else {
+                        start_index = pt.index - (pt_info.position * Math.sqrt(offset - 1) + pt_info.pos_int + 1);
+                    }
+
+                    same_indices = Array.from({ length: offset }, (x, i) => i + start_index);
+                    if (pt_info.type === "key") {
+                        start_index -= offset;
+                    } else {
+                        start_index += offset;
+                    }
+
+                    opposite_indices = Array.from({ length: offset }, (x, i) => i + start_index);
+                }
+
+                let tokenIndices = [...same_indices, ...opposite_indices];
+                store.commit("setHighlightedTokenIndices", tokenIndices);
+            } else if (!info.layer && state.view !== 'none') {
+                // clear selection if user clicks on empty space in canvas (still single view)
+                store.commit("setClearSelection", true);
             }
         }
 
@@ -1001,9 +956,9 @@ export default defineComponent({
 
             // switch on labels if bert/gpt; off if vit
             if ((state.modelType == "bert" || state.modelType == "gpt-2") && !state.showAll) {
-                store.commit("setShowAll", true);
+                state.showAll = true;
             } else if ((state.modelType == "vit-32" || state.modelType == "vit-16") && state.showAll) {
-                store.commit("setShowAll", false);
+                state.showAll = false;
             }
 
             if (state.mode == "single") {
@@ -1166,6 +1121,7 @@ export default defineComponent({
         watch(() => state.highlightedTokenIndices,
             () => {
                 if (state.highlightedTokenIndices.length == 0) {
+                    console.log("no highlighted indices");
                     // reset highlighted token indices
                     if (state.view == "attn") {
                         store.commit("setView", "none");

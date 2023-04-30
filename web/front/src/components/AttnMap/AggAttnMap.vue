@@ -1,23 +1,19 @@
 <template>
     <div class="viewHead" id="agg-map-view">
         <div class="align-top">
-            <Transition>
-                <p v-show="showAttn">Aggregate View<a-tooltip placement="bottom">
-                        <template #title>
-                            <span>aggregate sentence-level attention patterns for this attention head</span>
-                        </template>
-                        <font-awesome-icon icon="info" class="info-icon" />
-                    </a-tooltip>
-                </p>
-            </Transition>
-            <Transition>
-                <div class="attn-btns" v-show="showAttn">
-                    <a-button id="hide-agg" class="clear" type="link" @click="hideShowAgg">hide</a-button>
-                </div>
-            </Transition>
+            <p>Aggregate View<a-tooltip placement="bottom">
+                    <template #title>
+                        <span>aggregate sentence-level attention patterns for this attention head</span>
+                    </template>
+                    <font-awesome-icon icon="info" class="info-icon" />
+                </a-tooltip>
+            </p>
+            <div class="attn-btns">
+                <a-button id="hide-agg" class="clear" type="link" @click="hideShowAgg">hide</a-button>
+            </div>
         </div>
         <Transition>
-            <div :id="myID" class="bertviz" v-show="showAttn">
+            <div :id="myID" class="bertviz">
                 <div id="vis"></div>
             </div>
         </Transition>
@@ -71,8 +67,14 @@ export default {
             cur_attn: [] as number[][],
             weighted_attn: [] as number[][],
             hidden: { left: [] as number[], right: [] as number[] },
-            hideFirst: computed(() => store.state.hideFirst),
-            hideLast: computed(() => store.state.hideLast),
+            hideFirst: computed({
+                get: () => store.state.hideFirst,
+                set: (v) => store.commit("setHideFirst", v)
+            }),
+            hideLast: computed({
+                get: () => store.state.hideLast,
+                set: (v) => store.commit("setHideLast", v)
+            }),
             weightByNorm: computed(() => store.state.weightByNorm),
         });
 
@@ -407,9 +409,9 @@ export default {
                     } else { // key
                         if (e.isTrusted) {
                             if (ind == 0) {
-                                store.commit("setHideFirst", !state.hideFirst);
+                                state.hideFirst = !state.hideFirst;
                             } else if (ind == select.length - 1) {
-                                store.commit("setHideLast", !state.hideLast);
+                                state.hideLast = !state.hideLast;
                             }
                         }
                         let hid_index = state.hidden["right"].indexOf(ind);

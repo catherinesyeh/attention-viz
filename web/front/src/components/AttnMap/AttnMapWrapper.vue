@@ -5,12 +5,12 @@
             <AttnMap :myID="'sentAttn'" :otherID="'aggAttn'" />
         </div>
         <Transition>
-            <div class="row splitcol" v-show="showAgg && view == 'attn'">
+            <div class="row splitcol" v-show="showAgg">
                 <AggAttnMap :myID="'aggAttn'" :otherID="'sentAttn'" />
             </div>
         </Transition>
         <Transition>
-            <a-button id="show-agg" type="primary" @click="showAggAttention" v-show="!showAgg && view == 'attn'">
+            <a-button id="show-agg" type="primary" @click="showAggAttention" v-show="!showAgg">
                 show aggregate attention
             </a-button>
         </Transition>
