@@ -101,6 +101,7 @@ export default defineComponent({
     // Init the store to read data from backend
     onMounted(async () => {
       await store.dispatch("init");
+      // setTheme(state.userTheme);
     });
 
     // update graph settings based on dropdown option selected
@@ -130,7 +131,7 @@ export default defineComponent({
     // switch between light and dark mode
     const toggleTheme = () => {
       console.log("toggle theme");
-      const activeTheme = localStorage.getItem("user-theme");
+      const activeTheme = state.userTheme;
       if (activeTheme === "light-theme") {
         setTheme("dark-theme");
       } else {
@@ -140,12 +141,12 @@ export default defineComponent({
 
     const getTheme = () => {
       console.log("get theme");
-      return localStorage.getItem("user-theme");
+      return localStorage.getItem("user-theme") || "light-theme";
     }
 
     const setTheme = (theme: string) => {
       console.log("set theme");
-      localStorage.setItem("user-theme", theme);
+      // localStorage.setItem("user-theme", theme);
       document.documentElement.className = theme;
       store.commit('setUserTheme', theme);
 
@@ -185,7 +186,6 @@ export default defineComponent({
       }
 
     );
-
     return {
       ...toRefs(state),
       projection,

@@ -585,10 +585,6 @@ export default defineComponent({
                 getFillColor: [255, 255, 255, 0],
                 getElevation: 100,
                 getLineWidth: 0,
-                onClick: (info, event) => {
-                    let obj = info.object as Typing.PlotHead;
-                    zoomToPlot(obj.layer, obj.head, true, true);
-                },
                 updateTriggers: {
                     getPosition: [state.projectionMethod, state.zoom]
                 },
@@ -779,11 +775,16 @@ export default defineComponent({
         }
 
         const handleClick = (info: any) => {
-            if (state.mode === 'matrix' || state.attentionLoading) {
+            if (state.attentionLoading) {
                 // stop event propagation
                 return;
             }
-            if (info.layer && (info.layer.id === 'point-layer' || info.layer.id === 'image-scatter-layer')) {
+
+            if (state.mode === 'matrix' && info.layer && info.layer.id === 'overlay-layer') {
+                // zoom into single view from matrix view
+                let obj = info.object as Typing.PlotHead;
+                zoomToPlot(obj.layer, obj.head, true, true);
+            } else if (state.mode === 'single' && info.layer && (info.layer.id === 'point-layer' || info.layer.id === 'image-scatter-layer')) {
                 // open attn view if single view 
                 store.commit("updateAttentionLoading", true);
                 if (state.view != "attn") { // switch to attention view if not already
@@ -842,7 +843,7 @@ export default defineComponent({
                 let tokenIndices = [...same_indices, ...opposite_indices];
                 store.commit("setHighlightedTokenIndices", tokenIndices);
             } else if (!info.layer && state.view !== 'none') {
-                // clear selection if user clicks on empty space in canvas (still single view)
+                // clear selection if user clicks on empty space in canvas for both matrix/single view
                 store.commit("setClearSelection", true);
             }
         }
