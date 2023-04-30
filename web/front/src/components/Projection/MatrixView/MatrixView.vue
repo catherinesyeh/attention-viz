@@ -1121,7 +1121,6 @@ export default defineComponent({
         watch(() => state.highlightedTokenIndices,
             () => {
                 if (state.highlightedTokenIndices.length == 0) {
-                    console.log("no highlighted indices");
                     // reset highlighted token indices
                     if (state.view == "attn") {
                         store.commit("setView", "none");
