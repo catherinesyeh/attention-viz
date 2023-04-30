@@ -85,13 +85,13 @@ export default {
     margin: 0 2px;
 }
 
-#attn-clear,
 #attn-reset,
 #hide-agg {
     position: relative;
     padding: 0;
     height: auto;
     display: inline-block;
+    margin-right: -15px !important;
 }
 
 .subtitle {

@@ -27,7 +27,7 @@
                         </template>
                         <font-awesome-icon icon="info" class="info-icon" />
                     </a-tooltip></p>
-                <a-select v-model:value="vizType" style="width: 240px" :options="vizOptions">
+                <a-select v-model:value="vizType" style="width: 285px" :options="vizOptions">
                 </a-select>
             </div>
         </Transition>
