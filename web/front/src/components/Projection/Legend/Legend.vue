@@ -44,15 +44,17 @@ export default defineComponent({
 
         const lowLabel = () => {
             switch (state.colorBy) {
-                case 'position':
                 case 'pos_mod_5':
-                case 'token_length':
                 case 'row':
                 case 'column':
-                case 'sent_length':
-                case 'token_freq':
                     return "0"
+                case 'position':
+                    return "start"
+                case 'token_length':
+                case 'sent_length':
+                    return "short"
                 case 'embed_norm':
+                case 'token_freq':
                     return "low"
                 case 'punctuation':
                     return ".?!"
@@ -63,17 +65,18 @@ export default defineComponent({
         const highLabel = () => {
             switch (state.colorBy) {
                 case 'position':
-                case 'token_length':
-                case 'sent_length':
-                case 'token_freq':
-                    return "1"
+                    return "end"
                 case 'row':
                 case 'column':
                     return state.modelType == "vit-16" ? 13 : 6
                 case 'pos_mod_5':
                     return "4"
                 case 'embed_norm':
+                case 'token_freq':
                     return "high"
+                case 'token_length':
+                case 'sent_length':
+                    return "long"
                 case 'punctuation':
                     return "abc"
                 default:
@@ -112,7 +115,7 @@ export default defineComponent({
 
 #legend {
     display: flex;
-    column-gap: 15px;
+    column-gap: 12px;
 }
 
 #legend-msg {
@@ -126,9 +129,9 @@ export default defineComponent({
 
 /* default: type */
 .bar {
-    height: calc(20px + 0.2vw);
+    height: calc(24px + 0.2vw);
     max-height: 300px;
-    width: calc(20px + 0.2vw);
+    width: calc(24px + 0.2vw);
     background: rgb(95, 185, 108);
     margin: 5px auto 0;
     transition: 0.5s;
@@ -142,7 +145,7 @@ export default defineComponent({
 /* position or norm */
 .bar-contain.pos .bar {
     background: linear-gradient(to top, #ddefbb, #82CA7C, #00482A);
-    height: calc(100px + 1vw);
+    height: calc(120px + 1vw);
 }
 
 .bar-contain.k.pos .bar {
@@ -156,7 +159,7 @@ export default defineComponent({
             #5FB96C 40% 60%,
             #EDB50E 60% 80%,
             #E3378F 80%);
-    height: calc(100px + 1vw);
+    height: calc(120px + 1vw);
 }
 
 .bar-contain.k.cat .bar {
@@ -170,7 +173,7 @@ export default defineComponent({
 /* categorical */
 .bar-contain.pun .bar {
     background: linear-gradient(#F39226 50%, #5FB96C 50%);
-    height: calc(40px + 0.4vw);
+    height: calc(48px + 0.4vw);
 }
 
 .bar-contain.k.pun .bar {

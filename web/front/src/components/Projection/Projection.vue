@@ -261,12 +261,12 @@ const text_color_info = [
     {
         label: "position",
         value: "position",
-        desc: "darkness encodes token position in sentence (normalized)"
+        desc: "token position in sentence (normalized), darker = later in the sentence"
     },
     {
         label: "position mod 5",
         value: "pos_mod_5",
-        desc: "darkness encodes token position modulo 5 (unnormalized)"
+        desc: "token position in sentence modulo 5 (unnormalized)"
     },
     {
         label: "punctuation",
@@ -276,22 +276,22 @@ const text_color_info = [
     {
         label: "embedding norm",
         value: "embed_norm",
-        desc: "darkness encodes token embedding norm"
+        desc: "token embedding norm, darker = higher norm"
     },
     {
         label: "token length",
         value: "token_length",
-        desc: "darkness encodes # chars in token (normalized)"
+        desc: "number of chars in token, darker = longer token"
     },
     {
         label: "sentence length",
         value: "sent_length",
-        desc: "darkness encodes # tokens in sentence (normalized)"
+        desc: "number of tokens in sentence, darker = longer sentence"
     },
     {
         label: "token frequency",
         value: "token_freq",
-        desc: "darkness encodes frequency of token in dataset (normalized)"
+        desc: "frequency of token in dataset, darker = more frequent"
     }
 ];
 
@@ -309,12 +309,12 @@ const image_color_info = [
     {
         label: "patch row",
         value: "row",
-        desc: "darkness encodes row of patch in image (fill)"
+        desc: "row of patch in image, darker = later row"
     },
     {
         label: "patch column",
         value: "column",
-        desc: "darkness encodes column of patch in image (fill)"
+        desc: "column of patch in image, darker = later column"
     },
     {
         label: "no outline",
