@@ -10,12 +10,21 @@ import json
 import time
 import base64
 import cv2
+import os
 
 # set root directory for data
 # Alter: abspath('') is called from back/run.py
 rootDir = dirname(abspath(''))
 # rootDir = "E:\\attention-viz\\web\\"
 print(rootDir)
+
+# test whether folder for selected model exists
+
+
+def folder_exists(model):
+    path = join(rootDir, 'data', model)
+    return os.path.exists(path)
+
 
 # data unique to each layer/head (e.g., tsne/umap coordinates + norms)
 
@@ -484,10 +493,16 @@ class DataService(object):
         self.agg_att_data_gpt = read_agg_attn_data("gpt")
         self.token_data_gpt = read_token_data("gpt")
 
-        # VIT-32
+        # VIT-32 (natural)
         self.matrix_data_vit_32 = read_matrix_data("vit_32")
         self.attention_data_vit_32 = read_attention_data("vit_32")
         self.token_data_vit_32 = read_token_data("vit_32")
+
+        # VIT-32 (synthetic)
+        if folder_exists("vit_syn"):
+            self.matrix_data_vit_syn = read_matrix_data("vit_syn")
+            self.attention_data_vit_syn = read_attention_data("vit_syn")
+            self.token_data_vit_syn = read_token_data("vit_syn")
 
         # VIT-16
         self.matrix_data_vit_16 = read_matrix_data("vit_16")
@@ -501,8 +516,10 @@ class DataService(object):
             return self.matrix_data_bert
         elif model == "vit-16":
             return self.matrix_data_vit_16
-        elif model == "vit-32":
+        elif model in ["vit-32", "vit-nat"]:
             return self.matrix_data_vit_32
+        elif model == "vit-syn":
+            return self.matrix_data_vit_syn
         return self.matrix_data_gpt
 
     def get_token_data(self, model):
@@ -510,8 +527,10 @@ class DataService(object):
             return self.token_data_bert
         elif model == "vit-16":
             return self.token_data_vit_16
-        elif model == "vit-32":
+        elif model in ["vit-32", "vit-nat"]:
             return self.token_data_vit_32
+        elif model == "vit-syn":
+            return self.token_data_vit_syn
         return self.token_data_gpt
 
     def get_attention_by_token(self, token, model):
@@ -523,22 +542,28 @@ class DataService(object):
         if model == "bert":
             all_token_info = self.token_data_bert['tokens'][index]
             offset = len(self.token_data_bert['tokens']) / 2
-        elif model == "vit-32":
+        elif model in ["vit-32", "vit-nat"]:
             all_token_info = copy.copy(self.token_data_vit_32['tokens'][index])
+        elif model == "vit-syn":
+            all_token_info = copy.copy(
+                self.token_data_vit_syn['tokens'][index])
         elif model == "vit-16":
             all_token_info = copy.copy(self.token_data_vit_16['tokens'][index])
         else:
             all_token_info = self.token_data_gpt['tokens'][index]
             offset = len(self.token_data_gpt['tokens']) / 2
 
-        if model == "vit-32":
+        if model in ["vit-32", "vit-nat", "vit-syn"]:
             start = index - \
                 (all_token_info['position_row'] * 7 +
                  all_token_info['position_col'] + 1)
             end = start + 50
+
+            token_data = self.token_data_vit_32 if model in [
+                "vit-32", "vit-nat"] else self.token_data_vit_syn
             image = read_image_from_dataurl64(
-                self.token_data_vit_32['tokens'][start]['originalImagePath']).copy()
-            if self.token_data_vit_32['tokens'][index]['type'] == "key":
+                token_data['tokens'][start]['originalImagePath']).copy()
+            if token_data['tokens'][index]['type'] == "key":
                 color = [227, 55, 143]
                 start -= 50
                 end -= 50
@@ -554,6 +579,7 @@ class DataService(object):
                 (all_token_info['position_row'] * 14 +
                  all_token_info['position_col'] + 1)
             end = start + 197
+
             image = read_image_from_dataurl64(
                 self.token_data_vit_16['tokens'][start]['originalImagePath']).copy()
             if self.token_data_vit_16['tokens'][index]['type'] == "key":
@@ -580,8 +606,10 @@ class DataService(object):
             attn_data = self.attention_data_bert
             agg_attns = self.agg_att_data_bert['{}_{}'.format(
                 layer, head)][:num_tokens]
-        elif model == "vit-32":
+        elif model in ["vit-32", "vit-nat"]:
             attn_data = self.attention_data_vit_32
+        elif model == "vit-syn":
+            attn_data = self.attention_data_vit_syn
         elif model == "vit-16":
             attn_data = self.attention_data_vit_16
         else:
@@ -592,7 +620,7 @@ class DataService(object):
         for plot in attn_data:
             if plot['layer'] == layer and plot['head'] == head:
                 attns = plot['tokens'][start:end]
-                if model == "vit-32" and all_token_info['type'] == "key":
+                if model in ["vit-32", "vit-nat", "vit-syn"] and all_token_info['type'] == "key":
                     attns_vis = plot['tokens'][start + 50:end + 50]
                 elif model == "vit-16" and all_token_info['type'] == "key":
                     attns_vis = plot['tokens'][start + 197:end + 197]
@@ -607,12 +635,15 @@ class DataService(object):
         norms = [] if model != "gpt-2" else [t['value_norm'] for t in attns]
         agg_norms = [] if model != "gpt-2" else [t['value_norm'] for t in agg_attns]
 
-        if model == "vit-32":
+        if model in ["vit-32", "vit-nat", "vit-syn"]:
             overlaid_image = overlay_image_with_attention(
                 image.copy(), attns_vis[index % 50], 32)
             overlaid_image = highlight_patches(overlaid_image, 32)
 
-            if self.token_data_vit_32['tokens'][index]['type'] == "key":
+            token_data = self.token_data_vit_32 if model in [
+                "vit-32", "vit-nat"] else self.token_data_vit_syn
+
+            if token_data['tokens'][index]['type'] == "key":
                 color = [227, 55, 143]
             else:
                 color = [71, 222, 93]

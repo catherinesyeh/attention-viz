@@ -190,7 +190,7 @@ export default defineComponent({
         // helper when drawing attention lines
         function get_k_attn(k: number) {
             let attention = state.curAttn;
-            if (state.modelType == "vit-16" || state.modelType == "vit-32") {
+            if (state.modelType.includes("vit")) {
                 attention = state.attentionByToken.attns;
             }
 
@@ -456,7 +456,7 @@ export default defineComponent({
                     : 15;
             return new IconLayer({
                 id: 'image-scatter-layer',
-                pickable: state.mode == 'single' && state.modelType == "vit-16" || state.modelType == "vit-32",
+                pickable: state.mode == 'single' && state.modelType.includes("vit"),
                 data: points,
                 stroked: state.mode == 'single',
                 getIcon: d => ({
@@ -631,7 +631,7 @@ export default defineComponent({
                 if (state.modelType == "bert" || state.modelType == "gpt-2") {
                     layers.push(toPointLayer(layer_points));
                 }
-                else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
+                else if (state.modelType.includes("vit")) {
                     if (state.colorBy == "query_key" || state.colorBy == "no_outline") {
                         layers.push(toImageLayer(layer_points));
                     } else {
@@ -816,7 +816,7 @@ export default defineComponent({
                     opposite_indices = Array.from({ length: pt_info.length }, (x, i) => i + start_index);
                 } else { // vit
                     let offset = 0;
-                    if (state.modelType == "vit-32") {
+                    if (["vit-32", "vit-nat", "vit-syn"].includes(state.modelType)) {
                         offset = 50;
                     }
                     else {
@@ -949,7 +949,7 @@ export default defineComponent({
                     let projData = computeMatrixProjection(matrixData, tokenData);
                     shallowData.value = projData;
                 }
-                else if (state.modelType == "vit-16" || state.modelType == "vit-32") {
+                else if (state.modelType.includes("vit")) {
                     let projData = computeVitMatrixProjection(matrixData, tokenData);
                     shallowData.value = projData;
                 }
@@ -958,7 +958,7 @@ export default defineComponent({
             // switch on labels if bert/gpt; off if vit
             if ((state.modelType == "bert" || state.modelType == "gpt-2") && !state.showAll) {
                 state.showAll = true;
-            } else if ((state.modelType == "vit-32" || state.modelType == "vit-16") && state.showAll) {
+            } else if (state.modelType.includes("vit") && state.showAll) {
                 state.showAll = false;
             }
 

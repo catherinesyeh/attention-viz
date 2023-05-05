@@ -7,7 +7,7 @@ import { Typing } from "@/utils/typing";
 
 // Vuex docs: https://vuex.vuejs.org/
 
-const starter_model = "vit-32";
+const starter_model = "vit-nat";
 
 export interface State {
   matrixData: Typing.MatrixData[];

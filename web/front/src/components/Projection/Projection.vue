@@ -115,14 +115,14 @@
                     </div>
 
                     <p class="label">Dot Size<a-tooltip placement="rightBottom"
-                            :class="{ disabled: mode === 'matrix' || modelType == 'vit-16' || modelType == 'vit-32' }">
+                            :class="{ disabled: mode === 'matrix' || modelType.includes('vit') }">
                             <template #title>
                                 <span>scale dots in scatterplot by token embedding norm</span>
                             </template>
                             <font-awesome-icon icon="info" class="info-icon" />
                         </a-tooltip></p>
                     <a-checkbox v-model:checked="sizeByNorm" :class="{
-                            disabled: mode == 'matrix' || modelType == 'vit-16' || modelType == 'vit-32'
+                            disabled: mode == 'matrix' || modelType.includes('vit')
                         }">scale by
                         norm</a-checkbox>
 
@@ -172,7 +172,8 @@
                     <Transition>
                         <div v-show="!renderState">
                             <p id="num-msg" class="subtitle"><b>data info:</b> based on {{ num_message }}<span
-                                    v-show="modelType.includes('vit')"><a-tooltip placement="rightTop">
+                                    v-show="modelType.includes('vit') && modelType != 'vit-syn'"><a-tooltip
+                                        placement="rightTop">
                                         <template #title>
                                             <span>object labels are generated from a segmentation model and may not be 100%
                                                 accurate</span>
@@ -380,7 +381,8 @@ export default defineComponent({
                 set: (v) => store.dispatch("switchModel", v)
             }),
             // modelOptions: ["vit-16", "vit-32", "bert", "gpt-2"].map((x) => (
-            modelOptions: ["vit-32", "bert", "gpt-2"].map((x) => (
+            modelOptions: ["vit-nat", "bert", "gpt-2"].map((x) => (
+                // modelOptions: ["vit-nat", "vit-syn", "bert", "gpt-2"].map((x) => (
                 { value: x, label: x }
             )),
 
@@ -460,7 +462,7 @@ export default defineComponent({
 
         // switch placeholder text
         const switchPlaceholder = () => {
-            if (state.modelType == 'vit-32' || state.modelType == 'vit-16') {
+            if (state.modelType.includes('vit')) {
                 state.placeholder = "e.g., person, background";
             } else {
                 state.placeholder = "e.g., cat, april";
