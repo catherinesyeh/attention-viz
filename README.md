@@ -1,3 +1,5 @@
+<img src="https://github.com/catherinesyeh/attention-viz/blob/main/img/matrix.gif" width="33%" height="auto"><img src="https://github.com/catherinesyeh/attention-viz/blob/main/img/single.gif" width="33%" height="auto"><img src="https://github.com/catherinesyeh/attention-viz/blob/main/img/sent_img.gif" width="33%" height="auto">
+
 # attention-viz
 Visualizing query-key interactions in language + vision transformers
 
