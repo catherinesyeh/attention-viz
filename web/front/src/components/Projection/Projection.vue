@@ -59,8 +59,10 @@
                                         <ul>
                                             <li v-for="option in modelOptions">
                                                 <i>{{ option.value }}</i> (<span
-                                                    v-if="option.value.includes('vit')">vision</span>
-                                                <span v-else>language</span>)
+                                                    v-if="option.value.includes('vit')">vision</span><span
+                                                    v-if="option.value.includes('nat')">, natural images</span><span
+                                                    v-if="option.value.includes('syn')">, synthetic images</span>
+                                                <span v-if="['bert', 'gpt-2'].includes(option.value)">language</span>)
                                             </li>
                                         </ul>
                                     </template>
@@ -160,9 +162,8 @@
                                 <a-radio-button value="3D">3D</a-radio-button>
                             </a-radio-group>
                             <Transition>
-                                <p class="label italic" v-show="dimension === '3D' && mode === 'matrix'">click a head to see
-                                    full
-                                    3D</p>
+                                <p class="label italic" v-show="dimension === '3D' && mode === 'matrix'">
+                                    click a head to see full 3D</p>
                             </Transition>
                         </div>
                     </div>
@@ -664,10 +665,11 @@ p.label.italic {
     opacity: 0.7;
     margin-top: 2.5px;
     font-size: small;
-    position: absolute;
-    right: -110px;
+    transition: 0.5s;
+    // position: absolute;
+    // right: -110px;
     width: 100px;
-    transform: translateY(-100%);
+    // transform: translateY(-100%);
 }
 
 #control-buttons {
