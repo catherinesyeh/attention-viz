@@ -3,6 +3,7 @@
 # attention-viz
 Visualizing query-key interactions in language + vision transformers
 
+* Preprint: [https://arxiv.org/abs/2305.03210](https://arxiv.org/abs/2305.03210)
 * Demo: [http://attentionviz.com/](http://attentionviz.com/)
 * Docs: [https://catherinesyeh.github.io/attn-docs/](https://catherinesyeh.github.io/attn-docs/)
 
