@@ -42,7 +42,8 @@
 
             <a-button type="primary" id="docs-link" href="https://catherinesyeh.github.io/attn-docs/"
               target="_blank">Documentation</a-button>
-            <a-button type="primary" id="paper-link" class="disabled">arXiv Preprint: Coming Soon!</a-button>
+            <a-button type="primary" id="paper-link" target="_blank" href="https://arxiv.org/abs/2305.03210">arXiv
+              Preprint</a-button>
             <a-button type="primary" id="close-link" @click="closeModal">Jump Right In</a-button>
           </div>
         </a-modal>
