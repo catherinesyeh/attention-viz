@@ -14,7 +14,7 @@ git clone https://github.com/catherinesyeh/attention-viz.git
 cd attention-viz
 ```
 
-2. Ask Catherine for ```data``` folder. It should be included in the ```web``` folder like so:
+2. Download ```data``` folder [here](https://drive.google.com/file/d/11JEtmZNH9gl9K_994BLADSmV4-imslnY/view?usp=share_link) and unzip. It should be included in the ```web``` folder like so:
 <img width="415" alt="image" src="https://user-images.githubusercontent.com/43099514/219905589-17dc4aa1-1785-4d48-aabe-794f777b2dd9.png">
 
 3. Navigate to back end:
