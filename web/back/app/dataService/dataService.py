@@ -505,9 +505,10 @@ class DataService(object):
             self.token_data_vit_syn = read_token_data("vit_syn")
 
         # VIT-16
-        self.matrix_data_vit_16 = read_matrix_data("vit_16")
-        self.attention_data_vit_16 = read_attention_data("vit_16")
-        self.token_data_vit_16 = read_token_data("vit_16")
+        if folder_exists("vit_16"):
+            self.matrix_data_vit_16 = read_matrix_data("vit_16")
+            self.attention_data_vit_16 = read_attention_data("vit_16")
+            self.token_data_vit_16 = read_token_data("vit_16")
 
         return None
 
