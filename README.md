@@ -7,6 +7,9 @@ Visualizing query-key interactions in language + vision transformers
 * Demo: [http://attentionviz.com/](http://attentionviz.com/)
 * Docs: [https://catherinesyeh.github.io/attn-docs/](https://catherinesyeh.github.io/attn-docs/)
 
+## abstract
+> Transformer models are revolutionizing machine learning, but their inner workings remain mysterious. In this work, we present a new visualization technique designed to help researchers understand the self-attention mechanism in transformers that allows these models to learn rich, contextual relationships between elements of a sequence. The main idea behind our method is to visualize a joint embedding of the query and key vectors used by transformer models to compute attention. Unlike previous attention visualization techniques, our approach enables the analysis of global patterns across multiple input sequences. We create an interactive visualization tool, AttentionViz, based on these joint query-key embeddings, and use it to study attention mechanisms in both language and vision transformers. We demonstrate the utility of our approach in improving model understanding and offering new insights about query-key interactions through several application scenarios and expert feedback.
+
 ## set up instructions
 1. Clone repo and navigate into folder: 
 ```
@@ -50,5 +53,17 @@ npm run serve
 ```
 
 9. The interface should be running at: [http://localhost:8561](http://localhost:8561)
+
+## citation
+If you find this work helpful, please consider citing our paper:
+```
+@article{yeh2023attentionviz,
+  title={AttentionViz: A Global View of Transformer Attention},
+  author={Yeh, Catherine and Chen, Yida and Wu, Aoyu and Chen, Cynthia and Vi{\'e}gas, Fernanda and Wattenberg, Martin},
+  journal={arXiv preprint arXiv:2305.03210},
+  year={2023}
+}
+```
+Thank you for checking out AttentionViz!
 
 
