@@ -3,7 +3,7 @@
 # attention-viz
 Visualizing query-key interactions in language + vision transformers
 
-* Preprint: [https://arxiv.org/abs/2305.03210](https://arxiv.org/abs/2305.03210)
+* Paper: [https://ieeexplore.ieee.org/document/10297591](https://ieeexplore.ieee.org/document/10297591)
 * Demo: [http://attentionviz.com/](http://attentionviz.com/)
 * Docs: [https://catherinesyeh.github.io/attn-docs/](https://catherinesyeh.github.io/attn-docs/)
 
@@ -58,10 +58,11 @@ npm run serve
 If you find this work helpful, please consider citing our paper:
 ```
 @article{yeh2023attentionviz,
-  title={AttentionViz: A Global View of Transformer Attention},
+  title={Attentionviz: A global view of transformer attention},
   author={Yeh, Catherine and Chen, Yida and Wu, Aoyu and Chen, Cynthia and Vi{\'e}gas, Fernanda and Wattenberg, Martin},
-  journal={arXiv preprint arXiv:2305.03210},
-  year={2023}
+  journal={IEEE Transactions on Visualization and Computer Graphics},
+  year={2023},
+  publisher={IEEE}
 }
 ```
 Thank you for checking out AttentionViz!
